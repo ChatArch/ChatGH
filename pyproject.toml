@@ -5,11 +5,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "chatgh"
 dynamic = ["version"]
-description = "ChatTool for github"
+description = "GitHub CLI and Python helpers for ChatArch"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
-dependencies = ["click>=8.0", "chatstyle>=0.1.0", "chatenv>=0.1.1"]
+dependencies = ["click>=8.0", "chatstyle>=0.1.0", "chatenv>=0.1.1", "PyGithub>=2.0", "requests>=2.0"]
 authors = [{name = "ChatArch", email = "1073853456@qq.com"}]
 keywords = ["chatgh", "chatarch", "cli"]
 classifiers = [
@@ -32,3 +32,8 @@ where = ["src"]
 
 [tool.setuptools]
 include-package-data = true
+
+[tool.pytest.ini_options]
+markers = [
+    "mock_cli: mock CLI tests that do not call external services",
+]

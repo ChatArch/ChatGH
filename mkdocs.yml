@@ -1,6 +1,6 @@
 site_name: chatgh 文档
-site_url: https://OWNER.github.io/REPO
-repo_url: https://github.com/OWNER/REPO
+site_url: https://chatarch.github.io/ChatGH
+repo_url: https://github.com/ChatArch/ChatGH
 theme:
   name: material
   language: zh
