@@ -2,12 +2,6 @@
     <a href="https://pypi.python.org/pypi/chatgh">
         <img src="https://img.shields.io/pypi/v/chatgh.svg" alt="PyPI version" />
     </a>
-    <a href="https://github.com/OWNER/REPO/actions/workflows/ci.yml">
-        <img src="https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg" alt="Tests" />
-    </a>
-    <a href="https://OWNER.github.io/REPO">
-        <img src="https://img.shields.io/badge/docs-mkdocs-blue.svg" alt="Documentation" />
-    </a>
 </div>
 
 <div align="center">
@@ -17,33 +11,72 @@
 
 # chatgh
 
-ChatTool for github
+`chatgh` provides GitHub pull request, repository permission, token, and GitHub Actions helpers migrated from `chattool gh`. New workflows should use `chatgh` directly; any `chattool gh` entry point is a compatibility concern for ChatTool rather than the primary runtime.
 
 ## 快速开始
 
 ```bash
 pip install -e ".[dev]"
-chatgh hello ChatArch
+chatgh --help
+chatgh pr --help
 python -m pytest -q
-python -m build
 ```
 
-## CLI 规范
+## 常用流程
 
-这个模板默认依赖 `chatstyle>=0.1.0` 和 `chatenv>=0.1.1`，新的命令应优先使用：
+创建 PR：
 
-- `CommandSchema` / `CommandField` 描述输入。
-- `add_interactive_option()` 提供统一 `-i/-I`。
-- `resolve_command_inputs()` 统一缺参补问、默认值、TTY 与校验。
+```bash
+chatgh pr create --repo OWNER/REPO --base main --head feature-branch --title "Update docs" --body-file pr-body.md --token "$GITHUB_ACCESS_TOKEN"
+```
 
-## 目录结构
+查看 PR：
 
-- `src/`：包源码
-- `tests/code-tests/`：代码测试和历史测试迁移
-- `tests/cli-tests/`：真实 CLI 测试，doc-first
-- `tests/mock-cli-tests/`：mock/fake CLI 测试，doc-first
-- `docs/`：长期维护文档，由 mkdocs 构建
+```bash
+chatgh pr list --repo OWNER/REPO --state open
+chatgh pr view --repo OWNER/REPO --number 123
+```
 
-## 开发说明
+等待 CI：
 
-扩展脚手架前，先阅读 `DEVELOP.md` 和 `AGENTS.md`。
+```bash
+chatgh pr checks --repo OWNER/REPO --number 123 --wait --interval 15 --timeout 600
+chatgh pr checks --repo OWNER/REPO --number 123 --json-output
+```
+
+查看 workflow run 和 job logs：
+
+```bash
+chatgh run view --repo OWNER/REPO --run-id 123456789
+chatgh run logs --repo OWNER/REPO --job-id 987654321 --tail 200
+chatgh run logs --repo OWNER/REPO --job-id 987654321 --output job.log
+```
+
+配置 token：
+
+```bash
+chatgh repo-perms --repo OWNER/REPO --json-output
+chatgh set-token --token "$GITHUB_ACCESS_TOKEN"
+chatgh set-token --token "$GITHUB_ACCESS_TOKEN" --save-env
+```
+
+Token 解析顺序保持为显式 `--token`、仓库级 git credential、typed env 中的 `GITHUB_ACCESS_TOKEN`。缺少可恢复参数时，命令通过 `chatstyle` 支持默认交互补全；`-I/--no-interactive` 会禁用交互并返回清晰错误。
+
+## Python API
+
+```python
+from chatgh.github.client import GitHubClient
+
+client = GitHubClient(user_name="octocat", token="ghp_...")
+prs = client.get_pull_requests("Hello-World")
+```
+
+底层模块也可按需导入：`chatgh.github.api`、`chatgh.github.commands`、`chatgh.github.requests`、`chatgh.github.render`。
+
+## 开发
+
+```bash
+python -m pytest -q
+```
+
+真实 GitHub API 调用不属于默认本地验收；默认测试使用 mock/fake payload，避免污染真实 git credential 或 env 配置。
