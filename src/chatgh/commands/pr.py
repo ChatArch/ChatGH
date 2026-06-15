@@ -1,7 +1,7 @@
-"""chatgh pr — pull request commands backed by the generated API layer.
+"""chatgh pr — pull request commands with gh-style arguments.
 
-Imports of heavy modules (_generated.api.*, _generated.models.*) are deferred
-to function bodies so that `chatgh --help` stays fast.
+Heavy GitHub helpers are imported inside command callbacks so that
+`chatgh --help` stays fast.
 """
 
 from __future__ import annotations
@@ -34,7 +34,7 @@ PR_NUMBER_SCHEMA = CommandSchema(
 
 @click.group(name="pr")
 def pr_group() -> None:
-    """Pull request helpers (generated API layer)."""
+    """Pull request helpers."""
 
 
 # ── list ──────────────────────────────────────────────────────────────────────
@@ -47,24 +47,19 @@ def pr_group() -> None:
 @click.option("--token", default=None)
 def pr_list(repo: str | None, state: str, limit: int, json_output: bool, token: str | None) -> None:
     """List pull requests."""
-    # lazy imports — only loaded when this command actually runs
-    from chatgh._generated.api.pulls import pulls_list
-    from chatgh.adapters.client import make_client
+    from chatgh.github.commands import list_prs
+    from chatgh.github.render import echo_pr_list
 
-    owner, name = _resolve_repo(repo)
-    client = make_client(token)
-    prs = pulls_list(client, owner, name, state=state, per_page=min(limit, 100))
+    prs = list_prs(repo, state, limit, token)
 
     if json_output:
-        click.echo(json.dumps([_pr_to_dict(pr) for pr in prs], ensure_ascii=False, indent=2))
+        click.echo(json.dumps(prs, ensure_ascii=False, indent=2, default=str))
         return
 
     if not prs:
         click.echo("No pull requests found.")
         return
-    for pr in prs:
-        draft = " [draft]" if pr.draft else ""
-        click.echo(f"#{pr.number}\t{pr.state}\t{pr.title}{draft}")
+    echo_pr_list(prs)
 
 
 # ── view ──────────────────────────────────────────────────────────────────────
@@ -77,8 +72,8 @@ def pr_list(repo: str | None, state: str, limit: int, json_output: bool, token: 
 @add_interactive_option
 def pr_view(repo: str | None, number: int | None, json_output: bool, token: str | None, interactive: bool | None) -> None:
     """Show pull request details."""
-    from chatgh._generated.api.pulls import pulls_get
-    from chatgh.adapters.client import make_client
+    from chatgh.github.commands import view_pr
+    from chatgh.github.render import echo_pr_view
 
     inputs = resolve_command_inputs(
         schema=PR_NUMBER_SCHEMA,
@@ -86,21 +81,13 @@ def pr_view(repo: str | None, number: int | None, json_output: bool, token: str 
         interactive=interactive,
         usage="Usage: chatgh pr view NUMBER [--repo TEXT] [-i|-I]",
     )
-    owner, name = _resolve_repo(repo)
-    client = make_client(token)
-    pr = pulls_get(client, owner, name, int(inputs["number"]))
+    payload = view_pr(repo, int(inputs["number"]), token)
 
     if json_output:
-        click.echo(json.dumps(_pr_to_dict(pr), ensure_ascii=False, indent=2))
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
         return
 
-    click.echo(f"#{pr.number} {pr.title}")
-    click.echo(f"State:  {pr.state}")
-    click.echo(f"Author: {pr.user.login if pr.user else 'unknown'}")
-    click.echo(f"Base:   {pr.base.ref} ← {pr.head.ref}")
-    click.echo(f"URL:    {pr.html_url}")
-    if pr.body:
-        click.echo(f"\n{pr.body[:500]}")
+    echo_pr_view(payload)
 
 
 # ── checks ────────────────────────────────────────────────────────────────────
@@ -113,9 +100,8 @@ def pr_view(repo: str | None, number: int | None, json_output: bool, token: str 
 @add_interactive_option
 def pr_checks(repo: str | None, number: int | None, json_output: bool, token: str | None, interactive: bool | None) -> None:
     """Show CI check status for a pull request."""
-    from chatgh._generated.api.checks import checks_list_for_ref
-    from chatgh._generated.api.pulls import pulls_get
-    from chatgh.adapters.client import make_client
+    from chatgh.github.commands import check_pr
+    from chatgh.github.render import echo_pr_checks
 
     inputs = resolve_command_inputs(
         schema=PR_NUMBER_SCHEMA,
@@ -123,27 +109,22 @@ def pr_checks(repo: str | None, number: int | None, json_output: bool, token: st
         interactive=interactive,
         usage="Usage: chatgh pr checks NUMBER [--repo TEXT] [-i|-I]",
     )
-    owner, name = _resolve_repo(repo)
-    client = make_client(token)
-    pr = pulls_get(client, owner, name, int(inputs["number"]))
-    head_sha = pr.head.sha
-
-    result = checks_list_for_ref(client, owner, name, head_sha, per_page=50)
+    payload = check_pr(
+        repo,
+        int(inputs["number"]),
+        check_limit=20,
+        workflow_limit=10,
+        wait_for_completion=False,
+        interval=15,
+        timeout=None,
+        token=token,
+    )
 
     if json_output:
-        runs = getattr(result, "check_runs", result) if result else []
-        click.echo(json.dumps([r.model_dump() if hasattr(r, "model_dump") else r for r in runs], ensure_ascii=False, indent=2, default=str))
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
         return
 
-    runs = getattr(result, "check_runs", []) if result else []
-    if not runs:
-        click.echo("No check runs found.")
-        return
-    for run in runs:
-        status = run.status or ""
-        conclusion = run.conclusion or ""
-        flag = "✓" if conclusion == "success" else ("✗" if conclusion in ("failure", "cancelled") else "·")
-        click.echo(f"  {flag} {run.name}  [{status}/{conclusion}]")
+    echo_pr_checks(payload)
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
