@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-本项目按日期记录更新；正式发版信息另见 `release.log`。
+本项目按日期记录更新；正式发版信息也维护在本文件。
+
+## 2026-06-15
+- 为 `chatrest` generated API layer 补齐 `httpx` 运行依赖，修复 PR #2 CI 中 adapter/client 测试缺少 `httpx` 的失败。
+- 发版记录约定收口为只维护 `CHANGELOG.md`，不再要求额外发版记录文件。
 
 ## 2026-05-14
 - Migrated GitHub PR, CI checks, Actions run/job logs, repository permission, and token configuration helpers into `chatgh`.
