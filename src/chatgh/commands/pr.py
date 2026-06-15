@@ -70,8 +70,8 @@ def pr_list(repo: str | None, state: str, limit: int, json_output: bool, token: 
 # ── view ──────────────────────────────────────────────────────────────────────
 
 @pr_group.command("view")
+@click.argument("number", required=False, type=int)
 @click.option("--repo", default=None)
-@click.option("--number", default=None, type=int)
 @click.option("--json-output", is_flag=True)
 @click.option("--token", default=None)
 @add_interactive_option
@@ -84,7 +84,7 @@ def pr_view(repo: str | None, number: int | None, json_output: bool, token: str 
         schema=PR_NUMBER_SCHEMA,
         provided={"number": number},
         interactive=interactive,
-        usage="Usage: chatgh pr view [--repo TEXT] --number INTEGER [-i|-I]",
+        usage="Usage: chatgh pr view NUMBER [--repo TEXT] [-i|-I]",
     )
     owner, name = _resolve_repo(repo)
     client = make_client(token)
@@ -106,8 +106,8 @@ def pr_view(repo: str | None, number: int | None, json_output: bool, token: str 
 # ── checks ────────────────────────────────────────────────────────────────────
 
 @pr_group.command("checks")
+@click.argument("number", required=False, type=int)
 @click.option("--repo", default=None)
-@click.option("--number", default=None, type=int)
 @click.option("--json-output", is_flag=True)
 @click.option("--token", default=None)
 @add_interactive_option
@@ -121,7 +121,7 @@ def pr_checks(repo: str | None, number: int | None, json_output: bool, token: st
         schema=PR_NUMBER_SCHEMA,
         provided={"number": number},
         interactive=interactive,
-        usage="Usage: chatgh pr checks [--repo TEXT] --number INTEGER [-i|-I]",
+        usage="Usage: chatgh pr checks NUMBER [--repo TEXT] [-i|-I]",
     )
     owner, name = _resolve_repo(repo)
     client = make_client(token)

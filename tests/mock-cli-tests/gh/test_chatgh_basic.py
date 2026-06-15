@@ -30,6 +30,18 @@ def test_chatgh_pr_help_commands(runner):
         assert command in result.output
 
 
+def test_chatgh_generated_pr_uses_positional_number(runner):
+    result = runner.invoke(cli, ["pr", "view", "--help"])
+    assert result.exit_code == 0
+    assert "[NUMBER]" in result.output
+    assert "--number" not in result.output
+
+    result = runner.invoke(cli, ["pr", "checks", "--help"])
+    assert result.exit_code == 0
+    assert "[NUMBER]" in result.output
+    assert "--number" not in result.output
+
+
 def test_chatgh_pr_view_prompts_for_number(monkeypatch, runner):
     monkeypatch.setattr(
         gh_cli,

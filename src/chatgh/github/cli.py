@@ -108,7 +108,7 @@ def pr_create(repo, base, head, title, body, body_file, token, interactive):
         schema=PR_CREATE_SCHEMA,
         provided={"base": base, "head": head, "title": title},
         interactive=interactive,
-        usage="Usage: chatgh pr create [--repo TEXT] --base TEXT --head TEXT --title TEXT [-i|-I]",
+        usage="Usage: chatgh pr-legacy create [--repo TEXT] --base TEXT --head TEXT --title TEXT [-i|-I]",
     )
     if body_file:
         with open(body_file, "r", encoding="utf-8") as handle:
@@ -156,7 +156,7 @@ def pr_view(repo, number, json_output, token, interactive):
         schema=PR_NUMBER_SCHEMA,
         provided={"number": number},
         interactive=interactive,
-        usage="Usage: chatgh pr view [--repo TEXT] --number INTEGER [-i|-I]",
+        usage="Usage: chatgh pr-legacy view [--repo TEXT] --number INTEGER [-i|-I]",
     )
     payload = view_pr(repo, inputs["number"], token)
     if json_output:
@@ -221,7 +221,7 @@ def pr_checks(
         schema=PR_NUMBER_SCHEMA,
         provided={"number": number},
         interactive=interactive,
-        usage="Usage: chatgh pr checks [--repo TEXT] --number INTEGER [-i|-I]",
+        usage="Usage: chatgh pr-legacy checks [--repo TEXT] --number INTEGER [-i|-I]",
     )
     payload = check_pr(
         repo,
@@ -251,7 +251,7 @@ def pr_comment(repo, number, body, token, interactive):
         schema=PR_COMMENT_SCHEMA,
         provided={"number": number, "body": body},
         interactive=interactive,
-        usage="Usage: chatgh pr comment [--repo TEXT] --number INTEGER --body TEXT [-i|-I]",
+        usage="Usage: chatgh pr-legacy comment [--repo TEXT] --number INTEGER --body TEXT [-i|-I]",
     )
     payload = comment_pr(repo, inputs["number"], inputs["body"], token)
     click.echo(f"Comment created: {payload['url']}")
@@ -282,7 +282,7 @@ def pr_merge(repo, number, method, title, message, check_before_merge, token, in
         schema=PR_NUMBER_SCHEMA,
         provided={"number": number},
         interactive=interactive,
-        usage="Usage: chatgh pr merge [--repo TEXT] --number INTEGER [-i|-I]",
+        usage="Usage: chatgh pr-legacy merge [--repo TEXT] --number INTEGER [-i|-I]",
     )
     payload = merge_pr(
         repo,
@@ -316,7 +316,7 @@ def pr_edit(repo, number, title, body, body_file, state, base, token, interactiv
         schema=PR_NUMBER_SCHEMA,
         provided={"number": number},
         interactive=interactive,
-        usage="Usage: chatgh pr edit [--repo TEXT] --number INTEGER [-i|-I]",
+        usage="Usage: chatgh pr-legacy edit [--repo TEXT] --number INTEGER [-i|-I]",
     )
     if body_file:
         with open(body_file, "r", encoding="utf-8") as handle:
