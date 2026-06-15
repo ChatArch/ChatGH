@@ -1,0 +1,6 @@
+# chatrest regen 配置
+# 运行: chatrest regen --config chatrest.toml
+[regen]
+spec = "openapi/api.github.com.json"
+models_output = "src/chatgh/_generated/models/models.py"
+api_output = "src/chatgh/_generated/api/"

@@ -58,13 +58,10 @@ chatgh set-token --help
 
 命令树：
 
-- `chatgh pr create`：创建 PR。
-- `chatgh pr list`：列出 PR。
-- `chatgh pr view`：查看 PR 详情，包括 `mergeable` / `mergeable_state`。
-- `chatgh pr checks`：汇总 PR head commit 的 combined status、check runs 和 workflow runs。
-- `chatgh pr comment`：给 PR 添加评论。
-- `chatgh pr merge`：合并 PR，可用 `--check` 先做 CI/mergeable 强校验。
-- `chatgh pr edit`：更新 PR 标题、正文、状态或 base 分支。
+- `chatgh pr list`：generated-layer PR 列表。
+- `chatgh pr view NUMBER`：generated-layer PR 详情。
+- `chatgh pr checks NUMBER`：generated-layer PR head commit check runs。
+- `chatgh pr-legacy create/comment/merge/edit`：旧手写层的完整 PR 操作，迁移期保留。
 - `chatgh run view`：查看 workflow run 和 jobs。
 - `chatgh run logs`：查看 job 日志，支持 tail 和落盘。
 - `chatgh repo-perms`：查看 token 权限和派生 capabilities。
@@ -99,8 +96,8 @@ chatgh pr create \
 
 ```bash
 chatgh pr list --repo octocat/Hello-World --state open --limit 20
-chatgh pr view --repo octocat/Hello-World --number 123
-chatgh pr view --repo octocat/Hello-World --number 123 --json-output
+chatgh pr view 123 --repo octocat/Hello-World
+chatgh pr view 123 --repo octocat/Hello-World --json-output
 ```
 
 `pr view` 输出会包含：
@@ -113,10 +110,10 @@ chatgh pr view --repo octocat/Hello-World --number 123 --json-output
 ### 查看和等待 CI
 
 ```bash
-chatgh pr checks --repo octocat/Hello-World --number 123
-chatgh pr checks --repo octocat/Hello-World --number 123 --wait
-chatgh pr checks --repo octocat/Hello-World --number 123 --wait --interval 10 --timeout 600
-chatgh pr checks --repo octocat/Hello-World --number 123 --json-output
+chatgh pr checks 123 --repo octocat/Hello-World
+chatgh pr-legacy checks --repo octocat/Hello-World --number 123 --wait
+chatgh pr-legacy checks --repo octocat/Hello-World --number 123 --wait --interval 10 --timeout 600
+chatgh pr checks 123 --repo octocat/Hello-World --json-output
 ```
 
 `pr checks` 按 PR head commit 汇总三层信息：
@@ -149,15 +146,15 @@ chatgh run logs --repo octocat/Hello-World --job-id 987654321 --tail 200 --outpu
 ### 评论、合并和编辑 PR
 
 ```bash
-chatgh pr comment --repo octocat/Hello-World --number 123 --body "Looks good"
+chatgh pr-legacy comment --repo octocat/Hello-World --number 123 --body "Looks good"
 
-chatgh pr merge --repo octocat/Hello-World --number 123 --method squash
-chatgh pr merge --repo octocat/Hello-World --number 123 --method squash --check
+chatgh pr-legacy merge --repo octocat/Hello-World --number 123 --method squash
+chatgh pr-legacy merge --repo octocat/Hello-World --number 123 --method squash --check
 
-chatgh pr edit --repo octocat/Hello-World --number 123 --title "New title"
-chatgh pr edit --repo octocat/Hello-World --number 123 --body-file /tmp/pr_body.md
-chatgh pr edit --repo octocat/Hello-World --number 123 --state closed
-chatgh pr edit --repo octocat/Hello-World --number 123 --base main
+chatgh pr-legacy edit --repo octocat/Hello-World --number 123 --title "New title"
+chatgh pr-legacy edit --repo octocat/Hello-World --number 123 --body-file /tmp/pr_body.md
+chatgh pr-legacy edit --repo octocat/Hello-World --number 123 --state closed
+chatgh pr-legacy edit --repo octocat/Hello-World --number 123 --base main
 ```
 
 `pr merge --check` 会在合并前拒绝以下情况：
@@ -208,7 +205,7 @@ git fetch origin main
 
 - `chatgh pr view` / `chatgh pr checks` 显示 `mergeable` 不是 `False`，`mergeable_state` 不是 `dirty`。
 - 本地基于最新 base 做过 merge 或 rebase 演练，并在该结果上跑过最相关测试。
-- CI 需要终态时用 `chatgh pr checks --wait`，不要只看一次快照。
+- CI 需要终态时用 `chatgh pr-legacy checks --wait`，不要只看一次快照。
 
 ## Python API
 

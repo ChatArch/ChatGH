@@ -58,13 +58,10 @@ chatgh set-token --help
 
 Command tree:
 
-- `chatgh pr create`: create a pull request.
-- `chatgh pr list`: list pull requests.
-- `chatgh pr view`: show PR details including `mergeable` / `mergeable_state`.
-- `chatgh pr checks`: summarize combined status, check runs, and workflow runs for the PR head commit.
-- `chatgh pr comment`: add a PR comment.
-- `chatgh pr merge`: merge a PR; `--check` performs a CI/mergeability guard first.
-- `chatgh pr edit`: update title, body, state, or base branch.
+- `chatgh pr list`: generated-layer PR list.
+- `chatgh pr view NUMBER`: generated-layer PR details.
+- `chatgh pr checks NUMBER`: generated-layer PR head commit check runs.
+- `chatgh pr-legacy create/comment/merge/edit`: full legacy hand-written PR operations kept during migration.
 - `chatgh run view`: show a workflow run and its jobs.
 - `chatgh run logs`: show job logs, with tail and file output support.
 - `chatgh repo-perms`: show token permissions and derived capabilities.
@@ -99,8 +96,8 @@ When `base` / `head` / `title` are missing and the terminal is interactive, the 
 
 ```bash
 chatgh pr list --repo octocat/Hello-World --state open --limit 20
-chatgh pr view --repo octocat/Hello-World --number 123
-chatgh pr view --repo octocat/Hello-World --number 123 --json-output
+chatgh pr view 123 --repo octocat/Hello-World
+chatgh pr view 123 --repo octocat/Hello-World --json-output
 ```
 
 `pr view` output includes:
@@ -113,10 +110,10 @@ chatgh pr view --repo octocat/Hello-World --number 123 --json-output
 ### Inspect And Wait For CI
 
 ```bash
-chatgh pr checks --repo octocat/Hello-World --number 123
-chatgh pr checks --repo octocat/Hello-World --number 123 --wait
-chatgh pr checks --repo octocat/Hello-World --number 123 --wait --interval 10 --timeout 600
-chatgh pr checks --repo octocat/Hello-World --number 123 --json-output
+chatgh pr checks 123 --repo octocat/Hello-World
+chatgh pr-legacy checks --repo octocat/Hello-World --number 123 --wait
+chatgh pr-legacy checks --repo octocat/Hello-World --number 123 --wait --interval 10 --timeout 600
+chatgh pr checks 123 --repo octocat/Hello-World --json-output
 ```
 
 `pr checks` summarizes three layers for the PR head commit:
@@ -149,15 +146,15 @@ chatgh run logs --repo octocat/Hello-World --job-id 987654321 --tail 200 --outpu
 ### Comment, Merge, And Edit PRs
 
 ```bash
-chatgh pr comment --repo octocat/Hello-World --number 123 --body "Looks good"
+chatgh pr-legacy comment --repo octocat/Hello-World --number 123 --body "Looks good"
 
-chatgh pr merge --repo octocat/Hello-World --number 123 --method squash
-chatgh pr merge --repo octocat/Hello-World --number 123 --method squash --check
+chatgh pr-legacy merge --repo octocat/Hello-World --number 123 --method squash
+chatgh pr-legacy merge --repo octocat/Hello-World --number 123 --method squash --check
 
-chatgh pr edit --repo octocat/Hello-World --number 123 --title "New title"
-chatgh pr edit --repo octocat/Hello-World --number 123 --body-file /tmp/pr_body.md
-chatgh pr edit --repo octocat/Hello-World --number 123 --state closed
-chatgh pr edit --repo octocat/Hello-World --number 123 --base main
+chatgh pr-legacy edit --repo octocat/Hello-World --number 123 --title "New title"
+chatgh pr-legacy edit --repo octocat/Hello-World --number 123 --body-file /tmp/pr_body.md
+chatgh pr-legacy edit --repo octocat/Hello-World --number 123 --state closed
+chatgh pr-legacy edit --repo octocat/Hello-World --number 123 --base main
 ```
 
 `pr merge --check` refuses to merge when:
@@ -208,7 +205,7 @@ Then confirm:
 
 - `chatgh pr view` / `chatgh pr checks` do not show `mergeable=False` or `mergeable_state=dirty`.
 - You have locally merged or rebased against the latest base and run the most relevant tests on that result.
-- Use `chatgh pr checks --wait` when you need a terminal CI result; do not rely on a one-shot snapshot.
+- Use `chatgh pr-legacy checks --wait` when you need a terminal CI result; do not rely on a one-shot snapshot.
 
 ## Python API
 

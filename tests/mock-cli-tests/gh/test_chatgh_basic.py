@@ -24,10 +24,22 @@ def test_chatgh_help_commands(runner):
 
 
 def test_chatgh_pr_help_commands(runner):
-    result = runner.invoke(cli, ["pr", "--help"])
+    result = runner.invoke(cli, ["pr-legacy", "--help"])
     assert result.exit_code == 0
-    for command in ["create", "list", "view", "checks", "comment", "merge", "edit"]:
+    for command in ["list", "view", "checks"]:
         assert command in result.output
+
+
+def test_chatgh_generated_pr_uses_positional_number(runner):
+    result = runner.invoke(cli, ["pr", "view", "--help"])
+    assert result.exit_code == 0
+    assert "[NUMBER]" in result.output
+    assert "--number" not in result.output
+
+    result = runner.invoke(cli, ["pr", "checks", "--help"])
+    assert result.exit_code == 0
+    assert "[NUMBER]" in result.output
+    assert "--number" not in result.output
 
 
 def test_chatgh_pr_view_prompts_for_number(monkeypatch, runner):
@@ -55,7 +67,7 @@ def test_chatgh_pr_view_prompts_for_number(monkeypatch, runner):
         lambda message, default="", password=False, style=None: "138",
     )
 
-    result = runner.invoke(cli, ["pr", "view"], catch_exceptions=False)
+    result = runner.invoke(cli, ["pr-legacy", "view"], catch_exceptions=False)
 
     assert result.exit_code == 0
     assert "#138 [open] Improve setup and CI visibility" in result.output
@@ -78,7 +90,7 @@ def test_chatgh_pr_create_prompts_for_missing_fields(monkeypatch, runner):
         lambda message, default="", password=False, style=None: answers[message],
     )
 
-    result = runner.invoke(cli, ["pr", "create"], catch_exceptions=False)
+    result = runner.invoke(cli, ["pr-legacy", "create"], catch_exceptions=False)
 
     assert result.exit_code == 0
     assert created == {
@@ -104,7 +116,7 @@ def test_chatgh_pr_comment_prompts_for_inputs(monkeypatch, runner):
         lambda message, default="", password=False, style=None: answers[message],
     )
 
-    result = runner.invoke(cli, ["pr", "comment"], catch_exceptions=False)
+    result = runner.invoke(cli, ["pr-legacy", "comment"], catch_exceptions=False)
 
     assert result.exit_code == 0
     assert created == {"number": 138, "body": "LGTM"}
@@ -130,7 +142,7 @@ def test_chatgh_pr_merge_prompts_for_number(monkeypatch, runner):
         lambda message, default="", password=False, style=None: "138",
     )
 
-    result = runner.invoke(cli, ["pr", "merge"], catch_exceptions=False)
+    result = runner.invoke(cli, ["pr-legacy", "merge"], catch_exceptions=False)
 
     assert result.exit_code == 0
     assert merge_calls == [{"number": 138, "method": "merge", "check": False}]
@@ -208,7 +220,7 @@ def test_chatgh_run_logs_prompts_for_job_id(monkeypatch, runner):
 
 
 def test_chatgh_required_commands_error_with_no_interaction(runner):
-    result = runner.invoke(cli, ["pr", "view", "-I"])
+    result = runner.invoke(cli, ["pr-legacy", "view", "-I"])
 
     assert result.exit_code != 0
     assert "Missing required value: number" in result.output
@@ -248,7 +260,7 @@ def test_chatgh_pr_checks_forwards_wait(monkeypatch, runner):
 
     result = runner.invoke(
         cli,
-        ["pr", "checks", "--number", "138", "--wait", "--interval", "10", "--timeout", "600"],
+        ["pr-legacy", "checks", "--number", "138", "--wait", "--interval", "10", "--timeout", "600"],
     )
 
     assert result.exit_code == 0
@@ -266,7 +278,7 @@ def test_chatgh_pr_merge_forwards_check(monkeypatch, runner):
         or {"url": "https://github.com/CubeNLP/ChatTool/pull/138"},
     )
 
-    result = runner.invoke(cli, ["pr", "merge", "--number", "138", "--check"])
+    result = runner.invoke(cli, ["pr-legacy", "merge", "--number", "138", "--check"])
 
     assert result.exit_code == 0
     assert called == {"number": 138, "method": "merge", "check": True}
