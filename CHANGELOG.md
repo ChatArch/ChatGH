@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 本项目按日期记录更新；正式发版信息也维护在本文件。
 
 ## 2026-06-15
+- 准备 `0.2.0` 版本：`chattool pypi probe chatgh` 确认 PyPI 最新 `chatgh` 为 `0.1.0` 后，按 minor bump 将包版本提升到 `0.2.0`。
 - 为 `chatrest` generated API layer 补齐 `httpx` 运行依赖，修复 PR #2 CI 中 adapter/client 测试缺少 `httpx` 的失败。
 - 发版记录约定收口为只维护 `CHANGELOG.md`，不再要求额外发版记录文件。
 
