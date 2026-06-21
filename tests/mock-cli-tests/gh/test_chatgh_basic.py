@@ -127,17 +127,83 @@ def test_chatgh_repo_help_commands(runner):
 
 
 def test_chatgh_repo_list_renders_json(monkeypatch, runner):
+    captured = {}
+
+    def fake_list(owner, limit, sort, direction, token):
+        captured.update({"owner": owner, "limit": limit, "sort": sort, "direction": direction})
+        return [
+            {
+                "full_name": f"{owner}/ChatBlog",
+                "visibility": "private",
+                "private": True,
+                "stars": 7,
+                "open_prs": 2,
+                "open_issues": 3,
+                "updated_at": "2026-06-21T10:00:00+00:00",
+                "created_at": "2026-06-01T10:00:00+00:00",
+                "html_url": "https://github.com/ChatArch/ChatBlog",
+            }
+        ]
+
     monkeypatch.setattr(
         "chatgh.github.cli.list_repos",
-        lambda owner, limit, token: [
-            {"full_name": f"{owner}/ChatBlog", "private": True, "html_url": "https://github.com/ChatArch/ChatBlog"}
+        fake_list,
+    )
+
+    result = runner.invoke(
+        cli,
+        [
+            "repo",
+            "list",
+            "--owner",
+            "ChatArch",
+            "--limit",
+            "5",
+            "--sort",
+            "created",
+            "--direction",
+            "asc",
+            "--json-output",
         ],
     )
 
-    result = runner.invoke(cli, ["repo", "list", "--owner", "ChatArch", "--json-output"])
-
     assert result.exit_code == 0
     assert '"full_name": "ChatArch/ChatBlog"' in result.output
+    assert '"open_prs": 2' in result.output
+    assert captured == {
+        "owner": "ChatArch",
+        "limit": 5,
+        "sort": "created",
+        "direction": "asc",
+    }
+
+
+def test_chatgh_repo_list_renders_table(monkeypatch, runner):
+    monkeypatch.setattr(
+        "chatgh.github.cli.list_repos",
+        lambda owner, limit, sort, direction, token: [
+            {
+                "full_name": f"{owner}/ChatBlog",
+                "visibility": "private",
+                "stars": 7,
+                "open_prs": 2,
+                "open_issues": 3,
+                "updated_at": "2026-06-21T10:00:00+00:00",
+                "created_at": "2026-06-01T10:00:00+00:00",
+            }
+        ],
+    )
+
+    result = runner.invoke(cli, ["repo", "list", "--owner", "ChatArch"])
+
+    assert result.exit_code == 0
+    assert "repo" in result.output
+    assert "vis" in result.output
+    assert "stars" in result.output
+    assert "prs" in result.output
+    assert "issues" in result.output
+    assert "ChatArch/ChatBlog" in result.output
+    assert "private" in result.output
 
 
 def test_chatgh_repo_create_defaults_private(monkeypatch, runner):

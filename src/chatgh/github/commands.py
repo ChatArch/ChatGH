@@ -45,10 +45,16 @@ def resolve_repo_and_credential_path(repo: Optional[str]) -> tuple[str, Credenti
     return resolve_repo_from_git_remote()
 
 
-def list_repos(owner: str, limit: int, token: Optional[str]) -> list[dict]:
+def list_repos(
+    owner: str,
+    limit: int,
+    sort: str,
+    direction: str,
+    token: Optional[str],
+) -> list[dict]:
     credential_path = credential_path_from_repo(f"{owner}/_")
     client = get_client(token, require_token=True, credential_path=credential_path)
-    return get_repo_list(client, owner, limit)
+    return get_repo_list(client, owner, limit, sort, direction)
 
 
 def create_repo(

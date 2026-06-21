@@ -52,17 +52,54 @@ def repo_group() -> None:
 @repo_group.command(name="list")
 @click.option("--owner", required=True, help="GitHub owner or organization.")
 @click.option("--limit", default=50, type=click.IntRange(min=1), show_default=True)
+@click.option(
+    "--sort",
+    type=click.Choice(["updated", "created", "pushed", "name", "stars", "open-prs", "open-issues"]),
+    default="updated",
+    show_default=True,
+    help="Sort repositories before applying --limit.",
+)
+@click.option("--direction", type=click.Choice(["asc", "desc"]), default="desc", show_default=True)
 @click.option("--json-output", is_flag=True, help="Output JSON.")
 @click.option("--token", default=None, help="GitHub token.")
-def repo_list(owner, limit, json_output, token):
+def repo_list(owner, limit, sort, direction, json_output, token):
     """List repositories for an owner or organization."""
-    payload = list_repos(owner, limit, token)
+    payload = list_repos(owner, limit, sort, direction, token)
     if json_output:
         click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
         return
-    for item in payload:
-        private = "private" if item.get("private") else "public"
-        click.echo(f"{item['full_name']} ({private})")
+    _echo_repo_table(payload)
+
+
+def _echo_repo_table(items: list[dict]) -> None:
+    columns = [
+        ("repo", "full_name"),
+        ("vis", "visibility"),
+        ("stars", "stars"),
+        ("prs", "open_prs"),
+        ("issues", "open_issues"),
+        ("updated", "updated_at"),
+        ("created", "created_at"),
+    ]
+    rows = []
+    for item in items:
+        row = []
+        for _, key in columns:
+            value = item.get(key)
+            if key.endswith("_at"):
+                value = str(value or "")[:10]
+            row.append(str(value if value is not None else ""))
+        rows.append(row)
+    widths = [len(label) for label, _ in columns]
+    for row in rows:
+        for index, value in enumerate(row):
+            widths[index] = min(max(widths[index], len(value)), 48)
+    header = "  ".join(label.ljust(widths[index]) for index, (label, _) in enumerate(columns))
+    click.echo(header)
+    click.echo("  ".join("-" * width for width in widths))
+    for row in rows:
+        clipped = [value[: widths[index]] for index, value in enumerate(row)]
+        click.echo("  ".join(value.ljust(widths[index]) for index, value in enumerate(clipped)))
 
 
 @repo_group.command(name="create")
