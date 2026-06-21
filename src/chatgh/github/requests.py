@@ -84,7 +84,7 @@ def _get_owner(client, owner: str):
 def _build_repo_payload(repo) -> dict:
     open_prs = _safe_count(lambda: repo.get_pulls(state="open"))
     open_issues_reported = int(getattr(repo, "open_issues_count", 0) or 0)
-    open_issues = max(open_issues_reported - open_prs, 0)
+    open_issues = max(open_issues_reported - open_prs, 0) if open_prs is not None else None
     return {
         "name": repo.name,
         "full_name": repo.full_name,
@@ -108,11 +108,11 @@ def _build_repo_payload(repo) -> dict:
     }
 
 
-def _safe_count(factory) -> int:
+def _safe_count(factory) -> Optional[int]:
     try:
         return int(factory().totalCount)
     except Exception:
-        return 0
+        return None
 
 
 def _repo_sort_key(item: dict, sort: str):
@@ -130,7 +130,10 @@ def _repo_sort_key(item: dict, sort: str):
 def _parse_time(value: Optional[str]) -> datetime:
     if not value:
         return datetime.min.replace(tzinfo=timezone.utc)
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed
 
 
 def get_pr_checks(

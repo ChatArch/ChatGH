@@ -51,6 +51,7 @@ When writing repo-scoped credentials, the credential path is normalized to `octo
 ```bash
 chatgh --help
 chatgh pr --help
+chatgh repo --help
 chatgh run --help
 chatgh repo-perms --help
 chatgh set-token --help
@@ -61,7 +62,9 @@ Command tree:
 - `chatgh pr list`: generated-layer PR list.
 - `chatgh pr view NUMBER`: generated-layer PR details.
 - `chatgh pr checks NUMBER`: generated-layer PR head commit check runs.
-- `chatgh pr create/comment/merge/edit`: pull request create, comment, merge, and edit operations.
+- `chatgh repo list`: list repositories for a user/org; defaults to table output and supports `--json-output`, `--limit`, `--sort updated|created|pushed|name|stars|open-prs|open-issues`, and `--direction asc|desc`, with visibility, stars, open PRs/issues, and timestamps.
+- `chatgh repo create`: create a repository; defaults to private and supports `--public`.
+- The public `chatgh pr` command surface currently includes only `list/view/checks`; PR create/comment/merge/edit workflows remain available as internal helpers and are not documented as stable CLI commands until restored.
 - `chatgh run view`: show a workflow run and its jobs.
 - `chatgh run logs`: show job logs, with tail and file output support.
 - `chatgh repo-perms`: show token permissions and derived capabilities.
@@ -71,26 +74,7 @@ Command tree:
 
 ### Create A PR
 
-Prefer `--body-file` so shell quoting does not damage Markdown:
-
-```bash
-cat > /tmp/pr_body.md <<'EOF'
-## Summary
-- migrate GitHub helpers to chatgh
-
-## Testing
-- python -m pytest -q
-EOF
-
-chatgh pr create \
-  --repo octocat/Hello-World \
-  --base main \
-  --head feature-branch \
-  --title "feat: migrate github helpers" \
-  --body-file /tmp/pr_body.md
-```
-
-When `base` / `head` / `title` are missing and the terminal is interactive, the command prompts for them. Explicit `-I` disables prompts.
+The current version does not expose a public `chatgh pr create` CLI command. Use the existing project GitHub workflow or the GitHub API for PR creation until write commands are restored as a stable CLI surface.
 
 ### View PRs
 
@@ -107,12 +91,10 @@ chatgh pr view 123 --repo octocat/Hello-World --json-output
 - `mergeable` and `mergeable_state`.
 - created/updated/merged timestamps.
 
-### Inspect And Wait For CI
+### Inspect CI
 
 ```bash
 chatgh pr checks 123 --repo octocat/Hello-World
-chatgh pr checks --repo octocat/Hello-World --number 123 --wait
-chatgh pr checks --repo octocat/Hello-World --number 123 --wait --interval 10 --timeout 600
 chatgh pr checks 123 --repo octocat/Hello-World --json-output
 ```
 
@@ -122,11 +104,7 @@ chatgh pr checks 123 --repo octocat/Hello-World --json-output
 - check runs
 - workflow runs
 
-`--wait` keeps polling until statuses, check runs, and workflow runs finish:
-
-- No timeout by default.
-- `--interval <seconds>` controls polling interval.
-- Only explicit `--timeout <seconds>` enables timeout failure.
+The public CLI currently does not expose `--wait` / `--interval` / `--timeout`; when a terminal CI result is needed, poll `chatgh pr checks` from the surrounding workflow.
 
 If the GitHub token cannot access the check-runs API, the command stores that error in the payload while still showing combined status and workflow runs when available.
 
@@ -145,25 +123,7 @@ chatgh run logs --repo octocat/Hello-World --job-id 987654321 --tail 200 --outpu
 
 ### Comment, Merge, And Edit PRs
 
-```bash
-chatgh pr comment --repo octocat/Hello-World --number 123 --body "Looks good"
-
-chatgh pr merge --repo octocat/Hello-World --number 123 --method squash
-chatgh pr merge --repo octocat/Hello-World --number 123 --method squash --check
-
-chatgh pr edit --repo octocat/Hello-World --number 123 --title "New title"
-chatgh pr edit --repo octocat/Hello-World --number 123 --body-file /tmp/pr_body.md
-chatgh pr edit --repo octocat/Hello-World --number 123 --state closed
-chatgh pr edit --repo octocat/Hello-World --number 123 --base main
-```
-
-`pr merge --check` refuses to merge when:
-
-- The PR is currently `mergeable=False`.
-- `mergeable_state` is `dirty`, `blocked`, `behind`, `draft`, or `unknown`.
-- combined status, check runs, or workflow runs have failed, cancelled, or incomplete items.
-
-Without `--check`, the command keeps the direct GitHub merge API behavior.
+The current version does not expose public `chatgh pr comment/merge/edit` CLI commands. The workflow functions remain in `chatgh.github.commands`; use the existing project workflow or GitHub API until these write commands are restored as a stable CLI surface.
 
 ### Configure And Inspect Tokens
 
@@ -205,7 +165,7 @@ Then confirm:
 
 - `chatgh pr view` / `chatgh pr checks` do not show `mergeable=False` or `mergeable_state=dirty`.
 - You have locally merged or rebased against the latest base and run the most relevant tests on that result.
-- Use `chatgh pr checks --wait` when you need a terminal CI result; do not rely on a one-shot snapshot.
+- Poll `chatgh pr checks` from the surrounding workflow when you need a terminal CI result; do not rely on a one-shot snapshot.
 
 ## Python API
 
