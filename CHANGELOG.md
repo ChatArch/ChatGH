@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 本项目按日期记录更新；正式发版信息也维护在本文件。
 
 ## 2026-06-15
+- 移除外露 `pr-legacy` 迁移入口：`chatgh` 顶层只保留任务导向的 `pr`、`run`、`repo-perms`、`set-token`；旧 PR 兼容命令不再作为 CLI surface 维护，文档与测试同步收敛到 `chatgh pr ...`。
 - 准备 `0.2.1` 补丁版本：`chatgh pr list/view/checks` 默认命令不再引用缺失的 generated API 模块，先复用已验证的 GitHub helper 层，保留 `chatgh pr view NUMBER` / `chatgh pr checks NUMBER` 命令面。
 - 准备 `0.2.0` 版本：`chattool pypi probe chatgh` 确认 PyPI 最新 `chatgh` 为 `0.1.0` 后，按 minor bump 将包版本提升到 `0.2.0`。
 - 为 `chatrest` generated API layer 补齐 `httpx` 运行依赖，修复 PR #2 CI 中 adapter/client 测试缺少 `httpx` 的失败。

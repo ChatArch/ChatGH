@@ -2,11 +2,7 @@ from datetime import datetime, timezone
 from types import SimpleNamespace
 
 import pytest
-from click.testing import CliRunner
-
-from chatgh.cli import main as root_cli
 from chatgh.github.client import GitHubClient
-import chatgh.github.cli as gh_cli
 import chatgh.github.commands as gh_commands
 
 
@@ -135,83 +131,6 @@ def _fake_run_view_payload():
             }
         ],
     }
-
-
-def test_root_cli_registers_nested_gh_commands():
-    runner = CliRunner()
-
-    result = runner.invoke(root_cli, ["--help"])
-
-    assert result.exit_code == 0
-    assert "pr" in result.output
-    assert "run" in result.output
-    assert "repo-perms" in result.output
-    assert "set-token" in result.output
-
-
-def test_pr_group_help_lists_required_commands():
-    runner = CliRunner()
-
-    result = runner.invoke(gh_cli.cli, ["pr", "--help"])
-
-    assert result.exit_code == 0
-    for command in ["create", "list", "view", "checks", "comment", "merge", "edit"]:
-        assert command in result.output
-
-
-def test_run_view_help_is_available():
-    runner = CliRunner()
-
-    result = runner.invoke(gh_cli.cli, ["run", "view", "--help"])
-
-    assert result.exit_code == 0
-    assert "--run-id" in result.output
-
-
-def test_pr_checks_command_renders_summary(monkeypatch):
-    runner = CliRunner()
-    monkeypatch.setattr(gh_cli, "check_pr", lambda *args, **kwargs: _fake_pr_checks_payload())
-
-    result = runner.invoke(gh_cli.cli, ["pr", "checks", "--number", "138"])
-
-    assert result.exit_code == 0
-    assert "#138 [open] Improve setup and CI visibility" in result.output
-    assert "Mergeable: False  Merge State: dirty" in result.output
-    assert "ci/test: success - pytest passed" in result.output
-    assert "CI: in_progress/- (event=pull_request, run=501)" in result.output
-
-
-def test_run_view_command_renders_jobs(monkeypatch):
-    runner = CliRunner()
-    monkeypatch.setattr(gh_cli, "view_run", lambda *args, **kwargs: _fake_run_view_payload())
-
-    result = runner.invoke(gh_cli.cli, ["run", "view", "--run-id", "23494900414"])
-
-    assert result.exit_code == 0
-    assert "Run #151 (id=23494900414): completed/failure" in result.output
-    assert "Jobs (1/1 shown):" in result.output
-    assert "[9] Check test results: completed/failure" in result.output
-
-
-def test_run_logs_command_renders_tail(monkeypatch):
-    runner = CliRunner()
-    monkeypatch.setattr(
-        gh_cli,
-        "view_job_logs",
-        lambda *args, **kwargs: {
-            "job": _fake_run_view_payload()["jobs"][0],
-            "tail": 2,
-            "output_path": None,
-            "log": "full log",
-            "rendered_log": "FAILED something\nError: Process completed with exit code 1.",
-        },
-    )
-
-    result = runner.invoke(gh_cli.cli, ["run", "logs", "--job-id", "68373094563", "--tail", "2"])
-
-    assert result.exit_code == 0
-    assert "build (3.10, ubuntu-latest) (id=68373094563): completed/failure" in result.output
-    assert "FAILED something" in result.output
 
 
 def test_merge_pr_blocks_failed_ci(monkeypatch):

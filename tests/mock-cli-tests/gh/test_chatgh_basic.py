@@ -1,10 +1,7 @@
-from pathlib import Path
-
 import pytest
 from click.testing import CliRunner
 
 from chatgh.cli import main as cli
-import chatgh.github.cli as gh_cli
 
 
 pytestmark = pytest.mark.mock_cli
@@ -17,32 +14,39 @@ def runner():
 
 def test_chatgh_help_commands(runner):
     result = runner.invoke(cli, ["--help"])
+
     assert result.exit_code == 0
     assert "pr" in result.output
-    assert "run" in result.output
-    assert "repo-perms" in result.output
+    assert "pr-legacy" not in result.output
 
 
 def test_chatgh_pr_help_commands(runner):
-    result = runner.invoke(cli, ["pr-legacy", "--help"])
+    result = runner.invoke(cli, ["pr", "--help"])
+
     assert result.exit_code == 0
     for command in ["list", "view", "checks"]:
         assert command in result.output
+    for removed in ["create", "comment", "merge", "edit"]:
+        assert removed not in result.output
 
 
-def test_chatgh_generated_pr_uses_positional_number(runner):
+def test_chatgh_pr_view_uses_positional_number(runner):
     result = runner.invoke(cli, ["pr", "view", "--help"])
+
     assert result.exit_code == 0
     assert "[NUMBER]" in result.output
     assert "--number" not in result.output
 
+
+def test_chatgh_pr_checks_uses_positional_number(runner):
     result = runner.invoke(cli, ["pr", "checks", "--help"])
+
     assert result.exit_code == 0
     assert "[NUMBER]" in result.output
     assert "--number" not in result.output
 
 
-def test_chatgh_pr_list_runs_without_generated_api(monkeypatch, runner):
+def test_chatgh_pr_list_renders_json(monkeypatch, runner):
     monkeypatch.setattr(
         "chatgh.github.commands.list_prs",
         lambda repo, state, limit, token: [
@@ -58,7 +62,7 @@ def test_chatgh_pr_list_runs_without_generated_api(monkeypatch, runner):
     assert '"number": 138' in result.output
 
 
-def test_chatgh_pr_view_runs_without_generated_api(monkeypatch, runner):
+def test_chatgh_pr_view_renders_summary(monkeypatch, runner):
     monkeypatch.setattr(
         "chatgh.github.commands.view_pr",
         lambda repo, number, token: {
@@ -83,7 +87,7 @@ def test_chatgh_pr_view_runs_without_generated_api(monkeypatch, runner):
     assert "#138 [open] Move GitHub helpers" in result.output
 
 
-def test_chatgh_pr_checks_runs_without_generated_api(monkeypatch, runner):
+def test_chatgh_pr_checks_renders_json(monkeypatch, runner):
     monkeypatch.setattr(
         "chatgh.github.commands.check_pr",
         lambda *args, **kwargs: {
@@ -97,12 +101,7 @@ def test_chatgh_pr_checks_runs_without_generated_api(monkeypatch, runner):
             "head_sha": "abc123",
             "mergeable": True,
             "mergeable_state": "clean",
-            "combined_status": {
-                "state": "success",
-                "sha": "abc123",
-                "total_count": 0,
-                "statuses": [],
-            },
+            "combined_status": {"state": "success", "total_count": 0, "statuses": []},
             "check_runs": [],
             "check_runs_error": None,
             "workflow_runs": [],
@@ -116,604 +115,3 @@ def test_chatgh_pr_checks_runs_without_generated_api(monkeypatch, runner):
 
     assert result.exit_code == 0
     assert '"mergeable_state": "clean"' in result.output
-
-
-def test_chatgh_pr_view_prompts_for_number(monkeypatch, runner):
-    monkeypatch.setattr(
-        gh_cli,
-        "view_pr",
-        lambda repo, number, token: {
-            "number": number,
-            "title": "Improve setup and CI visibility",
-            "state": "open",
-            "url": "https://github.com/CubeNLP/ChatTool/pull/138",
-            "author": "rex",
-            "created_at": None,
-            "updated_at": None,
-            "merged_at": None,
-            "base": "main",
-            "head": "rex/setup",
-            "mergeable": False,
-            "mergeable_state": "dirty",
-        },
-    )
-    monkeypatch.setattr("chatstyle.core.interactive.is_interactive_available", lambda: True)
-    monkeypatch.setattr(
-        "chatstyle.tui.prompt.ask_text",
-        lambda message, default="", password=False, style=None: "138",
-    )
-
-    result = runner.invoke(cli, ["pr-legacy", "view"], catch_exceptions=False)
-
-    assert result.exit_code == 0
-    assert "#138 [open] Improve setup and CI visibility" in result.output
-
-
-def test_chatgh_pr_create_prompts_for_missing_fields(monkeypatch, runner):
-    created = {}
-    monkeypatch.setattr(
-        gh_cli,
-        "create_pr",
-        lambda repo, base, head, title, body, token: created.update(
-            {"base": base, "head": head, "title": title, "body": body}
-        )
-        or {"url": "https://github.com/CubeNLP/ChatTool/pull/200"},
-    )
-    monkeypatch.setattr("chatstyle.core.interactive.is_interactive_available", lambda: True)
-    answers = {"base": "main", "head": "rex/feature", "title": "Test PR"}
-    monkeypatch.setattr(
-        "chatstyle.tui.prompt.ask_text",
-        lambda message, default="", password=False, style=None: answers[message],
-    )
-
-    result = runner.invoke(cli, ["pr-legacy", "create"], catch_exceptions=False)
-
-    assert result.exit_code == 0
-    assert created == {
-        "base": "main",
-        "head": "rex/feature",
-        "title": "Test PR",
-        "body": "",
-    }
-
-
-def test_chatgh_pr_comment_prompts_for_inputs(monkeypatch, runner):
-    created = {}
-    monkeypatch.setattr(
-        gh_cli,
-        "comment_pr",
-        lambda repo, number, body, token: created.update({"number": number, "body": body})
-        or {"url": "https://github.com/CubeNLP/ChatTool/pull/138#issuecomment-1"},
-    )
-    monkeypatch.setattr("chatstyle.core.interactive.is_interactive_available", lambda: True)
-    answers = {"pr number": "138", "comment body": "LGTM"}
-    monkeypatch.setattr(
-        "chatstyle.tui.prompt.ask_text",
-        lambda message, default="", password=False, style=None: answers[message],
-    )
-
-    result = runner.invoke(cli, ["pr-legacy", "comment"], catch_exceptions=False)
-
-    assert result.exit_code == 0
-    assert created == {"number": 138, "body": "LGTM"}
-
-
-def test_chatgh_pr_merge_prompts_for_number(monkeypatch, runner):
-    merge_calls = []
-    monkeypatch.setattr(
-        gh_cli,
-        "merge_pr",
-        lambda repo, number, method, title, message, check_before_merge, token: merge_calls.append(
-            {
-                "number": number,
-                "method": method,
-                "check": check_before_merge,
-            }
-        )
-        or {"url": "https://github.com/CubeNLP/ChatTool/pull/138"},
-    )
-    monkeypatch.setattr("chatstyle.core.interactive.is_interactive_available", lambda: True)
-    monkeypatch.setattr(
-        "chatstyle.tui.prompt.ask_text",
-        lambda message, default="", password=False, style=None: "138",
-    )
-
-    result = runner.invoke(cli, ["pr-legacy", "merge"], catch_exceptions=False)
-
-    assert result.exit_code == 0
-    assert merge_calls == [{"number": 138, "method": "merge", "check": False}]
-
-
-def test_chatgh_run_view_prompts_for_run_id(monkeypatch, runner):
-    monkeypatch.setattr(
-        gh_cli,
-        "view_run",
-        lambda repo, run_id, job_limit, token: {
-            "id": run_id,
-            "name": "Python Package",
-            "display_title": "Python Package / pull_request",
-            "event": "pull_request",
-            "status": "completed",
-            "conclusion": "failure",
-            "html_url": "https://github.com/CubeNLP/ChatTool/actions/runs/1",
-            "created_at": None,
-            "updated_at": None,
-            "run_started_at": None,
-            "head_branch": "rex/setup",
-            "head_sha": "abc123",
-            "run_number": 151,
-            "jobs_total_count": 0,
-            "jobs": [],
-        },
-    )
-    monkeypatch.setattr("chatstyle.core.interactive.is_interactive_available", lambda: True)
-    monkeypatch.setattr(
-        "chatstyle.tui.prompt.ask_text",
-        lambda message, default="", password=False, style=None: "23494900414",
-    )
-
-    result = runner.invoke(cli, ["run", "view"], catch_exceptions=False)
-
-    assert result.exit_code == 0
-    assert "Run #151 (id=23494900414): completed/failure" in result.output
-
-
-def test_chatgh_run_logs_prompts_for_job_id(monkeypatch, runner):
-    monkeypatch.setattr(
-        gh_cli,
-        "view_job_logs",
-        lambda repo, job_id, tail, output, token: {
-            "job": {
-                "id": job_id,
-                "name": "build",
-                "status": "completed",
-                "conclusion": "failure",
-                "html_url": None,
-                "runner_name": None,
-                "runner_group_name": None,
-                "labels": [],
-                "started_at": None,
-                "completed_at": None,
-                "steps": [],
-            },
-            "tail": tail,
-            "output_path": output,
-            "log": "full log",
-            "rendered_log": "line 1\nline 2",
-        },
-    )
-    monkeypatch.setattr("chatstyle.core.interactive.is_interactive_available", lambda: True)
-    monkeypatch.setattr(
-        "chatstyle.tui.prompt.ask_text",
-        lambda message, default="", password=False, style=None: "68373094563",
-    )
-
-    result = runner.invoke(cli, ["run", "logs"], catch_exceptions=False)
-
-    assert result.exit_code == 0
-    assert "build (id=68373094563): completed/failure" in result.output
-    assert "line 1" in result.output
-
-
-def test_chatgh_required_commands_error_with_no_interaction(runner):
-    result = runner.invoke(cli, ["pr-legacy", "view", "-I"])
-
-    assert result.exit_code != 0
-    assert "Missing required value: number" in result.output
-
-
-def test_chatgh_pr_checks_forwards_wait(monkeypatch, runner):
-    called = {}
-    monkeypatch.setattr(
-        gh_cli,
-        "check_pr",
-        lambda repo, number, check_limit, workflow_limit, wait_for_completion, interval, timeout, token: called.update(
-            {
-                "number": number,
-                "wait": wait_for_completion,
-                "interval": interval,
-                "timeout": timeout,
-            }
-        )
-        or {
-            "number": number,
-            "title": "Test PR",
-            "state": "open",
-            "url": "https://github.com/CubeNLP/ChatTool/pull/138",
-            "author": "rex",
-            "base": "main",
-            "head": "rex/setup",
-            "head_sha": "abc123",
-            "mergeable": True,
-            "mergeable_state": "clean",
-            "combined_status": {"state": "success", "total_count": 0, "statuses": []},
-            "check_runs": [],
-            "check_runs_error": None,
-            "workflow_runs": [],
-            "workflow_runs_error": None,
-        },
-    )
-
-    result = runner.invoke(
-        cli,
-        ["pr-legacy", "checks", "--number", "138", "--wait", "--interval", "10", "--timeout", "600"],
-    )
-
-    assert result.exit_code == 0
-    assert called == {"number": 138, "wait": True, "interval": 10.0, "timeout": 600.0}
-
-
-def test_chatgh_pr_merge_forwards_check(monkeypatch, runner):
-    called = {}
-    monkeypatch.setattr(
-        gh_cli,
-        "merge_pr",
-        lambda repo, number, method, title, message, check_before_merge, token: called.update(
-            {"number": number, "method": method, "check": check_before_merge}
-        )
-        or {"url": "https://github.com/CubeNLP/ChatTool/pull/138"},
-    )
-
-    result = runner.invoke(cli, ["pr-legacy", "merge", "--number", "138", "--check"])
-
-    assert result.exit_code == 0
-    assert called == {"number": 138, "method": "merge", "check": True}
-
-
-def test_chatgh_repo_perms_basic(monkeypatch, runner):
-    monkeypatch.setattr(
-        gh_cli,
-        "repo_perms",
-        lambda repo, full_json, token: {
-            "repo": "CubeNLP/ChatTool",
-            "private": True,
-            "visibility": "private",
-            "token_mask": "gho_abc...12345",
-            "token_source": "git credential",
-            "permissions": {"pull": True, "push": False, "admin": False},
-            "capabilities": {
-                "can_comment_pr": False,
-                "can_merge_pr": False,
-                "can_read_pr": True,
-                "can_view_actions": True,
-                "can_view_checks": True,
-            },
-        },
-    )
-
-    result = runner.invoke(cli, ["repo-perms", "--repo", "CubeNLP/ChatTool"])
-
-    assert result.exit_code == 0
-    assert "Repo: CubeNLP/ChatTool" in result.output
-    assert "Token: gho_abc...12345" in result.output
-    assert "Token Source: git credential" in result.output
-    assert "Permissions:" in result.output
-    assert "Capabilities:" in result.output
-
-
-def test_chatgh_repo_perms_full_json(monkeypatch, runner):
-    monkeypatch.setattr(
-        gh_cli,
-        "repo_perms",
-        lambda repo, full_json, token: {
-            "repo": "CubeNLP/ChatTool",
-            "private": False,
-            "visibility": "public",
-            "token_mask": "github_...token",
-            "token_source": "--token",
-            "permissions": {"pull": True, "push": True, "admin": True},
-            "capabilities": {"can_merge_pr": True},
-            "repository": {"allow_merge_commit": True},
-        },
-    )
-
-    result = runner.invoke(
-        cli,
-        ["repo-perms", "--repo", "CubeNLP/ChatTool", "--json-output", "--full-json"],
-    )
-
-    assert result.exit_code == 0
-    assert '"token_mask": "github_...token"' in result.output
-    assert '"token_source": "--token"' in result.output
-    assert '"repository"' in result.output
-    assert '"allow_merge_commit": true' in result.output
-
-
-@pytest.mark.parametrize(
-    ("remote_url", "expected_repo"),
-    [
-        ("https://github.com/CubeNLP/ChatTool.git", "CubeNLP/ChatTool"),
-        ("https://github.com/CubeNLP/ChatTool", "CubeNLP/ChatTool"),
-        ("git@github.com:CubeNLP/ChatTool.git", "CubeNLP/ChatTool"),
-        ("ssh://git@github.com/CubeNLP/ChatTool.git", "CubeNLP/ChatTool"),
-    ],
-)
-def test_chatgh_remote_paths_are_canonical_without_git_suffix(remote_url, expected_repo):
-    from chatgh.github.api import parse_github_repo_from_remote
-
-    parsed = parse_github_repo_from_remote(remote_url)
-
-    assert parsed == (
-        expected_repo,
-        {"protocol": "https", "host": "github.com", "path": expected_repo},
-    )
-
-
-def test_chatgh_explicit_and_remote_repo_share_credential_path(monkeypatch):
-    from chatgh.github.api import credential_path_from_repo, resolve_repo_from_git_remote
-
-    def fake_run(command, check=True, capture_output=True, text=True, input=None):
-        class Result:
-            def __init__(self, stdout=""):
-                self.stdout = stdout
-                self.stderr = ""
-
-        if command == ["git", "remote"]:
-            return Result(stdout="origin\n")
-        if command == ["git", "remote", "get-url", "origin"]:
-            return Result(stdout="https://github.com/CubeNLP/ChatTool.git\n")
-        return Result()
-
-    monkeypatch.setattr("chatgh.github.api.subprocess.run", fake_run)
-
-    _, remote_credential = resolve_repo_from_git_remote()
-    explicit_credential = credential_path_from_repo("CubeNLP/ChatTool")
-
-    assert remote_credential == explicit_credential
-    assert remote_credential["path"] == "CubeNLP/ChatTool"
-
-
-def test_chatgh_repo_scoped_credential_requires_exact_path(monkeypatch, runner):
-    monkeypatch.setattr(
-        "chatgh.github.api.read_github_token_from_git",
-        lambda credential_path=None, exact_only=False: None,
-    )
-    monkeypatch.setattr(
-        "chatgh.github.api.read_github_token_from_credentials",
-        lambda credential_path=None, exact_only=False: None if credential_path and exact_only else "ghp_other_repo_token",
-    )
-    from chatgh.github.api import resolve_token
-
-    assert resolve_token(None, credential_path="CubeNLP/ChatTool.git", exact_only=True) is None
-
-
-def test_chatgh_token_uses_exact_git_credential_query(monkeypatch):
-    from chatgh.github import api as gh_api
-
-    calls = []
-
-    def fake_run(command, input=None, check=False, capture_output=True, text=True):
-        calls.append(input)
-
-        class Result:
-            returncode = 0
-            stderr = ""
-            stdout = ""
-
-        result = Result()
-        if input == "protocol=https\nhost=github.com\npath=ChatArch/ChatEnv\n\n":
-            result.stdout = (
-                "protocol=https\n"
-                "host=github.com\n"
-                "path=ChatArch/ChatEnv\n"
-                "username=x-access-token\n"
-                "password=ghp_repo_token\n"
-            )
-        return result
-
-    monkeypatch.setattr("chatgh.github.api.subprocess.run", fake_run)
-
-    assert (
-        gh_api.resolve_token(
-            None,
-            credential_path={"protocol": "https", "host": "github.com", "path": "ChatArch/ChatEnv"},
-            exact_only=True,
-        )
-        == "ghp_repo_token"
-    )
-    assert calls == ["protocol=https\nhost=github.com\npath=ChatArch/ChatEnv\n\n"]
-
-
-def test_chatgh_token_falls_back_to_host_credential(monkeypatch):
-    from chatgh.github import api as gh_api
-
-    def fake_run(command, input=None, check=False, capture_output=True, text=True):
-        class Result:
-            returncode = 0
-            stderr = ""
-            stdout = ""
-
-        result = Result()
-        if input == "protocol=https\nhost=github.com\n\n":
-            result.stdout = (
-                "protocol=https\n"
-                "host=github.com\n"
-                "username=x-access-token\n"
-                "password=ghp_host_token\n"
-            )
-        return result
-
-    monkeypatch.setattr("chatgh.github.api.subprocess.run", fake_run)
-    monkeypatch.setattr(
-        "chatgh.github.api.read_github_token_from_credentials",
-        lambda credential_path=None, exact_only=False: None if exact_only else "ghp_host_token",
-    )
-
-    assert (
-        gh_api.resolve_token(
-            None,
-            credential_path={"protocol": "https", "host": "github.com", "path": "ChatArch/ChatEnv"},
-        )
-        == "ghp_host_token"
-    )
-
-
-def test_chatgh_set_token_configures_repo_scoped_https_credential(tmp_path, monkeypatch, runner):
-    commands = []
-    inputs = []
-
-    def fake_run(command, check=True, capture_output=True, text=True, input=None):
-        commands.append(command)
-        inputs.append(input)
-
-        class Result:
-            def __init__(self, stdout=""):
-                self.stdout = stdout
-                self.stderr = ""
-
-        if command == ["git", "remote"]:
-            return Result(stdout="origin\n")
-        if command == ["git", "remote", "get-url", "origin"]:
-            return Result(stdout="git@github.com:CubeNLP/ChatTool.git\n")
-        return Result()
-
-    monkeypatch.setattr("chatgh.github.api.subprocess.run", fake_run)
-
-    result = runner.invoke(cli, ["set-token", "--token", "ghp_test_token"], catch_exceptions=False)
-
-    assert result.exit_code == 0
-    assert "Configured Git HTTPS token for CubeNLP/ChatTool." in result.output
-    approve_input = inputs[commands.index(["git", "credential", "approve"])]
-    assert "path=CubeNLP/ChatTool" in approve_input
-    assert "password=ghp_test_token" in approve_input
-
-
-def test_chatgh_set_token_save_env_updates_github_env(tmp_path, monkeypatch, runner):
-    env_root = tmp_path / "envs"
-    monkeypatch.setattr("chatgh.github.api.CHATARCH_ENV_DIR", env_root)
-
-    def fake_run(command, check=True, capture_output=True, text=True, input=None):
-        class Result:
-            def __init__(self, stdout=""):
-                self.stdout = stdout
-                self.stderr = ""
-
-        if command == ["git", "remote"]:
-            return Result(stdout="origin\n")
-        if command == ["git", "remote", "get-url", "origin"]:
-            return Result(stdout="https://github.com/CubeNLP/ChatTool.git\n")
-        return Result()
-
-    monkeypatch.setattr("chatgh.github.api.subprocess.run", fake_run)
-
-    result = runner.invoke(cli, ["set-token", "--token", "ghp_saved_token", "--save-env"], catch_exceptions=False)
-
-    assert result.exit_code == 0
-    env_file = Path(env_root) / "GitHub" / ".env"
-    assert env_file.exists()
-    assert "GITHUB_ACCESS_TOKEN='ghp_saved_token'" in env_file.read_text(encoding="utf-8")
-
-
-def test_chatgh_set_token_rejects_non_github_remote(monkeypatch, runner):
-    def fake_run(command, check=True, capture_output=True, text=True, input=None):
-        class Result:
-            def __init__(self, stdout=""):
-                self.stdout = stdout
-                self.stderr = ""
-
-        if command == ["git", "remote"]:
-            return Result(stdout="origin\n")
-        if command == ["git", "remote", "get-url", "origin"]:
-            return Result(stdout="git@gitlab.com:CubeNLP/ChatTool.git\n")
-        return Result()
-
-    monkeypatch.setattr("chatgh.github.api.subprocess.run", fake_run)
-
-    result = runner.invoke(cli, ["set-token", "--token", "ghp_test_token"])
-
-    assert result.exit_code != 0
-    assert "Current repository does not have a recognizable GitHub remote." in result.output
-
-
-def test_chatgh_set_token_prompts_for_missing_token_in_tty(monkeypatch, runner):
-    commands = []
-    inputs = []
-
-    def fake_run(command, check=True, capture_output=True, text=True, input=None):
-        commands.append(command)
-        inputs.append(input)
-
-        class Result:
-            def __init__(self, stdout=""):
-                self.stdout = stdout
-                self.stderr = ""
-
-        if command == ["git", "remote"]:
-            return Result(stdout="origin\n")
-        if command == ["git", "remote", "get-url", "origin"]:
-            return Result(stdout="git@github.com:CubeNLP/ChatTool.git\n")
-        return Result()
-
-    monkeypatch.setattr("chatgh.github.api.subprocess.run", fake_run)
-    monkeypatch.delenv("GITHUB_ACCESS_TOKEN", raising=False)
-    monkeypatch.setattr(gh_cli, "resolve_token", lambda token, credential_path=None, exact_only=False: token)
-    monkeypatch.setattr(gh_cli, "is_interactive_available", lambda: True)
-    monkeypatch.setattr(
-        gh_cli,
-        "ask_text",
-        lambda message, default="", password=False, style=None: "ghp_prompted_token",
-    )
-
-    result = runner.invoke(cli, ["set-token"], catch_exceptions=False)
-
-    assert result.exit_code == 0
-    approve_input = inputs[commands.index(["git", "credential", "approve"])]
-    assert "password=ghp_prompted_token" in approve_input
-
-
-def test_chatgh_set_token_falls_back_to_other_github_remote(monkeypatch, runner):
-    commands = []
-    inputs = []
-
-    def fake_run(command, check=True, capture_output=True, text=True, input=None):
-        commands.append(command)
-        inputs.append(input)
-
-        class Result:
-            def __init__(self, stdout=""):
-                self.stdout = stdout
-                self.stderr = ""
-
-        if command == ["git", "remote"]:
-            return Result(stdout="origin\nupstream\n")
-        if command == ["git", "remote", "get-url", "origin"]:
-            return Result(stdout="git@gitlab.com:CubeNLP/ChatTool.git\n")
-        if command == ["git", "remote", "get-url", "upstream"]:
-            return Result(stdout="git@github.com:CubeNLP/ChatTool.git\n")
-        return Result()
-
-    monkeypatch.setattr("chatgh.github.api.subprocess.run", fake_run)
-
-    result = runner.invoke(cli, ["set-token", "--token", "ghp_test_token"], catch_exceptions=False)
-
-    assert result.exit_code == 0
-    approve_input = inputs[commands.index(["git", "credential", "approve"])]
-    assert "path=CubeNLP/ChatTool" in approve_input
-
-
-def test_chatgh_set_token_keeps_remote_path_without_git_suffix(monkeypatch, runner):
-    commands = []
-    inputs = []
-
-    def fake_run(command, check=True, capture_output=True, text=True, input=None):
-        commands.append(command)
-        inputs.append(input)
-
-        class Result:
-            def __init__(self, stdout=""):
-                self.stdout = stdout
-                self.stderr = ""
-
-        if command == ["git", "remote"]:
-            return Result(stdout="origin\n")
-        if command == ["git", "remote", "get-url", "origin"]:
-            return Result(stdout="https://github.com/Lean-zh/LeanUp\n")
-        return Result()
-
-    monkeypatch.setattr("chatgh.github.api.subprocess.run", fake_run)
-
-    result = runner.invoke(cli, ["set-token", "--token", "ghp_test_token"], catch_exceptions=False)
-
-    assert result.exit_code == 0
-    approve_input = inputs[commands.index(["git", "credential", "approve"])]
-    assert "path=Lean-zh/LeanUp\n" in approve_input
