@@ -17,6 +17,7 @@ def test_chatgh_help_commands(runner):
 
     assert result.exit_code == 0
     assert "pr" in result.output
+    assert "repo" in result.output
     assert "pr-legacy" not in result.output
 
 
@@ -115,3 +116,54 @@ def test_chatgh_pr_checks_renders_json(monkeypatch, runner):
 
     assert result.exit_code == 0
     assert '"mergeable_state": "clean"' in result.output
+
+
+def test_chatgh_repo_help_commands(runner):
+    result = runner.invoke(cli, ["repo", "--help"])
+
+    assert result.exit_code == 0
+    assert "list" in result.output
+    assert "create" in result.output
+
+
+def test_chatgh_repo_list_renders_json(monkeypatch, runner):
+    monkeypatch.setattr(
+        "chatgh.github.cli.list_repos",
+        lambda owner, limit, token: [
+            {"full_name": f"{owner}/ChatBlog", "private": True, "html_url": "https://github.com/ChatArch/ChatBlog"}
+        ],
+    )
+
+    result = runner.invoke(cli, ["repo", "list", "--owner", "ChatArch", "--json-output"])
+
+    assert result.exit_code == 0
+    assert '"full_name": "ChatArch/ChatBlog"' in result.output
+
+
+def test_chatgh_repo_create_defaults_private(monkeypatch, runner):
+    captured = {}
+
+    def fake_create(owner, name, private, description, if_exists, token):
+        captured.update({"owner": owner, "name": name, "private": private, "if_exists": if_exists})
+        return {
+            "full_name": f"{owner}/{name}",
+            "private": private,
+            "created": True,
+            "html_url": f"https://github.com/{owner}/{name}",
+        }
+
+    monkeypatch.setattr("chatgh.github.cli.create_repo", fake_create)
+
+    result = runner.invoke(
+        cli,
+        ["repo", "create", "--owner", "ChatArch", "--name", "hermes-agent"],
+    )
+
+    assert result.exit_code == 0
+    assert "created: ChatArch/hermes-agent (private)" in result.output
+    assert captured == {
+        "owner": "ChatArch",
+        "name": "hermes-agent",
+        "private": True,
+        "if_exists": "error",
+    }

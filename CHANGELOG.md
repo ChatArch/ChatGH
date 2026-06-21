@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 本项目按日期记录更新；正式发版信息也维护在本文件。
 
 ## 2026-06-15
+- 新增 `chatgh repo list/create` 最小仓库管理入口；`repo create` 默认创建 private 仓库，并支持 `--if-exists use` 复用已有仓库。
 - 准备 `0.2.2` 补丁版本：移除外露 `pr-legacy` 迁移入口，只保留 `chatgh pr` 与干净辅助命令作为公开 CLI surface。
 - 移除外露 `pr-legacy` 迁移入口：`chatgh` 顶层只保留任务导向的 `pr`、`run`、`repo-perms`、`set-token`；旧 PR 兼容命令不再作为 CLI surface 维护，文档与测试同步收敛到 `chatgh pr ...`。
 - 准备 `0.2.1` 补丁版本：`chatgh pr list/view/checks` 默认命令不再引用缺失的 generated API 模块，先复用已验证的 GitHub helper 层，保留 `chatgh pr view NUMBER` / `chatgh pr checks NUMBER` 命令面。
