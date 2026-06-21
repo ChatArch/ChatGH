@@ -1,18 +1,27 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Optional
 
 from chatgh.github.api import github_api_get_json, github_api_get_text
 
 
-def get_repo_list(client, owner: str, limit: int) -> list[dict]:
+def get_repo_list(
+    client,
+    owner: str,
+    limit: int,
+    sort: str,
+    direction: str,
+) -> list[dict]:
     owner_obj = _get_owner(client, owner)
     items: list[dict] = []
     for repo in owner_obj.get_repos():
         items.append(_build_repo_payload(repo))
-        if len(items) >= limit:
-            break
-    return items
+    items.sort(
+        key=lambda item: _repo_sort_key(item, sort),
+        reverse=(direction == "desc"),
+    )
+    return items[:limit]
 
 
 def post_repo_create(
@@ -73,17 +82,58 @@ def _get_owner(client, owner: str):
 
 
 def _build_repo_payload(repo) -> dict:
+    open_prs = _safe_count(lambda: repo.get_pulls(state="open"))
+    open_issues_reported = int(getattr(repo, "open_issues_count", 0) or 0)
+    open_issues = max(open_issues_reported - open_prs, 0) if open_prs is not None else None
     return {
         "name": repo.name,
         "full_name": repo.full_name,
         "private": repo.private,
-        "visibility": getattr(repo, "visibility", None),
+        "visibility": getattr(repo, "visibility", None) or ("private" if repo.private else "public"),
+        "stars": int(getattr(repo, "stargazers_count", 0) or 0),
+        "forks": int(getattr(repo, "forks_count", 0) or 0),
+        "open_prs": open_prs,
+        "open_issues": open_issues,
+        "open_issues_reported": open_issues_reported,
+        "archived": bool(getattr(repo, "archived", False)),
+        "fork": bool(getattr(repo, "fork", False)),
+        "created_at": _isoformat(getattr(repo, "created_at", None)),
+        "updated_at": _isoformat(getattr(repo, "updated_at", None)),
+        "pushed_at": _isoformat(getattr(repo, "pushed_at", None)),
         "html_url": repo.html_url,
         "clone_url": getattr(repo, "clone_url", None),
         "ssh_url": getattr(repo, "ssh_url", None),
         "default_branch": getattr(repo, "default_branch", None),
         "description": getattr(repo, "description", None),
     }
+
+
+def _safe_count(factory) -> Optional[int]:
+    try:
+        return int(factory().totalCount)
+    except Exception:
+        return None
+
+
+def _repo_sort_key(item: dict, sort: str):
+    if sort in {"updated", "created", "pushed"}:
+        return _parse_time(item.get(f"{sort}_at"))
+    if sort == "stars":
+        return int(item.get("stars") or 0)
+    if sort == "open-prs":
+        return int(item.get("open_prs") or 0)
+    if sort == "open-issues":
+        return int(item.get("open_issues") or 0)
+    return str(item.get("name") or item.get("full_name") or "").lower()
+
+
+def _parse_time(value: Optional[str]) -> datetime:
+    if not value:
+        return datetime.min.replace(tzinfo=timezone.utc)
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed
 
 
 def get_pr_checks(

@@ -62,8 +62,8 @@ chatgh set-token --help
 - `chatgh pr list`：generated-layer PR 列表。
 - `chatgh pr view NUMBER`：generated-layer PR 详情。
 - `chatgh pr checks NUMBER`：generated-layer PR head commit check runs。
-- `chatgh pr create/comment/merge/edit`：PR 创建、评论、合并和编辑操作。
-- `chatgh repo list`：列出 owner/org 下的仓库。
+- 当前公开 `chatgh pr` 命令面只包含 `list/view/checks`；PR 创建、评论、合并和编辑流程仍由内部 helper 支持，后续作为独立 CLI 命令恢复前不在帮助与文档中承诺。
+- `chatgh repo list`：列出 user/org 下的仓库；默认 table，支持 `--json-output`、`--limit`、`--sort updated|created|pushed|name|stars|open-prs|open-issues`、`--direction asc|desc`，字段包含 visibility、stars、open PRs、open issues、created/updated time 等。
 - `chatgh repo create`：创建仓库；默认 private，可用 `--public` 显式创建公开仓库。
 - `chatgh run view`：查看 workflow run 和 jobs。
 - `chatgh run logs`：查看 job 日志，支持 tail 和落盘。
@@ -74,26 +74,7 @@ chatgh set-token --help
 
 ### 创建 PR
 
-优先使用 `--body-file`，避免 shell 转义破坏 Markdown：
-
-```bash
-cat > /tmp/pr_body.md <<'EOF'
-## Summary
-- migrate GitHub helpers to chatgh
-
-## Testing
-- python -m pytest -q
-EOF
-
-chatgh pr create \
-  --repo octocat/Hello-World \
-  --base main \
-  --head feature-branch \
-  --title "feat: migrate github helpers" \
-  --body-file /tmp/pr_body.md
-```
-
-缺少 `base` / `head` / `title` 且终端可交互时，命令会自动补问；显式 `-I` 会禁用补问。
+当前版本未公开 `chatgh pr create` CLI 命令。需要创建 PR 时，请使用项目既有 GitHub 流程或直接调用 GitHub API；等写操作命令恢复为稳定 CLI surface 后再补回示例。
 
 ### 查看 PR
 
@@ -110,12 +91,10 @@ chatgh pr view 123 --repo octocat/Hello-World --json-output
 - `mergeable` 和 `mergeable_state`。
 - created/updated/merged timestamps。
 
-### 查看和等待 CI
+### 查看 CI
 
 ```bash
 chatgh pr checks 123 --repo octocat/Hello-World
-chatgh pr checks --repo octocat/Hello-World --number 123 --wait
-chatgh pr checks --repo octocat/Hello-World --number 123 --wait --interval 10 --timeout 600
 chatgh pr checks 123 --repo octocat/Hello-World --json-output
 ```
 
@@ -125,11 +104,7 @@ chatgh pr checks 123 --repo octocat/Hello-World --json-output
 - check runs
 - workflow runs
 
-`--wait` 会持续轮询直到 statuses、check runs 和 workflow runs 都结束：
-
-- 默认不设超时，会一直等。
-- `--interval <seconds>` 控制轮询间隔。
-- 只有显式传 `--timeout <seconds>` 时才会超时报错。
+当前公开 CLI 不提供 `--wait` / `--interval` / `--timeout` 参数；需要等待终态时，在外层流程中轮询 `chatgh pr checks`。
 
 如果 GitHub token 无权读取 check-runs API，命令会把 check-runs 错误放进 payload，同时仍尽量展示 combined status 和 workflow runs。
 
@@ -148,25 +123,7 @@ chatgh run logs --repo octocat/Hello-World --job-id 987654321 --tail 200 --outpu
 
 ### 评论、合并和编辑 PR
 
-```bash
-chatgh pr comment --repo octocat/Hello-World --number 123 --body "Looks good"
-
-chatgh pr merge --repo octocat/Hello-World --number 123 --method squash
-chatgh pr merge --repo octocat/Hello-World --number 123 --method squash --check
-
-chatgh pr edit --repo octocat/Hello-World --number 123 --title "New title"
-chatgh pr edit --repo octocat/Hello-World --number 123 --body-file /tmp/pr_body.md
-chatgh pr edit --repo octocat/Hello-World --number 123 --state closed
-chatgh pr edit --repo octocat/Hello-World --number 123 --base main
-```
-
-`pr merge --check` 会在合并前拒绝以下情况：
-
-- PR 当前 `mergeable=False`。
-- `mergeable_state` 为 `dirty`、`blocked`、`behind`、`draft` 或 `unknown`。
-- combined status、check runs 或 workflow runs 存在失败、取消或未完成项。
-
-不带 `--check` 时，命令保持直接调用 GitHub merge API 的行为。
+当前版本未公开 `chatgh pr comment/merge/edit` CLI 命令。相关业务函数已保留在 `chatgh.github.commands` 中，后续恢复为稳定 CLI surface 前，建议通过项目既有流程或 GitHub API 执行写操作。
 
 ### 配置和检查 token
 
@@ -208,7 +165,7 @@ git fetch origin main
 
 - `chatgh pr view` / `chatgh pr checks` 显示 `mergeable` 不是 `False`，`mergeable_state` 不是 `dirty`。
 - 本地基于最新 base 做过 merge 或 rebase 演练，并在该结果上跑过最相关测试。
-- CI 需要终态时用 `chatgh pr checks --wait`，不要只看一次快照。
+- CI 需要终态时，在外层流程中轮询 `chatgh pr checks`，不要只看一次快照。
 
 ## Python API
 

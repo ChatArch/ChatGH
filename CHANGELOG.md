@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 本项目按日期记录更新；正式发版信息也维护在本文件。
 
 ## 2026-06-15
+- 增强 `chatgh repo list`：默认输出仓库 table，支持 JSON 输出、limit、排序方向，以及按 updated/created/pushed/name/stars/open PR/open issue 排序；返回字段补充 visibility、stars、forks、open PRs、open issues、created/updated/pushed timestamps 等，便于查看 GitHub 用户或组织下的仓库概况。
 - 新增 `chatgh repo list/create` 最小仓库管理入口；`repo create` 默认创建 private 仓库，并支持 `--if-exists use` 复用已有仓库。
 - 准备 `0.2.2` 补丁版本：移除外露 `pr-legacy` 迁移入口，只保留 `chatgh pr` 与干净辅助命令作为公开 CLI surface。
 - 移除外露 `pr-legacy` 迁移入口：`chatgh` 顶层只保留任务导向的 `pr`、`run`、`repo-perms`、`set-token`；旧 PR 兼容命令不再作为 CLI surface 维护，文档与测试同步收敛到 `chatgh pr ...`。

@@ -2,6 +2,7 @@ import pytest
 from click.testing import CliRunner
 
 from chatgh.cli import main as cli
+from chatgh.github.requests import _build_repo_payload, _parse_time
 
 
 pytestmark = pytest.mark.mock_cli
@@ -127,17 +128,83 @@ def test_chatgh_repo_help_commands(runner):
 
 
 def test_chatgh_repo_list_renders_json(monkeypatch, runner):
+    captured = {}
+
+    def fake_list(owner, limit, sort, direction, token):
+        captured.update({"owner": owner, "limit": limit, "sort": sort, "direction": direction})
+        return [
+            {
+                "full_name": f"{owner}/ChatBlog",
+                "visibility": "private",
+                "private": True,
+                "stars": 7,
+                "open_prs": 2,
+                "open_issues": 3,
+                "updated_at": "2026-06-21T10:00:00+00:00",
+                "created_at": "2026-06-01T10:00:00+00:00",
+                "html_url": "https://github.com/ChatArch/ChatBlog",
+            }
+        ]
+
     monkeypatch.setattr(
         "chatgh.github.cli.list_repos",
-        lambda owner, limit, token: [
-            {"full_name": f"{owner}/ChatBlog", "private": True, "html_url": "https://github.com/ChatArch/ChatBlog"}
+        fake_list,
+    )
+
+    result = runner.invoke(
+        cli,
+        [
+            "repo",
+            "list",
+            "--owner",
+            "ChatArch",
+            "--limit",
+            "5",
+            "--sort",
+            "created",
+            "--direction",
+            "asc",
+            "--json-output",
         ],
     )
 
-    result = runner.invoke(cli, ["repo", "list", "--owner", "ChatArch", "--json-output"])
-
     assert result.exit_code == 0
     assert '"full_name": "ChatArch/ChatBlog"' in result.output
+    assert '"open_prs": 2' in result.output
+    assert captured == {
+        "owner": "ChatArch",
+        "limit": 5,
+        "sort": "created",
+        "direction": "asc",
+    }
+
+
+def test_chatgh_repo_list_renders_table(monkeypatch, runner):
+    monkeypatch.setattr(
+        "chatgh.github.cli.list_repos",
+        lambda owner, limit, sort, direction, token: [
+            {
+                "full_name": f"{owner}/ChatBlog",
+                "visibility": "private",
+                "stars": 7,
+                "open_prs": 2,
+                "open_issues": 3,
+                "updated_at": "2026-06-21T10:00:00+00:00",
+                "created_at": "2026-06-01T10:00:00+00:00",
+            }
+        ],
+    )
+
+    result = runner.invoke(cli, ["repo", "list", "--owner", "ChatArch"])
+
+    assert result.exit_code == 0
+    assert "repo" in result.output
+    assert "vis" in result.output
+    assert "stars" in result.output
+    assert "prs" in result.output
+    assert "issues" in result.output
+    assert "ChatArch/ChatBlog" in result.output
+    assert "private" in result.output
 
 
 def test_chatgh_repo_create_defaults_private(monkeypatch, runner):
@@ -167,3 +234,38 @@ def test_chatgh_repo_create_defaults_private(monkeypatch, runner):
         "private": True,
         "if_exists": "error",
     }
+
+
+def test_repo_sort_time_handles_naive_and_missing_values():
+    assert _parse_time("2026-06-21T10:00:00").tzinfo is not None
+    assert _parse_time(None).tzinfo is not None
+
+
+def test_repo_payload_does_not_invent_open_issues_when_pr_count_fails():
+    class _Repo:
+        name = "demo"
+        full_name = "ChatArch/demo"
+        private = True
+        visibility = "private"
+        stargazers_count = 0
+        forks_count = 0
+        open_issues_count = 5
+        archived = False
+        fork = False
+        created_at = None
+        updated_at = None
+        pushed_at = None
+        html_url = "https://github.com/ChatArch/demo"
+        clone_url = "https://github.com/ChatArch/demo.git"
+        ssh_url = "git@github.com:ChatArch/demo.git"
+        default_branch = "main"
+        description = None
+
+        def get_pulls(self, state):
+            raise RuntimeError("rate limited")
+
+    payload = _build_repo_payload(_Repo())
+
+    assert payload["open_prs"] is None
+    assert payload["open_issues"] is None
+    assert payload["open_issues_reported"] == 5
