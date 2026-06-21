@@ -5,6 +5,48 @@ from typing import Optional
 from chatgh.github.api import github_api_get_json, github_api_get_text
 
 
+def get_repo_list(client, owner: str, limit: int) -> list[dict]:
+    owner_obj = _get_owner(client, owner)
+    items: list[dict] = []
+    for repo in owner_obj.get_repos():
+        items.append(_build_repo_payload(repo))
+        if len(items) >= limit:
+            break
+    return items
+
+
+def post_repo_create(
+    client,
+    owner: str,
+    name: str,
+    private: bool,
+    description: Optional[str],
+    if_exists: str,
+) -> dict:
+    full_name = f"{owner}/{name}"
+    try:
+        existing = client.get_repo(full_name)
+    except Exception as exc:
+        if getattr(exc, "status", None) != 404:
+            raise
+    else:
+        if if_exists == "use":
+            payload = _build_repo_payload(existing)
+            payload["created"] = False
+            return payload
+        raise ValueError(f"Repository already exists: {full_name}")
+
+    owner_obj = _get_owner(client, owner)
+    repo = owner_obj.create_repo(
+        name=name,
+        private=private,
+        description=description or "",
+    )
+    payload = _build_repo_payload(repo)
+    payload["created"] = True
+    return payload
+
+
 def get_pr_list(client, repo: str, state: str, limit: int) -> list[dict]:
     repo_obj = client.get_repo(repo)
     items: list[dict] = []
@@ -19,6 +61,29 @@ def get_pr_view(client, repo: str, number: int) -> dict:
     repo_obj = client.get_repo(repo)
     pr = repo_obj.get_pull(number)
     return _build_pr_view_payload(pr)
+
+
+def _get_owner(client, owner: str):
+    try:
+        return client.get_organization(owner)
+    except Exception as exc:
+        if getattr(exc, "status", None) not in {403, 404}:
+            raise
+    return client.get_user(owner)
+
+
+def _build_repo_payload(repo) -> dict:
+    return {
+        "name": repo.name,
+        "full_name": repo.full_name,
+        "private": repo.private,
+        "visibility": getattr(repo, "visibility", None),
+        "html_url": repo.html_url,
+        "clone_url": getattr(repo, "clone_url", None),
+        "ssh_url": getattr(repo, "ssh_url", None),
+        "default_branch": getattr(repo, "default_branch", None),
+        "description": getattr(repo, "description", None),
+    }
 
 
 def get_pr_checks(

@@ -27,12 +27,14 @@ from chatgh.github.requests import (
     get_pr_checks,
     get_pr_list,
     get_pr_view,
+    get_repo_list,
     get_repo_permissions,
     get_run_view,
     patch_pr_edit,
     post_pr_comment,
     post_pr_create,
     post_pr_merge,
+    post_repo_create,
 )
 
 
@@ -41,6 +43,28 @@ def resolve_repo_and_credential_path(repo: Optional[str]) -> tuple[str, Credenti
         normalized = resolve_repo(repo)
         return normalized, credential_path_from_repo(normalized)
     return resolve_repo_from_git_remote()
+
+
+def list_repos(owner: str, limit: int, token: Optional[str]) -> list[dict]:
+    credential_path = credential_path_from_repo(f"{owner}/_")
+    client = get_client(token, require_token=True, credential_path=credential_path)
+    return get_repo_list(client, owner, limit)
+
+
+def create_repo(
+    owner: str,
+    name: str,
+    private: bool,
+    description: Optional[str],
+    if_exists: str,
+    token: Optional[str],
+) -> dict:
+    credential_path = credential_path_from_repo(f"{owner}/{name}")
+    client = get_client(token, require_token=True, credential_path=credential_path)
+    try:
+        return post_repo_create(client, owner, name, private, description, if_exists)
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
 
 
 def create_pr(

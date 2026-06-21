@@ -14,7 +14,7 @@ from chatstyle.core.interactive import is_interactive_available
 from chatstyle.tui.prompt import BACK_VALUE, ask_text
 
 from chatgh.github.api import resolve_token
-from chatgh.github.commands import repo_perms, set_token, view_job_logs, view_run
+from chatgh.github.commands import create_repo, list_repos, repo_perms, set_token, view_job_logs, view_run
 from chatgh.github.render import echo_workflow_job, echo_workflow_run, format_optional
 
 
@@ -42,6 +42,48 @@ def cli() -> None:
 @cli.group(name="run")
 def run_group() -> None:
     """GitHub Actions helpers."""
+
+
+@cli.group(name="repo")
+def repo_group() -> None:
+    """Repository helpers."""
+
+
+@repo_group.command(name="list")
+@click.option("--owner", required=True, help="GitHub owner or organization.")
+@click.option("--limit", default=50, type=click.IntRange(min=1), show_default=True)
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token.")
+def repo_list(owner, limit, json_output, token):
+    """List repositories for an owner or organization."""
+    payload = list_repos(owner, limit, token)
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    for item in payload:
+        private = "private" if item.get("private") else "public"
+        click.echo(f"{item['full_name']} ({private})")
+
+
+@repo_group.command(name="create")
+@click.option("--owner", required=True, help="GitHub owner or organization.")
+@click.option("--name", required=True, help="Repository name.")
+@click.option("--description", default=None, help="Repository description.")
+@click.option("--public", "public_repo", is_flag=True, help="Create a public repository. Defaults to private.")
+@click.option("--if-exists", type=click.Choice(["error", "use"]), default="error", show_default=True)
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token.")
+def repo_create(owner, name, description, public_repo, if_exists, json_output, token):
+    """Create a repository. Repositories are private by default."""
+    payload = create_repo(owner, name, not public_repo, description, if_exists, token)
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    created = "created" if payload.get("created") else "existing"
+    private = "private" if payload.get("private") else "public"
+    click.echo(f"{created}: {payload['full_name']} ({private})")
+    if payload.get("html_url"):
+        click.echo(payload["html_url"])
 
 
 @run_group.command(name="view")

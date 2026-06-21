@@ -51,6 +51,7 @@ chatenv cat -t gh
 ```bash
 chatgh --help
 chatgh pr --help
+chatgh repo --help
 chatgh run --help
 chatgh repo-perms --help
 chatgh set-token --help
@@ -62,6 +63,8 @@ chatgh set-token --help
 - `chatgh pr view NUMBER`：generated-layer PR 详情。
 - `chatgh pr checks NUMBER`：generated-layer PR head commit check runs。
 - `chatgh pr create/comment/merge/edit`：PR 创建、评论、合并和编辑操作。
+- `chatgh repo list`：列出 owner/org 下的仓库。
+- `chatgh repo create`：创建仓库；默认 private，可用 `--public` 显式创建公开仓库。
 - `chatgh run view`：查看 workflow run 和 jobs。
 - `chatgh run logs`：查看 job 日志，支持 tail 和落盘。
 - `chatgh repo-perms`：查看 token 权限和派生 capabilities。
