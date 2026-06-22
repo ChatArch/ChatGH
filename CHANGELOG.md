@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 本项目按日期记录更新；正式发版信息也维护在本文件。
 
 ## 2026-06-15
+- 准备 `0.2.3` 补丁版本：发布 repo-local `.git/config` HTTPS auth header 读写改造，确保 `chatgh set-token` 与 token resolution 不再依赖全局 git credential store。
 - 改造 GitHub token 读写：`chatgh set-token` 不再写全局 `git credential` / `~/.git-credentials`，而是把 repo-local HTTPS `extraHeader` 写入当前仓库 `.git/config`；token 解析顺序同步改为显式 `--token`、repo-local `.git/config`、typed env `GITHUB_ACCESS_TOKEN`。
 - 增强 `chatgh repo list`：默认输出仓库 table，支持 JSON 输出、limit、排序方向，以及按 updated/created/pushed/name/stars/open PR/open issue 排序；返回字段补充 visibility、stars、forks、open PRs、open issues、created/updated/pushed timestamps 等，便于查看 GitHub 用户或组织下的仓库概况。
 - 新增 `chatgh repo list/create` 最小仓库管理入口；`repo create` 默认创建 private 仓库，并支持 `--if-exists use` 复用已有仓库。
