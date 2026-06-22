@@ -161,14 +161,15 @@ def _echo_repo_table(items: list[dict]) -> None:
 @click.option("--repo", default=None, help="Repository in owner/name form. Defaults to current git remote when --owner is omitted.")
 @click.option("--owner", default=None, help="GitHub owner or organization for inventory mode.")
 @click.option("--limit", default=50, type=click.IntRange(min=1), show_default=True)
+@click.option("--jobs", default=8, type=click.IntRange(min=1), show_default=True, help="Concurrent protection checks in owner inventory mode.")
 @click.option("--json-output", is_flag=True, help="Output JSON.")
 @click.option("--token", default=None, help="GitHub token.")
-def repo_protection(repo, owner, limit, json_output, token):
+def repo_protection(repo, owner, limit, jobs, json_output, token):
     """Show default-branch protection and ruleset status."""
     if repo and owner:
         raise click.ClickException("Use either --repo for one repository or --owner for inventory, not both.")
     if owner:
-        payload = list_repo_protections(owner, limit, token)
+        payload = list_repo_protections(owner, limit, token, jobs)
         if json_output:
             click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
             return

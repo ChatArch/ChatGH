@@ -131,11 +131,11 @@ The current version does not expose public `chatgh pr comment/merge/edit` CLI co
 ```bash
 chatgh repo protection --repo octocat/Hello-World
 chatgh repo protection --repo octocat/Hello-World --json-output
-chatgh repo protection --owner octocat --limit 50
-chatgh repo protection --owner octocat --limit 50 --json-output
+chatgh repo protection --owner octocat --limit 50 --jobs 8
+chatgh repo protection --owner octocat --limit 50 --jobs 8 --json-output
 ```
 
-`repo protection` reports the default branch, whether it is protected, classic branch protection details such as required PR reviews / review count / force-push and deletion flags, and repository ruleset summaries when GitHub exposes them. Some private repositories may return a GitHub plan/visibility error for rulesets; the command preserves that error in JSON while still reporting the branch protection state when available.
+`repo protection` reports the default branch, whether it is protected, classic branch protection details such as required PR reviews / review count / force-push and deletion flags, and repository ruleset summaries when GitHub exposes them. Some private repositories may return a GitHub plan/visibility error for rulesets; the command preserves that error in JSON while still reporting the branch protection state when available. Owner inventory mode lists repositories first, then checks each repository concurrently with `--jobs` while preserving stable output order.
 
 ### Configure And Inspect Tokens
 

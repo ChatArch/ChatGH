@@ -25,6 +25,13 @@ def get_repo_list(
     return items[:limit]
 
 
+def get_repo_names(client, owner: str, limit: int) -> list[str]:
+    owner_obj = _get_owner(client, owner)
+    names = [repo.full_name for repo in owner_obj.get_repos()]
+    names.sort(key=str.lower)
+    return names[:limit]
+
+
 def post_repo_create(
     client,
     owner: str,

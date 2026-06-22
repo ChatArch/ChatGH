@@ -298,8 +298,8 @@ def test_chatgh_repo_protection_renders_single_repo_summary(monkeypatch, runner)
 def test_chatgh_repo_protection_renders_owner_inventory(monkeypatch, runner):
     captured = {}
 
-    def fake_inventory(owner, limit, token):
-        captured.update({"owner": owner, "limit": limit})
+    def fake_inventory(owner, limit, token, jobs):
+        captured.update({"owner": owner, "limit": limit, "jobs": jobs})
         return [
             {
                 "repo": "ChatArch/ChatGH",
@@ -321,7 +321,7 @@ def test_chatgh_repo_protection_renders_owner_inventory(monkeypatch, runner):
 
     monkeypatch.setattr("chatgh.github.cli.list_repo_protections", fake_inventory)
 
-    result = runner.invoke(cli, ["repo", "protection", "--owner", "ChatArch", "--limit", "2"])
+    result = runner.invoke(cli, ["repo", "protection", "--owner", "ChatArch", "--limit", "2", "--jobs", "4"])
 
     assert result.exit_code == 0
     assert "repo" in result.output
@@ -331,13 +331,13 @@ def test_chatgh_repo_protection_renders_owner_inventory(monkeypatch, runner):
     assert "ChatArch/ChatLink" in result.output
     assert "yes" in result.output
     assert "no" in result.output
-    assert captured == {"owner": "ChatArch", "limit": 2}
+    assert captured == {"owner": "ChatArch", "limit": 2, "jobs": 4}
 
 
 def test_chatgh_repo_protection_inventory_table_preserves_error_text(monkeypatch, runner):
     monkeypatch.setattr(
         "chatgh.github.cli.list_repo_protections",
-        lambda owner, limit, token: [
+        lambda owner, limit, token, jobs: [
             {
                 "repo": "ChatArch/ChatLink",
                 "default_branch": "main",

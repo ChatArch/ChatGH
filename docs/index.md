@@ -131,11 +131,11 @@ chatgh run logs --repo octocat/Hello-World --job-id 987654321 --tail 200 --outpu
 ```bash
 chatgh repo protection --repo octocat/Hello-World
 chatgh repo protection --repo octocat/Hello-World --json-output
-chatgh repo protection --owner octocat --limit 50
-chatgh repo protection --owner octocat --limit 50 --json-output
+chatgh repo protection --owner octocat --limit 50 --jobs 8
+chatgh repo protection --owner octocat --limit 50 --jobs 8 --json-output
 ```
 
-`repo protection` 会展示默认分支、是否 protected、classic branch protection 细节（例如是否要求 PR、review 数量、是否允许 force push / deletion），以及 GitHub 可读取时的 repository ruleset 摘要。部分 private 仓库可能因为 GitHub plan/visibility 限制读取 rulesets 返回错误；命令会在 JSON 里保留该错误，同时尽量展示 branch protection 状态。
+`repo protection` 会展示默认分支、是否 protected、classic branch protection 细节（例如是否要求 PR、review 数量、是否允许 force push / deletion），以及 GitHub 可读取时的 repository ruleset 摘要。部分 private 仓库可能因为 GitHub plan/visibility 限制读取 rulesets 返回错误；命令会在 JSON 里保留该错误，同时尽量展示 branch protection 状态。owner inventory 模式会先列仓库，再用 `--jobs` 并发检查每个仓库，输出顺序保持稳定。
 
 ### 配置和检查 token
 
