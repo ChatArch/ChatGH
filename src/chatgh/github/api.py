@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 from urllib.parse import urlparse
 import subprocess
 from typing import Optional, TypedDict
@@ -74,7 +75,7 @@ def resolve_token_with_source(
         credential_path, exact_only=exact_only
     )
     if credential_token:
-        return {"token": credential_token, "source": "git credential"}
+        return {"token": credential_token, "source": "repo git config"}
     credential_token = read_github_token_from_credentials(
         credential_path, exact_only=exact_only
     )
@@ -212,20 +213,22 @@ def read_github_token_from_git(
 ) -> Optional[str]:
     if not credential_path:
         return None
-    return _git_credential_fill(credential_path)
+    return _read_repo_local_extraheader(credential_path)
 
 
-def _git_credential_fill(credential: CredentialQuery) -> Optional[str]:
-    credential_input = (
-        f"protocol={credential['protocol']}\n"
-        f"host={credential['host']}\n"
-        f"path={credential['path']}\n"
-    )
-    credential_input += "\n"
+def _github_https_url(credential: CredentialQuery) -> str:
+    path = credential["path"].strip().removeprefix("/").removesuffix(".git")
+    return f"https://{credential['host']}/{path}.git"
+
+
+def _extraheader_config_key(credential: CredentialQuery) -> str:
+    return f"http.{_github_https_url(credential)}.extraHeader"
+
+
+def _read_repo_local_extraheader(credential: CredentialQuery) -> Optional[str]:
     try:
         result = subprocess.run(
-            ["git", "credential", "fill"],
-            input=credential_input,
+            ["git", "config", "--local", "--get", _extraheader_config_key(credential)],
             check=False,
             capture_output=True,
             text=True,
@@ -234,41 +237,30 @@ def _git_credential_fill(credential: CredentialQuery) -> Optional[str]:
         return None
     if result.returncode != 0:
         return None
-    values: dict[str, str] = {}
-    for line in result.stdout.splitlines():
-        if "=" not in line:
-            continue
-        key, value = line.split("=", 1)
-        values[key] = value
-    if values.get("host") != credential["host"]:
+    return _token_from_extraheader(result.stdout.strip())
+
+
+def _token_from_extraheader(header: str) -> Optional[str]:
+    prefix = "Authorization: Basic "
+    if not header.startswith(prefix):
         return None
-    return values.get("password") or None
+    encoded = header[len(prefix) :].strip()
+    try:
+        decoded = base64.b64decode(encoded).decode("utf-8")
+    except Exception:
+        return None
+    username, sep, password = decoded.partition(":")
+    if sep != ":" or username != "x-access-token" or not password:
+        return None
+    return password
 
 
 def configure_github_https_token(credential: CredentialQuery, token: str) -> None:
     try:
+        raw = f"x-access-token:{token}".encode("utf-8")
+        header = "Authorization: Basic " + base64.b64encode(raw).decode("ascii")
         subprocess.run(
-            ["git", "config", "--global", "credential.helper", "store"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        subprocess.run(
-            ["git", "config", "--global", "credential.useHttpPath", "true"],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        credential_input = (
-            f"protocol={credential['protocol']}\n"
-            f"host={credential['host']}\n"
-            f"path={credential['path']}\n"
-            "username=x-access-token\n"
-            f"password={token}\n\n"
-        )
-        subprocess.run(
-            ["git", "credential", "approve"],
-            input=credential_input,
+            ["git", "config", "--local", _extraheader_config_key(credential), header],
             check=True,
             capture_output=True,
             text=True,

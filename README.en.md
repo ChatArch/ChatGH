@@ -15,7 +15,7 @@ pip install -e ".[dev]"
 Default behavior:
 
 - `repo`: explicit `--repo owner/repo` wins; otherwise `chatgh` infers the repository from the current git remote.
-- `token`: explicit `--token` wins, then the repo-scoped git credential, then `GITHUB_ACCESS_TOKEN` from typed env.
+- `token`: explicit `--token` wins, then the repo-local HTTPS auth header in the current repository's `.git/config`, then `GITHUB_ACCESS_TOKEN` from typed env.
 - Output: human-readable by default; commands with `--json-output` emit stable JSON for scripts.
 
 ### Token Sources
@@ -23,7 +23,7 @@ Default behavior:
 Token resolution order is stable:
 
 1. Explicit `--token`.
-2. Repo-scoped git credential keyed by normalized `owner/repo` without a `.git` suffix.
+2. Repo-local HTTPS auth header in the current repository's `.git/config`, with the path normalized to `https://github.com/owner/repo.git`.
 3. `GITHUB_ACCESS_TOKEN` from typed env.
 
 Use `chatenv` to inspect or configure typed env:
@@ -44,7 +44,7 @@ When `--repo` is omitted, `chatgh` checks git remotes in the current repository.
 - `git@github.com:octocat/Hello-World.git`
 - `ssh://git@github.com/octocat/Hello-World.git`
 
-When writing repo-scoped credentials, the credential path is normalized to `octocat/Hello-World`.
+When writing a repo-local HTTPS auth header, the path is normalized to `https://github.com/octocat/Hello-World.git`.
 
 ## CLI Entry Points
 
@@ -141,7 +141,14 @@ chatgh set-token --token "$GITHUB_ACCESS_TOKEN" --save-env
 - `permissions` returned by GitHub.
 - derived capabilities: `can_read_pr`, `can_comment_pr`, `can_merge_pr`, `can_view_checks`, `can_view_actions`.
 
-`set-token` only works when the current directory has a recognizable GitHub remote. By default it writes only a repo-scoped git credential; `--save-env` also writes `GITHUB_ACCESS_TOKEN` to typed env.
+`set-token` only works when the current directory has a recognizable GitHub remote. By default it writes only the current repository's `.git/config`:
+
+```ini
+[http "https://github.com/octocat/Hello-World.git"]
+    extraHeader = Authorization: Basic <base64(x-access-token:TOKEN)>
+```
+
+Do not put tokens in remote URLs, and do not log raw `extraHeader` values. With `--save-env`, `set-token` also writes typed env `GITHUB_ACCESS_TOKEN`.
 
 ## Interactive Mode
 
