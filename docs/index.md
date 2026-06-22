@@ -15,7 +15,7 @@ pip install -e ".[dev]"
 默认行为：
 
 - `repo`：优先使用显式 `--repo owner/repo`，未传时从当前 git remote 推断。
-- `token`：优先使用显式 `--token`，其次读取当前仓库对应的 git credential，再回退 typed env 里的 `GITHUB_ACCESS_TOKEN`。
+- `token`：优先使用显式 `--token`，其次读取当前仓库 `.git/config` 中 repo-local HTTPS auth header，再回退 typed env 里的 `GITHUB_ACCESS_TOKEN`。
 - 输出：默认是人类可读格式；支持 `--json-output` 的命令会输出稳定 JSON，适合脚本消费。
 
 ### Token 来源
@@ -23,7 +23,7 @@ pip install -e ".[dev]"
 Token 解析顺序稳定为：
 
 1. 显式 `--token`。
-2. repo-scoped git credential，路径为规范化后的 `owner/repo`，不带 `.git` 后缀。
+2. 当前仓库 `.git/config` 中的 repo-local HTTPS auth header，路径为规范化后的 `https://github.com/owner/repo.git`。
 3. typed env 中的 `GITHUB_ACCESS_TOKEN`。
 
 可以用 `chatenv` 查看或配置 typed env：
@@ -44,7 +44,7 @@ chatenv cat -t gh
 - `git@github.com:octocat/Hello-World.git`
 - `ssh://git@github.com/octocat/Hello-World.git`
 
-写入 repo-scoped credential 时，path 会规范化为 `octocat/Hello-World`。
+写入 repo-local HTTPS auth header 时，path 会规范化为 `https://github.com/octocat/Hello-World.git`。
 
 ## CLI 入口
 
@@ -141,7 +141,14 @@ chatgh set-token --token "$GITHUB_ACCESS_TOKEN" --save-env
 - GitHub 返回的 `permissions`。
 - 派生 capabilities：`can_read_pr`、`can_comment_pr`、`can_merge_pr`、`can_view_checks`、`can_view_actions`。
 
-`set-token` 只在当前目录能识别 GitHub remote 时生效。默认只写入 repo-scoped git credential；传 `--save-env` 时会同步写入 typed env 的 `GITHUB_ACCESS_TOKEN`。
+`set-token` 只在当前目录能识别 GitHub remote 时生效。默认只写入当前仓库自己的 `.git/config`：
+
+```ini
+[http "https://github.com/octocat/Hello-World.git"]
+    extraHeader = Authorization: Basic <base64(x-access-token:TOKEN)>
+```
+
+不要把 token 写进 remote URL，也不要把 raw `extraHeader` 输出到日志。传 `--save-env` 时会同步写入 typed env 的 `GITHUB_ACCESS_TOKEN`。
 
 ## 交互模式
 
