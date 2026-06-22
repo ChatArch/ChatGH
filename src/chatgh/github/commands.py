@@ -29,6 +29,7 @@ from chatgh.github.requests import (
     get_pr_view,
     get_repo_list,
     get_repo_permissions,
+    get_repo_protection,
     get_run_view,
     patch_pr_edit,
     post_pr_comment,
@@ -55,6 +56,20 @@ def list_repos(
     credential_path = credential_path_from_repo(f"{owner}/_")
     client = get_client(token, require_token=True, credential_path=credential_path)
     return get_repo_list(client, owner, limit, sort, direction)
+
+
+def inspect_repo_protection(repo: str, token: Optional[str]) -> dict:
+    resolved_repo = resolve_repo(repo)
+    credential_path = credential_path_from_repo(resolved_repo)
+    resolved_token = resolve_token(token, credential_path=credential_path)
+    return get_repo_protection(resolved_repo, resolved_token)
+
+
+def list_repo_protections(owner: str, limit: int, token: Optional[str]) -> list[dict]:
+    repos = list_repos(owner, limit, "name", "asc", token)
+    credential_path = credential_path_from_repo(f"{owner}/_")
+    resolved_token = resolve_token(token, credential_path=credential_path)
+    return [get_repo_protection(item["full_name"], resolved_token) for item in repos]
 
 
 def create_repo(

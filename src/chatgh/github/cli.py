@@ -10,11 +10,21 @@ import json
 
 import click
 from chatstyle import CommandField, CommandSchema, add_interactive_option, resolve_command_inputs
+from chatstyle.core import InteractiveResolution, normalize_interactive
 from chatstyle.core.interactive import is_interactive_available
 from chatstyle.tui.prompt import BACK_VALUE, ask_text
 
-from chatgh.github.api import resolve_token
-from chatgh.github.commands import create_repo, list_repos, repo_perms, set_token, view_job_logs, view_run
+from chatgh.github.api import resolve_repo_from_git_remote, resolve_token
+from chatgh.github.commands import (
+    create_repo,
+    inspect_repo_protection,
+    list_repo_protections,
+    list_repos,
+    repo_perms,
+    set_token,
+    view_job_logs,
+    view_run,
+)
 from chatgh.github.render import echo_workflow_job, echo_workflow_run, format_optional
 
 
@@ -33,6 +43,42 @@ JOB_ID_SCHEMA = CommandSchema(
     fields=(CommandField("job_id", prompt="workflow job id", kind="int", required=True),),
 )
 
+OWNER_SCHEMA = CommandSchema(
+    name="repo-owner",
+    fields=(CommandField("owner", prompt="GitHub owner or organization", required=True),),
+)
+
+REPO_CREATE_SCHEMA = CommandSchema(
+    name="repo-create",
+    fields=(
+        CommandField("owner", prompt="GitHub owner or organization", required=True),
+        CommandField("name", prompt="repository name", required=True),
+    ),
+)
+
+
+class _TextPromptRuntime:
+    def ask_text(self, prompt: str, default: str = "", password: bool = False):
+        return ask_text(prompt, default=default, password=password)
+
+
+TEXT_PROMPT_RUNTIME = _TextPromptRuntime()
+
+
+def resolve_cli_interactive_mode(interactive: bool | None, *, auto_prompt_condition: bool):
+    interactive = normalize_interactive(interactive)
+    can_prompt = is_interactive_available()
+    force_interactive = interactive is True
+    need_prompt = force_interactive or (
+        interactive is None and auto_prompt_condition and can_prompt
+    )
+    return InteractiveResolution(
+        interactive=interactive,
+        can_prompt=can_prompt,
+        force_interactive=force_interactive,
+        need_prompt=need_prompt,
+    )
+
 
 @click.group(name="github-extra")
 def cli() -> None:
@@ -50,7 +96,7 @@ def repo_group() -> None:
 
 
 @repo_group.command(name="list")
-@click.option("--owner", required=True, help="GitHub owner or organization.")
+@click.option("--owner", required=False, help="GitHub owner or organization.")
 @click.option("--limit", default=50, type=click.IntRange(min=1), show_default=True)
 @click.option(
     "--sort",
@@ -62,9 +108,18 @@ def repo_group() -> None:
 @click.option("--direction", type=click.Choice(["asc", "desc"]), default="desc", show_default=True)
 @click.option("--json-output", is_flag=True, help="Output JSON.")
 @click.option("--token", default=None, help="GitHub token.")
-def repo_list(owner, limit, sort, direction, json_output, token):
+@add_interactive_option
+def repo_list(owner, limit, sort, direction, json_output, token, interactive):
     """List repositories for an owner or organization."""
-    payload = list_repos(owner, limit, sort, direction, token)
+    inputs = resolve_command_inputs(
+        schema=OWNER_SCHEMA,
+        provided={"owner": owner},
+        interactive=interactive,
+        usage="Usage: chatgh repo list --owner TEXT [-i|-I]",
+        prompt_runtime_override=TEXT_PROMPT_RUNTIME,
+        interactive_resolver_override=resolve_cli_interactive_mode,
+    )
+    payload = list_repos(inputs["owner"], limit, sort, direction, token)
     if json_output:
         click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
         return
@@ -102,17 +157,119 @@ def _echo_repo_table(items: list[dict]) -> None:
         click.echo("  ".join(value.ljust(widths[index]) for index, value in enumerate(clipped)))
 
 
+@repo_group.command(name="protection")
+@click.option("--repo", default=None, help="Repository in owner/name form. Defaults to current git remote when --owner is omitted.")
+@click.option("--owner", default=None, help="GitHub owner or organization for inventory mode.")
+@click.option("--limit", default=50, type=click.IntRange(min=1), show_default=True)
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token.")
+def repo_protection(repo, owner, limit, json_output, token):
+    """Show default-branch protection and ruleset status."""
+    if repo and owner:
+        raise click.ClickException("Use either --repo for one repository or --owner for inventory, not both.")
+    if owner:
+        payload = list_repo_protections(owner, limit, token)
+        if json_output:
+            click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+            return
+        _echo_repo_protection_table(payload)
+        return
+
+    if repo is None:
+        repo, _ = resolve_repo_from_git_remote()
+    payload = inspect_repo_protection(repo, token)
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    _echo_repo_protection_summary(payload)
+
+
+def _yes_no(value) -> str:
+    if value is True:
+        return "yes"
+    if value is False:
+        return "no"
+    return "unknown"
+
+
+def _compact_error(error: object) -> str:
+    text = str(error)
+    text = text.replace("GitHub API error (403) for /rulesets: ", "")
+    text = text.replace(". If this repository should use a dedicated token, run `chatgh set-token` inside the repo to add a matching git credential entry.", "")
+    return text
+
+
+def _echo_repo_protection_summary(payload: dict) -> None:
+    protection = payload.get("branch_protection") or {}
+    click.echo(f"Repo: {payload.get('repo')}")
+    click.echo(f"Default Branch: {payload.get('default_branch') or ''}")
+    click.echo(f"Protected: {_yes_no(payload.get('default_branch_protected'))}")
+    click.echo(f"PR Required: {_yes_no(protection.get('required_pull_request_reviews'))}")
+    reviews = protection.get("required_approving_review_count")
+    click.echo(f"Reviews Required: {'' if reviews is None else reviews}")
+    click.echo(f"Force Pushes Allowed: {_yes_no(protection.get('allow_force_pushes'))}")
+    click.echo(f"Deletions Allowed: {_yes_no(protection.get('allow_deletions'))}")
+    click.echo(f"Rulesets: {payload.get('ruleset_count', 0)}")
+    for ruleset in payload.get("rulesets") or []:
+        name = ruleset.get("name") or ruleset.get("id") or "<unnamed>"
+        click.echo(f"  - {name}: {ruleset.get('enforcement') or 'unknown'}")
+    for error in payload.get("errors") or []:
+        click.echo(f"Warning: {error}", err=True)
+
+
+def _echo_repo_protection_table(items: list[dict]) -> None:
+    columns = [
+        ("repo", "repo"),
+        ("branch", "default_branch"),
+        ("protected", "default_branch_protected"),
+        ("reviews", "required_approving_review_count"),
+        ("rulesets", "ruleset_count"),
+        ("error", "error_summary"),
+    ]
+    rows = []
+    for item in items:
+        protection = item.get("branch_protection") or {}
+        errors = item.get("errors") or []
+        row_values = {
+            "repo": item.get("repo"),
+            "default_branch": item.get("default_branch"),
+            "default_branch_protected": _yes_no(item.get("default_branch_protected")),
+            "required_approving_review_count": protection.get("required_approving_review_count"),
+            "ruleset_count": item.get("ruleset_count", 0),
+            "error_summary": "; ".join(_compact_error(error) for error in errors),
+        }
+        rows.append([str(row_values.get(key) if row_values.get(key) is not None else "") for _, key in columns])
+    widths = [len(label) for label, _ in columns]
+    for row in rows:
+        for index, value in enumerate(row):
+            widths[index] = min(max(widths[index], len(value)), 48)
+    click.echo("  ".join(label.ljust(widths[index]) for index, (label, _) in enumerate(columns)))
+    click.echo("  ".join("-" * width for width in widths))
+    for row in rows:
+        clipped = [value[: widths[index]] for index, value in enumerate(row)]
+        click.echo("  ".join(value.ljust(widths[index]) for index, value in enumerate(clipped)))
+
+
 @repo_group.command(name="create")
-@click.option("--owner", required=True, help="GitHub owner or organization.")
-@click.option("--name", required=True, help="Repository name.")
+@click.option("--owner", required=False, help="GitHub owner or organization.")
+@click.option("--name", required=False, help="Repository name.")
 @click.option("--description", default=None, help="Repository description.")
 @click.option("--public", "public_repo", is_flag=True, help="Create a public repository. Defaults to private.")
 @click.option("--if-exists", type=click.Choice(["error", "use"]), default="error", show_default=True)
 @click.option("--json-output", is_flag=True, help="Output JSON.")
 @click.option("--token", default=None, help="GitHub token.")
-def repo_create(owner, name, description, public_repo, if_exists, json_output, token):
+@add_interactive_option
+def repo_create(owner, name, description, public_repo, if_exists, json_output, token, interactive):
     """Create a repository. Repositories are private by default."""
-    payload = create_repo(owner, name, not public_repo, description, if_exists, token)
+    inputs = resolve_command_inputs(
+        schema=REPO_CREATE_SCHEMA,
+        provided={"owner": owner, "name": name},
+        interactive=interactive,
+        usage="Usage: chatgh repo create --owner TEXT --name TEXT [-i|-I]",
+        prompt_runtime_override=TEXT_PROMPT_RUNTIME,
+        interactive_resolver_override=resolve_cli_interactive_mode,
+    )
+    payload = create_repo(inputs["owner"], inputs["name"], not public_repo, description, if_exists, token)
     if json_output:
         click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
         return

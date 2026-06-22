@@ -64,6 +64,7 @@ Command tree:
 - `chatgh pr checks NUMBER`: generated-layer PR head commit check runs.
 - `chatgh repo list`: list repositories for a user/org; defaults to table output and supports `--json-output`, `--limit`, `--sort updated|created|pushed|name|stars|open-prs|open-issues`, and `--direction asc|desc`, with visibility, stars, open PRs/issues, and timestamps.
 - `chatgh repo create`: create a repository; defaults to private and supports `--public`.
+- `chatgh repo protection`: inspect default-branch protection and repository rulesets for one repo or for an owner inventory; use this instead of crowding governance fields into `repo list`.
 - The public `chatgh pr` command surface currently includes only `list/view/checks`; PR create/comment/merge/edit workflows remain available as internal helpers and are not documented as stable CLI commands until restored.
 - `chatgh run view`: show a workflow run and its jobs.
 - `chatgh run logs`: show job logs, with tail and file output support.
@@ -124,6 +125,17 @@ chatgh run logs --repo octocat/Hello-World --job-id 987654321 --tail 200 --outpu
 ### Comment, Merge, And Edit PRs
 
 The current version does not expose public `chatgh pr comment/merge/edit` CLI commands. The workflow functions remain in `chatgh.github.commands`; use the existing project workflow or GitHub API until these write commands are restored as a stable CLI surface.
+
+### Inspect Repository Protection
+
+```bash
+chatgh repo protection --repo octocat/Hello-World
+chatgh repo protection --repo octocat/Hello-World --json-output
+chatgh repo protection --owner octocat --limit 50
+chatgh repo protection --owner octocat --limit 50 --json-output
+```
+
+`repo protection` reports the default branch, whether it is protected, classic branch protection details such as required PR reviews / review count / force-push and deletion flags, and repository ruleset summaries when GitHub exposes them. Some private repositories may return a GitHub plan/visibility error for rulesets; the command preserves that error in JSON while still reporting the branch protection state when available.
 
 ### Configure And Inspect Tokens
 

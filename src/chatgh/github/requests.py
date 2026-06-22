@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Optional
+from urllib.parse import quote
 
 from chatgh.github.api import github_api_get_json, github_api_get_text
 
@@ -64,6 +65,82 @@ def get_pr_list(client, repo: str, state: str, limit: int) -> list[dict]:
         if len(items) >= limit:
             break
     return items
+
+
+def get_repo_protection(repo: str, token: Optional[str]) -> dict:
+    repo_payload = github_api_get_json(repo, "", token)
+    default_branch = repo_payload.get("default_branch")
+    errors: list[str] = []
+    branch_protection = {"enabled": False}
+    default_branch_protected: Optional[bool] = None
+
+    if default_branch:
+        branch_path = quote(str(default_branch), safe="")
+        try:
+            branch_payload = github_api_get_json(repo, f"/branches/{branch_path}", token)
+            default_branch_protected = bool(branch_payload.get("protected"))
+        except Exception as exc:
+            errors.append(f"branch: {exc}")
+            default_branch_protected = None
+
+        if default_branch_protected:
+            try:
+                protection_payload = github_api_get_json(
+                    repo, f"/branches/{branch_path}/protection", token
+                )
+                branch_protection = _build_branch_protection_payload(protection_payload)
+            except Exception as exc:
+                branch_protection = {"enabled": True, "error": str(exc)}
+                errors.append(f"branch protection: {exc}")
+    else:
+        errors.append("default branch missing")
+
+    rulesets: list[dict] = []
+    try:
+        ruleset_payload = github_api_get_json(repo, "/rulesets", token)
+        if isinstance(ruleset_payload, list):
+            rulesets = [_build_ruleset_summary(item) for item in ruleset_payload]
+    except Exception as exc:
+        errors.append(f"rulesets: {exc}")
+
+    return {
+        "repo": repo_payload.get("full_name") or repo,
+        "private": repo_payload.get("private"),
+        "visibility": repo_payload.get("visibility"),
+        "default_branch": default_branch,
+        "default_branch_protected": default_branch_protected,
+        "branch_protection": branch_protection,
+        "rulesets": rulesets,
+        "ruleset_count": len(rulesets),
+        "errors": errors,
+    }
+
+
+def _build_branch_protection_payload(payload: dict) -> dict:
+    reviews = payload.get("required_pull_request_reviews") or None
+    return {
+        "enabled": True,
+        "required_pull_request_reviews": reviews is not None,
+        "required_approving_review_count": (
+            reviews or {}
+        ).get("required_approving_review_count"),
+        "allow_force_pushes": (payload.get("allow_force_pushes") or {}).get("enabled"),
+        "allow_deletions": (payload.get("allow_deletions") or {}).get("enabled"),
+        "required_status_checks": payload.get("required_status_checks") is not None,
+        "enforce_admins": (payload.get("enforce_admins") or {}).get("enabled"),
+    }
+
+
+def _build_ruleset_summary(payload: dict) -> dict:
+    rules = payload.get("rules") or []
+    return {
+        "id": payload.get("id"),
+        "name": payload.get("name"),
+        "target": payload.get("target"),
+        "enforcement": payload.get("enforcement"),
+        "rule_count": len(rules),
+        "rules": [rule.get("type") for rule in rules if isinstance(rule, dict)],
+    }
 
 
 def get_pr_view(client, repo: str, number: int) -> dict:
