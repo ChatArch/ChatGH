@@ -65,6 +65,7 @@ chatgh set-token --help
 - 当前公开 `chatgh pr` 命令面只包含 `list/view/checks`；PR 创建、评论、合并和编辑流程仍由内部 helper 支持，后续作为独立 CLI 命令恢复前不在帮助与文档中承诺。
 - `chatgh repo list`：列出 user/org 下的仓库；默认 table，支持 `--json-output`、`--limit`、`--sort updated|created|pushed|name|stars|open-prs|open-issues`、`--direction asc|desc`，字段包含 visibility、stars、open PRs、open issues、created/updated time 等。
 - `chatgh repo create`：创建仓库；默认 private，可用 `--public` 显式创建公开仓库。
+- `chatgh repo protection`：查看单个仓库或 owner 下仓库的默认分支保护与 repository rulesets；治理/规则审计不挤进 `repo list` 默认表格。
 - `chatgh run view`：查看 workflow run 和 jobs。
 - `chatgh run logs`：查看 job 日志，支持 tail 和落盘。
 - `chatgh repo-perms`：查看 token 权限和派生 capabilities。
@@ -124,6 +125,17 @@ chatgh run logs --repo octocat/Hello-World --job-id 987654321 --tail 200 --outpu
 ### 评论、合并和编辑 PR
 
 当前版本未公开 `chatgh pr comment/merge/edit` CLI 命令。相关业务函数已保留在 `chatgh.github.commands` 中，后续恢复为稳定 CLI surface 前，建议通过项目既有流程或 GitHub API 执行写操作。
+
+### 查看仓库保护规则
+
+```bash
+chatgh repo protection --repo octocat/Hello-World
+chatgh repo protection --repo octocat/Hello-World --json-output
+chatgh repo protection --owner octocat --limit 50 --jobs 8
+chatgh repo protection --owner octocat --limit 50 --jobs 8 --json-output
+```
+
+`repo protection` 会展示默认分支、是否 protected、classic branch protection 细节（例如是否要求 PR、review 数量、是否允许 force push / deletion），以及 GitHub 可读取时的 repository ruleset 摘要。部分 private 仓库可能因为 GitHub plan/visibility 限制读取 rulesets 返回错误；命令会在 JSON 里保留该错误，同时尽量展示 branch protection 状态。owner inventory 模式会先列仓库，再用 `--jobs` 并发检查每个仓库，输出顺序保持稳定。
 
 ### 配置和检查 token
 

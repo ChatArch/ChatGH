@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from concurrent.futures import ThreadPoolExecutor
 from typing import Optional
 
 import click
@@ -28,7 +29,9 @@ from chatgh.github.requests import (
     get_pr_list,
     get_pr_view,
     get_repo_list,
+    get_repo_names,
     get_repo_permissions,
+    get_repo_protection,
     get_run_view,
     patch_pr_edit,
     post_pr_comment,
@@ -55,6 +58,25 @@ def list_repos(
     credential_path = credential_path_from_repo(f"{owner}/_")
     client = get_client(token, require_token=True, credential_path=credential_path)
     return get_repo_list(client, owner, limit, sort, direction)
+
+
+def inspect_repo_protection(repo: str, token: Optional[str]) -> dict:
+    resolved_repo = resolve_repo(repo)
+    credential_path = credential_path_from_repo(resolved_repo)
+    resolved_token = resolve_token(token, credential_path=credential_path)
+    return get_repo_protection(resolved_repo, resolved_token)
+
+
+def list_repo_protections(owner: str, limit: int, token: Optional[str], jobs: int = 8) -> list[dict]:
+    credential_path = credential_path_from_repo(f"{owner}/_")
+    client = get_client(token, require_token=True, credential_path=credential_path)
+    repo_names = get_repo_names(client, owner, limit)
+    resolved_token = resolve_token(token, credential_path=credential_path)
+    if not repo_names:
+        return []
+    worker_count = max(1, min(jobs, len(repo_names)))
+    with ThreadPoolExecutor(max_workers=worker_count) as executor:
+        return list(executor.map(lambda repo: get_repo_protection(repo, resolved_token), repo_names))
 
 
 def create_repo(
