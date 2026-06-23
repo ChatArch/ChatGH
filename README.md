@@ -33,6 +33,8 @@ chatenv init -t gh
 chatenv cat -t gh
 ```
 
+安装 `chatgh` 后，它会通过 `chatenv.configs` entry point 注册 `GitHubConfig`，所以 `chatenv list` 会出现 `[GitHub]` 分组，`-t gh` / `-t github` 可以解析到同一份 GitHub typed env。
+
 `ghp_xxx` / `github_pat_xxx` 都是 GitHub Personal Access Token。通常 clone/fetch/push 至少需要 contents 读写权限；PR 评论、合并和 Actions 读取按仓库策略补充对应权限。
 
 ### 仓库推断

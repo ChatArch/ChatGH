@@ -33,6 +33,8 @@ chatenv init -t gh
 chatenv cat -t gh
 ```
 
+After `chatgh` is installed, it registers `GitHubConfig` through the `chatenv.configs` entry point, so `chatenv list` shows a `[GitHub]` group and `-t gh` / `-t github` resolve to the same GitHub typed env.
+
 `ghp_xxx` and `github_pat_xxx` are GitHub Personal Access Tokens. Clone/fetch/push usually require contents read/write permissions; PR comments, merges, and Actions inspection may require additional repository permissions.
 
 ### Repository Inference
