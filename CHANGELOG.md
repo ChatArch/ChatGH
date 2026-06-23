@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 本项目按日期记录更新；正式发版信息也维护在本文件。
 
 ## 2026-06-15
+- 准备 `0.2.4` 补丁版本：发布 `chatgh repo protection` 默认分支保护 / rulesets 检查能力，并补充 owner inventory 的并发检查与表格/JSON 输出。
 - 修复 `chatgh repo list/create` 缺少可恢复参数时被 Click required option 提前拦截、无法进入 chatstyle 交互补问的问题。
 - 新增 `chatgh repo protection` 独立命令，用于查看单仓库或 owner inventory 的默认分支保护和 repository rulesets 状态；不把治理/规则字段塞进 `repo list` 默认表格。
 - 准备 `0.2.3` 补丁版本：发布 repo-local `.git/config` HTTPS auth header 读写改造，确保 `chatgh set-token` 与 token resolution 不再依赖全局 git credential store。
