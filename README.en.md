@@ -67,7 +67,7 @@ Command tree:
 - `chatgh repo list`: list repositories for a user/org; defaults to table output and supports `--json-output`, `--limit`, `--sort updated|created|pushed|name|stars|open-prs|open-issues`, and `--direction asc|desc`, with visibility, stars, open PRs/issues, and timestamps.
 - `chatgh repo create`: create a repository; defaults to private and supports `--public`.
 - `chatgh repo protection`: inspect default-branch protection and repository rulesets for one repo or for an owner inventory; use this instead of crowding governance fields into `repo list`.
-- The public `chatgh pr` command surface currently includes only `list/view/checks`; PR create/comment/merge/edit workflows remain available as internal helpers and are not documented as stable CLI commands until restored.
+- The public `chatgh pr` command surface includes `list/create/view/comment/edit/checks/merge`; write commands use the same ChatGH token resolution and keep secrets out of output.
 - `chatgh run view`: show a workflow run and its jobs.
 - `chatgh run logs`: show job logs, with tail and file output support.
 - `chatgh repo-perms`: show token permissions and derived capabilities.
@@ -77,7 +77,12 @@ Command tree:
 
 ### Create A PR
 
-The current version does not expose a public `chatgh pr create` CLI command. Use the existing project GitHub workflow or the GitHub API for PR creation until write commands are restored as a stable CLI surface.
+```bash
+chatgh pr create --repo octocat/Hello-World --base main --head rex/feature --title "Add feature" --body-file pr-body.md
+chatgh pr create --repo octocat/Hello-World --base main --head rex/feature --title "Add feature" --body "Short body" --json-output
+```
+
+`pr create` uses the existing ChatGH token resolution flow and does not print tokens. Missing `base/head/title` values can be prompted interactively; use `-I` to fail clearly in non-interactive mode.
 
 ### View PRs
 
@@ -126,7 +131,13 @@ chatgh run logs --repo octocat/Hello-World --job-id 987654321 --tail 200 --outpu
 
 ### Comment, Merge, And Edit PRs
 
-The current version does not expose public `chatgh pr comment/merge/edit` CLI commands. The workflow functions remain in `chatgh.github.commands`; use the existing project workflow or GitHub API until these write commands are restored as a stable CLI surface.
+```bash
+chatgh pr comment 123 --repo octocat/Hello-World --body-file review-note.md
+chatgh pr edit 123 --repo octocat/Hello-World --title "New title" --body-file pr-body.md
+chatgh pr merge 123 --repo octocat/Hello-World --method squash --check
+```
+
+`pr merge` defaults to `--method squash` and `--check`, reading PR checks before merge and refusing non-green states. Merging is still a high-risk remote mutation; confirm PR status and user authorization before running it.
 
 ### Inspect Repository Protection
 

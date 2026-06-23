@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 本项目按日期记录更新；正式发版信息也维护在本文件。
 
+## 2026-06-24
+- 准备 `0.2.6` 补丁版本：恢复 `chatgh pr create/comment/edit/merge` 公开 CLI surface，并把 ChatEnv 依赖窗口推进到 `chatenv>=0.2.0,<0.3.0` 以对齐已发布的 shared config runtime。
+- 恢复 `chatgh pr create/comment/edit/merge` 公开 CLI surface，复用已存在的 GitHub helper 层；`merge` 默认 `--method squash` 与 `--check`，写操作支持 `--json-output` 和 body/message file。
+- 为 ChatArch 内部依赖补版本窗口：`chatstyle>=0.1.0,<0.2.0`、`chatenv>=0.2.0,<0.3.0`，避免旧包自动解析到未来不兼容 minor。
+- 文档同步移除“PR 写操作未公开”的过期说明。
+
 ## 2026-06-15
 - 准备 `0.2.5` 补丁版本：为 ChatGH 注册 `chatenv.configs` provider，使安装后的 `chatenv list` / `chatenv cat -t gh` 能发现 GitHub typed env。
 - 准备 `0.2.4` 补丁版本：发布 `chatgh repo protection` 默认分支保护 / rulesets 检查能力，并补充 owner inventory 的并发检查与表格/JSON 输出。

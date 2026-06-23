@@ -77,7 +77,12 @@ chatgh set-token --help
 
 ### 创建 PR
 
-当前版本未公开 `chatgh pr create` CLI 命令。需要创建 PR 时，请使用项目既有 GitHub 流程或直接调用 GitHub API；等写操作命令恢复为稳定 CLI surface 后再补回示例。
+```bash
+chatgh pr create --repo octocat/Hello-World --base main --head rex/feature --title "Add feature" --body-file pr-body.md
+chatgh pr create --repo octocat/Hello-World --base main --head rex/feature --title "Add feature" --body "Short body" --json-output
+```
+
+`pr create` 会使用当前 ChatGH token resolution 逻辑，不会打印 token。缺少 `base/head/title` 时，可在交互终端自动补问；非交互可用 `-I` 明确失败。
 
 ### 查看 PR
 
@@ -126,7 +131,13 @@ chatgh run logs --repo octocat/Hello-World --job-id 987654321 --tail 200 --outpu
 
 ### 评论、合并和编辑 PR
 
-当前版本未公开 `chatgh pr comment/merge/edit` CLI 命令。相关业务函数已保留在 `chatgh.github.commands` 中，后续恢复为稳定 CLI surface 前，建议通过项目既有流程或 GitHub API 执行写操作。
+```bash
+chatgh pr comment 123 --repo octocat/Hello-World --body-file review-note.md
+chatgh pr edit 123 --repo octocat/Hello-World --title "New title" --body-file pr-body.md
+chatgh pr merge 123 --repo octocat/Hello-World --method squash --check
+```
+
+`pr merge` 默认使用 `--method squash` 和 `--check`，会在合并前读取 PR checks 并拒绝非绿色状态。合并仍然是高风险远程 mutation，实际执行前应先确认 PR 状态和用户授权。
 
 ### 查看仓库保护规则
 

@@ -26,10 +26,8 @@ def test_chatgh_pr_help_commands(runner):
     result = runner.invoke(cli, ["pr", "--help"])
 
     assert result.exit_code == 0
-    for command in ["list", "view", "checks"]:
+    for command in ["list", "create", "view", "comment", "edit", "checks", "merge"]:
         assert command in result.output
-    for removed in ["create", "comment", "merge", "edit"]:
-        assert removed not in result.output
 
 
 def test_chatgh_pr_view_uses_positional_number(runner):
