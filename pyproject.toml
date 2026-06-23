@@ -20,8 +20,11 @@ classifiers = [
 [project.scripts]
 chatgh = "chatgh.cli:main"
 
+[project.entry-points."chatenv.configs"]
+github = "chatgh.config"
+
 [project.optional-dependencies]
-dev = ["build", "pytest", "twine"]
+dev = ["build", "pytest", "twine", "tomli; python_version < '3.11'"]
 docs = ["mkdocs>=1.4.0", "mkdocs-material>=9.0.0", "mike>=2.0.0"]
 
 [tool.setuptools.dynamic]
