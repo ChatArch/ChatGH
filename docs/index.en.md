@@ -66,7 +66,7 @@ Command tree:
 - `chatgh pr checks NUMBER`: generated-layer PR head commit check runs.
 - `chatgh repo list`: list repositories for a user/org; defaults to table output and supports `--json-output`, `--limit`, `--sort updated|created|pushed|name|stars|open-prs|open-issues`, and `--direction asc|desc`, with visibility, stars, open PRs/issues, and timestamps.
 - `chatgh repo create`: create a repository; defaults to private and supports `--public`.
-- `chatgh repo fork`: fork a source repository into a target user/org, with optional target name, `--default-branch-only`, `--if-exists use`, and JSON output.
+- `chatgh repo fork`: fork a source repository into a target user/org, with `gh`-style positional input, `--org`, and `--fork-name`, plus ChatGH's explicit `--source`, `--owner`, `--name`, `--default-branch-only`, `--if-exists use`, and JSON output.
 - `chatgh repo protection`: inspect default-branch protection and repository rulesets for one repo or for an owner inventory; use this instead of crowding governance fields into `repo list`.
 - The public `chatgh pr` command surface includes `list/create/view/comment/edit/checks/merge`; write commands use the same ChatGH token resolution and keep secrets out of output.
 - `chatgh run view`: show a workflow run and its jobs.
@@ -143,12 +143,17 @@ chatgh pr merge 123 --repo octocat/Hello-World --method squash --check
 ### Fork Repositories
 
 ```bash
+# gh-like shape
+chatgh repo fork octocat/Hello-World --org ChatArch
+chatgh repo fork octocat/Hello-World --org ChatArch --fork-name hello-world-copy --default-branch-only
+
+# ChatGH explicit / automation-friendly shape
 chatgh repo fork --source octocat/Hello-World --owner ChatArch
 chatgh repo fork --source octocat/Hello-World --owner ChatArch --name hello-world-copy --default-branch-only
 chatgh repo fork --source octocat/Hello-World --owner ChatArch --if-exists use --json-output
 ```
 
-`repo fork` uses the GitHub Fork API. The target repository name defaults to the source repository name. Organization targets send GitHub's `organization` field; user-account targets require `--owner` to match the authenticated user. `--if-exists use` only reuses an existing fork when it matches the requested source, avoiding false success on an unrelated same-name repository.
+`repo fork` uses the GitHub Fork API. The target repository name defaults to the source repository name. It accepts the common official `gh repo fork [<repository>] --org ... --fork-name ...` shape while preserving ChatGH's explicit `--source/--owner/--name` and `--json-output/--if-exists use` automation extensions. Organization targets send GitHub's `organization` field; user-account targets require `--owner` to match the authenticated user. `--if-exists use` only reuses an existing fork when it matches the requested source, avoiding false success on an unrelated same-name repository.
 
 ### Inspect Repository Protection
 
@@ -234,7 +239,9 @@ The long-term `chattool gh` implementation has moved to `chatgh`. ChatTool may k
 
 ## Development Reference
 
-When extending `chatgh`, prefer official documentation:
+When extending `chatgh`, start from the project interface guide: `docs/gh-interface-alignment.en.md`. For common GitHub capabilities, first inspect the official GitHub CLI `gh` command shape and help text. If `gh` already has the capability, prefer compatible names, positional arguments, and common aliases, then implement it through ChatGH's own auth, JSON, safety gates, and Python API. If `gh` does not have it, design a ChatGH-native surface. Official `gh` is reference-only; it is not a runtime dependency, CI/ops fallback, or real operation path.
+
+Also consult official API documentation:
 
 - GitHub REST API: https://docs.github.com/en/rest
 - Pull requests API: https://docs.github.com/en/rest/pulls/pulls

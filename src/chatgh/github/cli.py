@@ -89,6 +89,23 @@ def resolve_cli_interactive_mode(interactive: bool | None, *, auto_prompt_condit
     )
 
 
+def _resolve_fork_source(source_arg: str | None, source_option: str | None) -> str | None:
+    if source_arg and source_option:
+        raise click.ClickException("Use either positional repository or --source, not both")
+    return source_arg or source_option
+
+
+def _resolve_alias_value(
+    primary: str | None,
+    alias: str | None,
+    primary_flag: str,
+    alias_flag: str,
+) -> str | None:
+    if primary and alias and primary != alias:
+        raise click.ClickException(f"Use either {primary_flag} or {alias_flag}, not both")
+    return primary or alias
+
+
 @click.group(name="github-extra")
 def cli() -> None:
     """GitHub Actions and credential helpers."""
@@ -291,28 +308,34 @@ def repo_create(owner, name, description, public_repo, if_exists, json_output, t
 
 
 @repo_group.command(name="fork")
+@click.argument("source_arg", required=False, metavar="REPOSITORY")
 @click.option("--source", required=False, help="Source repository in owner/name form.")
 @click.option("--owner", required=False, help="Target GitHub owner or organization.")
+@click.option("--org", "org", required=False, help="Target GitHub organization. Alias for --owner.")
 @click.option("--name", default=None, help="Target repository name. Defaults to the source repository name.")
+@click.option("--fork-name", "fork_name", default=None, help="Target repository name. Alias for --name.")
 @click.option("--default-branch-only", is_flag=True, help="Fork only the source default branch.")
 @click.option("--if-exists", type=click.Choice(["error", "use"]), default="error", show_default=True)
 @click.option("--json-output", is_flag=True, help="Output JSON.")
 @click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def repo_fork(source, owner, name, default_branch_only, if_exists, json_output, token, interactive):
+def repo_fork(source_arg, source, owner, org, name, fork_name, default_branch_only, if_exists, json_output, token, interactive):
     """Fork a repository into a target owner or organization."""
+    resolved_source = _resolve_fork_source(source_arg, source)
+    resolved_owner = _resolve_alias_value(owner, org, "--owner", "--org")
+    resolved_name = _resolve_alias_value(name, fork_name, "--name", "--fork-name")
     inputs = resolve_command_inputs(
         schema=REPO_FORK_SCHEMA,
-        provided={"source": source, "owner": owner},
+        provided={"source": resolved_source, "owner": resolved_owner},
         interactive=interactive,
-        usage="Usage: chatgh repo fork --source OWNER/REPO --owner TEXT [-i|-I]",
+        usage="Usage: chatgh repo fork [OWNER/REPO] [--source OWNER/REPO] --owner TEXT [--org TEXT] [-i|-I]",
         prompt_runtime_override=TEXT_PROMPT_RUNTIME,
         interactive_resolver_override=resolve_cli_interactive_mode,
     )
     payload = fork_repo(
         inputs["source"],
         inputs["owner"],
-        name,
+        resolved_name,
         default_branch_only,
         if_exists,
         token,

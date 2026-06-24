@@ -479,6 +479,123 @@ def test_chatgh_repo_fork_renders_existing_json(monkeypatch, runner):
     assert '"created": false' in result.output
 
 
+def test_chatgh_repo_fork_accepts_gh_like_positional_and_aliases(monkeypatch, runner):
+    captured = {}
+
+    def fake_fork(source, owner, name, default_branch_only, if_exists, token):
+        captured.update(
+            {
+                "source": source,
+                "owner": owner,
+                "name": name,
+                "default_branch_only": default_branch_only,
+                "if_exists": if_exists,
+                "token": token,
+            }
+        )
+        return {
+            "full_name": f"{owner}/{name}",
+            "source_full_name": source,
+            "created": True,
+            "html_url": f"https://github.com/{owner}/{name}",
+        }
+
+    monkeypatch.setattr("chatgh.github.cli.fork_repo", fake_fork)
+
+    result = runner.invoke(
+        cli,
+        [
+            "repo",
+            "fork",
+            "Wei-Shaw/claude-relay-service",
+            "--org",
+            "ChatArch",
+            "--fork-name",
+            "crs",
+            "--default-branch-only",
+            "--json-output",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert '"full_name": "ChatArch/crs"' in result.output
+    assert captured == {
+        "source": "Wei-Shaw/claude-relay-service",
+        "owner": "ChatArch",
+        "name": "crs",
+        "default_branch_only": True,
+        "if_exists": "error",
+        "token": None,
+    }
+
+
+def test_chatgh_repo_fork_rejects_conflicting_source_forms(runner):
+    result = runner.invoke(
+        cli,
+        [
+            "repo",
+            "fork",
+            "owner/from-arg",
+            "--source",
+            "owner/from-option",
+            "--owner",
+            "ChatArch",
+            "-I",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Use either positional repository or --source, not both" in result.output
+
+
+def test_chatgh_repo_fork_rejects_conflicting_owner_aliases(runner):
+    result = runner.invoke(
+        cli,
+        [
+            "repo",
+            "fork",
+            "owner/repo",
+            "--owner",
+            "ChatArch",
+            "--org",
+            "OtherOrg",
+            "-I",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Use either --owner or --org, not both" in result.output
+
+
+def test_chatgh_repo_fork_rejects_conflicting_name_aliases(runner):
+    result = runner.invoke(
+        cli,
+        [
+            "repo",
+            "fork",
+            "owner/repo",
+            "--owner",
+            "ChatArch",
+            "--name",
+            "repo-a",
+            "--fork-name",
+            "repo-b",
+            "-I",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Use either --name or --fork-name, not both" in result.output
+
+
+def test_chatgh_repo_fork_help_uses_gh_like_repository_metavar(runner):
+    result = runner.invoke(cli, ["repo", "fork", "--help"])
+
+    assert result.exit_code == 0
+    assert "Usage: main repo fork [OPTIONS] REPOSITORY" in result.output
+    assert "[SOURCE_ARG]" not in result.output
+
+
 def test_chatgh_repo_fork_rejects_invalid_source(runner):
     result = runner.invoke(
         cli,

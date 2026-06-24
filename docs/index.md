@@ -66,7 +66,7 @@ chatgh set-token --help
 - `chatgh pr checks NUMBER`：generated-layer PR head commit check runs。
 - `chatgh repo list`：列出 user/org 下的仓库；默认 table，支持 `--json-output`、`--limit`、`--sort updated|created|pushed|name|stars|open-prs|open-issues`、`--direction asc|desc`，字段包含 visibility、stars、open PRs、open issues、created/updated time 等。
 - `chatgh repo create`：创建仓库；默认 private，可用 `--public` 显式创建公开仓库。
-- `chatgh repo fork`：把 source 仓库 fork 到目标 user/org，支持自定义目标仓库名、`--default-branch-only`、`--if-exists use` 和 JSON 输出。
+- `chatgh repo fork`：把 source 仓库 fork 到目标 user/org，兼容 `gh` 风格位置参数、`--org`、`--fork-name`，并保留 ChatGH 显式 `--source`、`--owner`、`--name`、`--default-branch-only`、`--if-exists use` 和 JSON 输出。
 - `chatgh repo protection`：查看单个仓库或 owner 下仓库的默认分支保护与 repository rulesets；治理/规则审计不挤进 `repo list` 默认表格。
 - 当前公开 `chatgh pr` 命令面包含 `list/create/view/comment/edit/checks/merge`；写操作复用 ChatGH token resolution，且不会打印 token。
 - `chatgh run view`：查看 workflow run 和 jobs。
@@ -143,12 +143,17 @@ chatgh pr merge 123 --repo octocat/Hello-World --method squash --check
 ### Fork 仓库
 
 ```bash
+# gh-like 形态
+chatgh repo fork octocat/Hello-World --org ChatArch
+chatgh repo fork octocat/Hello-World --org ChatArch --fork-name hello-world-copy --default-branch-only
+
+# ChatGH 显式/自动化形态
 chatgh repo fork --source octocat/Hello-World --owner ChatArch
 chatgh repo fork --source octocat/Hello-World --owner ChatArch --name hello-world-copy --default-branch-only
 chatgh repo fork --source octocat/Hello-World --owner ChatArch --if-exists use --json-output
 ```
 
-`repo fork` 通过 GitHub Fork API 创建目标仓库；目标仓库名默认沿用 source repo 名。目标为 organization 时会传递 GitHub API 的 `organization` 字段；目标为 user account 时，`--owner` 必须匹配当前认证用户。`--if-exists use` 只会复用已存在且匹配 source 的 fork，避免把同名非匹配仓库误当成功结果。
+`repo fork` 通过 GitHub Fork API 创建目标仓库；目标仓库名默认沿用 source repo 名。它兼容官方 `gh repo fork [<repository>] --org ... --fork-name ...` 的常见形态，同时保留 ChatGH 的显式 `--source/--owner/--name` 和 `--json-output/--if-exists use` 自动化扩展。目标为 organization 时会传递 GitHub API 的 `organization` 字段；目标为 user account 时，`--owner` 必须匹配当前认证用户。`--if-exists use` 只会复用已存在且匹配 source 的 fork，避免把同名非匹配仓库误当成功结果。
 
 ### 查看仓库保护规则
 
@@ -234,7 +239,9 @@ checks = client.get_pr_checks("octocat/Hello-World", 1)
 
 ## 开发参考
 
-扩展 `chatgh` 时优先查官方文档：
+扩展 `chatgh` 时应先看项目内接口规范：`docs/gh-interface-alignment.md`。常见 GitHub 能力要先参考官方 GitHub CLI `gh` 的命令形态和帮助文本；如果官方已有能力，优先兼容其命名、位置参数和常见 alias，再结合 ChatGH 的鉴权、JSON、安全门和 Python API 落地；如果官方没有，才设计 ChatGH-native surface。官方 `gh` 只作接口参考，不作为运行依赖、CI/ops fallback 或真实操作路径。
+
+扩展时也要查官方 API 文档：
 
 - GitHub REST API: https://docs.github.com/en/rest
 - Pull requests API: https://docs.github.com/en/rest/pulls/pulls
