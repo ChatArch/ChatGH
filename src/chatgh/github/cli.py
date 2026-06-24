@@ -16,15 +16,24 @@ from chatstyle.tui.prompt import BACK_VALUE, ask_text
 
 from chatgh.github.api import resolve_repo_from_git_remote, resolve_token
 from chatgh.github.commands import (
+    cancel_run,
+    clone_repo,
     create_repo,
+    download_run_artifacts,
+    edit_repo,
     fork_repo,
     inspect_repo_protection,
     list_repo_protections,
     list_repos,
+    list_runs,
     repo_perms,
+    rerun_run,
     set_token,
+    sync_repo,
     view_job_logs,
+    view_repo,
     view_run,
+    watch_run,
 )
 from chatgh.github.render import echo_workflow_job, echo_workflow_run, format_optional
 
@@ -63,6 +72,11 @@ REPO_FORK_SCHEMA = CommandSchema(
         CommandField("source", prompt="source repository (owner/name)", required=True),
         CommandField("owner", prompt="target GitHub owner or organization", required=True),
     ),
+)
+
+REPO_VIEW_SCHEMA = CommandSchema(
+    name="repo-view",
+    fields=(CommandField("repo", prompt="repository (owner/name)", required=True),),
 )
 
 
@@ -182,6 +196,121 @@ def _echo_repo_table(items: list[dict]) -> None:
         clipped = [value[: widths[index]] for index, value in enumerate(row)]
         click.echo("  ".join(value.ljust(widths[index]) for index, value in enumerate(clipped)))
 
+
+
+@repo_group.command(name="view")
+@click.argument("repo_arg", required=False, metavar="REPOSITORY")
+@click.option("-R", "--repo", "repo_option", default=None, help="Repository in owner/name form.")
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token.")
+@add_interactive_option
+def repo_view(repo_arg, repo_option, json_output, token, interactive):
+    """View repository details."""
+    repo = _resolve_alias_value(repo_arg, repo_option, "REPOSITORY", "--repo")
+    inputs = resolve_command_inputs(
+        schema=REPO_VIEW_SCHEMA,
+        provided={"repo": repo},
+        interactive=interactive,
+        usage="Usage: chatgh repo view [REPOSITORY] [-R/--repo REPOSITORY] [-i|-I]",
+        prompt_runtime_override=TEXT_PROMPT_RUNTIME,
+        interactive_resolver_override=resolve_cli_interactive_mode,
+    )
+    payload = view_repo(inputs["repo"], token)
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    click.echo(f"{payload.get('full_name')}")
+    click.echo(f"Visibility: {payload.get('visibility')}")
+    click.echo(f"Default Branch: {payload.get('default_branch')}")
+    if payload.get("description"):
+        click.echo(f"Description: {payload.get('description')}")
+    if payload.get("html_url"):
+        click.echo(payload["html_url"])
+
+
+@repo_group.command(name="clone")
+@click.argument("repo", required=True, metavar="REPOSITORY")
+@click.argument("directory", required=False, metavar="DIRECTORY")
+@click.option("--ssh", is_flag=True, help="Use SSH clone URL instead of HTTPS.")
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token (reserved for future authenticated clone helpers).")
+def repo_clone(repo, directory, ssh, json_output, token):
+    """Clone a repository without overwriting an existing directory."""
+    payload = clone_repo(repo, directory, ssh, token)
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    click.echo(f"Cloned {payload['repo']} to {payload['path']}")
+
+
+@repo_group.command(name="sync")
+@click.argument("repo_arg", required=False, metavar="REPOSITORY")
+@click.option("-R", "--repo", "repo_option", default=None, help="Repository in owner/name form. Defaults to current git remote.")
+@click.option("--branch", default=None, help="Branch to pull. Defaults to current branch.")
+@click.option("--remote", default="origin", show_default=True, help="Git remote to fetch/pull from.")
+@click.option("--ff-only/--no-ff-only", default=True, show_default=True, help="Use git pull --ff-only.")
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token (reserved for future API sync helpers).")
+def repo_sync(repo_arg, repo_option, branch, remote, ff_only, json_output, token):
+    """Fetch and fast-forward the current checkout for a repository."""
+    repo = _resolve_alias_value(repo_arg, repo_option, "REPOSITORY", "--repo")
+    payload = sync_repo(repo, branch, remote, ff_only, token)
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    click.echo(f"Synced {payload['repo']} {payload['remote']}/{payload['branch']}")
+
+
+@repo_group.command(name="edit")
+@click.argument("repo_arg", required=False, metavar="REPOSITORY")
+@click.option("-R", "--repo", "repo_option", default=None, help="Repository in owner/name form.")
+@click.option("--description", default=None, help="Set repository description.")
+@click.option("--homepage", default=None, help="Set repository homepage URL.")
+@click.option("--default-branch", default=None, help="Set default branch.")
+@click.option("--visibility", type=click.Choice(["public", "private"]), default=None, help="Set repository visibility.")
+@click.option(
+    "--accept-visibility-change-consequences",
+    is_flag=True,
+    help="Required when --visibility is set; acknowledges repository visibility consequences.",
+)
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token.")
+@add_interactive_option
+def repo_edit(
+    repo_arg,
+    repo_option,
+    description,
+    homepage,
+    default_branch,
+    visibility,
+    accept_visibility_change_consequences,
+    json_output,
+    token,
+    interactive,
+):
+    """Edit repository metadata."""
+    repo = _resolve_alias_value(repo_arg, repo_option, "REPOSITORY", "--repo")
+    inputs = resolve_command_inputs(
+        schema=REPO_VIEW_SCHEMA,
+        provided={"repo": repo},
+        interactive=interactive,
+        usage="Usage: chatgh repo edit [REPOSITORY] [--description TEXT] [--homepage URL] [--default-branch BRANCH] [--visibility public|private] [-i|-I]",
+        prompt_runtime_override=TEXT_PROMPT_RUNTIME,
+        interactive_resolver_override=resolve_cli_interactive_mode,
+    )
+    payload = edit_repo(
+        inputs["repo"],
+        description,
+        homepage,
+        default_branch,
+        visibility,
+        accept_visibility_change_consequences,
+        token,
+    )
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    click.echo(f"Updated {payload.get('full_name')}")
 
 @repo_group.command(name="protection")
 @click.option("--repo", default=None, help="Repository in owner/name form. Defaults to current git remote when --owner is omitted.")
@@ -349,6 +478,100 @@ def repo_fork(source_arg, source, owner, org, name, fork_name, default_branch_on
     if payload.get("html_url"):
         click.echo(payload["html_url"])
 
+
+
+@run_group.command(name="list")
+@click.option("--repo", required=False, help="Repository in owner/name form.")
+@click.option("--branch", default=None, help="Filter by branch.")
+@click.option("--status", default=None, help="Filter by run status/conclusion.")
+@click.option("--event", default=None, help="Filter by triggering event.")
+@click.option("--limit", default=20, type=click.IntRange(min=1), show_default=True)
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token.")
+def run_list(repo, branch, status, event, limit, json_output, token):
+    """List workflow runs."""
+    payload = list_runs(repo, branch, status, event, limit, token)
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    for run in payload:
+        click.echo(f"{run.get('id')} {run.get('status')}/{run.get('conclusion') or ''} {run.get('display_title') or run.get('name') or ''}")
+
+
+@run_group.command(name="watch")
+@click.argument("run_id_arg", required=False, type=int, metavar="RUN_ID")
+@click.option("--repo", required=False, help="Repository in owner/name form.")
+@click.option("--run-id", required=False, type=int, help="Workflow run id.")
+@click.option("--interval", default=10.0, type=float, show_default=True)
+@click.option("--timeout", default=600.0, type=float, show_default=True)
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token.")
+def run_watch(run_id_arg, repo, run_id, interval, timeout, json_output, token):
+    """Watch a workflow run until it completes."""
+    resolved_run_id = run_id_arg or run_id
+    if resolved_run_id is None:
+        raise click.ClickException("Missing run id. Pass RUN_ID or --run-id.")
+    payload = watch_run(repo, resolved_run_id, interval, timeout, token)
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    echo_workflow_run(payload)
+
+
+@run_group.command(name="rerun")
+@click.argument("run_id_arg", required=False, type=int, metavar="RUN_ID")
+@click.option("--repo", required=False, help="Repository in owner/name form.")
+@click.option("--run-id", required=False, type=int, help="Workflow run id.")
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token.")
+def run_rerun(run_id_arg, repo, run_id, json_output, token):
+    """Rerun a workflow run."""
+    resolved_run_id = run_id_arg or run_id
+    if resolved_run_id is None:
+        raise click.ClickException("Missing run id. Pass RUN_ID or --run-id.")
+    payload = rerun_run(repo, resolved_run_id, token)
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    click.echo(f"Rerun requested for {payload['id']}")
+
+
+@run_group.command(name="cancel")
+@click.argument("run_id_arg", required=False, type=int, metavar="RUN_ID")
+@click.option("--repo", required=False, help="Repository in owner/name form.")
+@click.option("--run-id", required=False, type=int, help="Workflow run id.")
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token.")
+def run_cancel(run_id_arg, repo, run_id, json_output, token):
+    """Cancel a workflow run."""
+    resolved_run_id = run_id_arg or run_id
+    if resolved_run_id is None:
+        raise click.ClickException("Missing run id. Pass RUN_ID or --run-id.")
+    payload = cancel_run(repo, resolved_run_id, token)
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    click.echo(f"Cancel requested for {payload['id']}")
+
+
+@run_group.command(name="download")
+@click.argument("run_id_arg", required=False, type=int, metavar="RUN_ID")
+@click.option("--repo", required=False, help="Repository in owner/name form.")
+@click.option("--run-id", required=False, type=int, help="Workflow run id.")
+@click.option("--name", default=None, help="Only download artifacts with this name.")
+@click.option("--dir", "output_dir", default=".", show_default=True, help="Output directory.")
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token.")
+def run_download(run_id_arg, repo, run_id, name, output_dir, json_output, token):
+    """Download workflow run artifacts."""
+    resolved_run_id = run_id_arg or run_id
+    if resolved_run_id is None:
+        raise click.ClickException("Missing run id. Pass RUN_ID or --run-id.")
+    payload = download_run_artifacts(repo, resolved_run_id, name, output_dir, token)
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    click.echo(f"Downloaded {len(payload.get('files') or [])} artifact(s) to {payload['output_dir']}")
 
 @run_group.command(name="view")
 @click.option("--repo", required=False, help="Repository in owner/name form.")

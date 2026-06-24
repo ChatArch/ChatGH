@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional
 from urllib.parse import quote
+import zipfile
 
 import click
 
@@ -241,6 +243,230 @@ def _build_repo_payload_from_json(payload: dict) -> dict:
         "description": payload.get("description"),
     }
 
+
+
+def get_repo_view_payload(repo: str, token: Optional[str]) -> dict:
+    return _build_repo_payload_from_json(github_api_get_json(repo, "", token))
+
+
+def patch_repo_edit(
+    repo: str,
+    token: Optional[str],
+    *,
+    description: Optional[str],
+    homepage: Optional[str],
+    default_branch: Optional[str],
+    visibility: Optional[str],
+) -> dict:
+    import requests
+
+    payload: dict[str, object] = {}
+    if description is not None:
+        payload["description"] = description
+    if homepage is not None:
+        payload["homepage"] = homepage
+    if default_branch is not None:
+        payload["default_branch"] = default_branch
+    if visibility is not None:
+        payload["private"] = visibility == "private"
+    if not payload:
+        raise click.ClickException("No updates provided. Use --description/--homepage/--default-branch/--visibility.")
+    owner, name = split_repo(repo)
+    url = f"https://api.github.com/repos/{owner}/{name}"
+    response = requests.patch(url, headers=github_api_headers(token), json=payload, timeout=30)
+    if not response.ok:
+        detail = _response_error_detail(response)
+        raise click.ClickException(f"GitHub API error ({response.status_code}) for {repo}: {detail}")
+    try:
+        repo_payload = response.json()
+    except ValueError as exc:
+        raise click.ClickException(f"GitHub API returned non-JSON response for {repo}") from exc
+    return _build_repo_payload_from_json(repo_payload)
+
+
+def get_pr_diff_text(repo: str, number: int, token: Optional[str]) -> str:
+    return github_api_get_text(repo, f"/pulls/{number}", token, headers={"Accept": "application/vnd.github.v3.diff"})
+
+
+def post_pr_review(client, repo: str, number: int, event: str, body: str) -> dict:
+    repo_obj = client.get_repo(repo)
+    pr = repo_obj.get_pull(number)
+    review = pr.create_review(body=body or None, event=event)
+    return {
+        "id": getattr(review, "id", None),
+        "number": number,
+        "event": event,
+        "body": getattr(review, "body", body),
+        "state": getattr(review, "state", None),
+        "url": getattr(review, "html_url", None),
+    }
+
+
+def post_pr_update_branch(repo: str, number: int, token: Optional[str], expected_head_sha: Optional[str]) -> dict:
+    import requests
+
+    owner, name = split_repo(repo)
+    url = f"https://api.github.com/repos/{owner}/{name}/pulls/{number}/update-branch"
+    payload = {"expected_head_sha": expected_head_sha} if expected_head_sha else {}
+    response = requests.put(url, headers=github_api_headers(token), json=payload, timeout=30)
+    if response.status_code not in {200, 202, 204}:
+        detail = _response_error_detail(response)
+        raise click.ClickException(f"GitHub API error ({response.status_code}) for PR #{number} update-branch: {detail}")
+    return {"number": number, "updated": True, "status_code": response.status_code}
+
+
+def post_pr_ready(repo: str, number: int, token: Optional[str]) -> dict:
+    import requests
+
+    pr_payload = github_api_get_json(repo, f"/pulls/{number}", token)
+    pull_request_id = pr_payload.get("node_id")
+    if not pull_request_id:
+        raise click.ClickException(f"GitHub API response for PR #{number} did not include node_id")
+    query = """
+    mutation MarkPullRequestReadyForReview($pullRequestId: ID!) {
+      markPullRequestReadyForReview(input: {pullRequestId: $pullRequestId}) {
+        pullRequest { number }
+      }
+    }
+    """
+    response = requests.post(
+        "https://api.github.com/graphql",
+        headers=github_api_headers(token),
+        json={"query": query, "variables": {"pullRequestId": pull_request_id}},
+        timeout=30,
+    )
+    if not response.ok:
+        detail = _response_error_detail(response)
+        raise click.ClickException(f"GitHub GraphQL error ({response.status_code}) for PR #{number} ready: {detail}")
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        raise click.ClickException("GitHub GraphQL returned non-JSON response") from exc
+    errors = payload.get("errors") if isinstance(payload, dict) else None
+    if errors:
+        raise click.ClickException(f"GitHub GraphQL error for PR #{number} ready: {errors}")
+    return {"number": number, "ready": True}
+
+
+def get_run_list(repo: str, token: Optional[str], *, branch: Optional[str], status: Optional[str], event: Optional[str], limit: int) -> list[dict]:
+    params: dict[str, object] = {"per_page": min(max(limit, 1), 100)}
+    if branch:
+        params["branch"] = branch
+    if status:
+        params["status"] = status
+    if event:
+        params["event"] = event
+    payload = github_api_get_json(repo, "/actions/runs", token, params=params)
+    runs = payload.get("workflow_runs") or []
+    return [_build_workflow_run_summary(item) for item in runs[:limit]]
+
+
+def _build_workflow_run_summary(run_payload: dict) -> dict:
+    return {
+        "id": run_payload.get("id"),
+        "name": run_payload.get("name"),
+        "display_title": run_payload.get("display_title"),
+        "event": run_payload.get("event"),
+        "status": run_payload.get("status"),
+        "conclusion": run_payload.get("conclusion"),
+        "html_url": run_payload.get("html_url"),
+        "created_at": run_payload.get("created_at"),
+        "updated_at": run_payload.get("updated_at"),
+        "run_started_at": run_payload.get("run_started_at"),
+        "head_branch": run_payload.get("head_branch"),
+        "head_sha": run_payload.get("head_sha"),
+        "run_number": run_payload.get("run_number"),
+    }
+
+
+def post_run_action(repo: str, run_id: int, token: Optional[str], action: str) -> dict:
+    import requests
+
+    if action not in {"cancel", "rerun"}:
+        raise click.ClickException(f"Unsupported run action: {action}")
+    owner, name = split_repo(repo)
+    url = f"https://api.github.com/repos/{owner}/{name}/actions/runs/{run_id}/{action}"
+    response = requests.post(url, headers=github_api_headers(token), timeout=30)
+    if response.status_code not in {200, 201, 202, 204}:
+        detail = _response_error_detail(response)
+        raise click.ClickException(f"GitHub API error ({response.status_code}) for run {action}: {detail}")
+    return {"id": run_id, "action": action, "requested": True, "status_code": response.status_code}
+
+
+def download_run_artifact_zip(repo: str, run_id: int, token: Optional[str], *, name: Optional[str], output_dir: str) -> dict:
+    import requests
+
+    owner, repo_name = split_repo(repo)
+    artifacts = github_api_get_json(repo, f"/actions/runs/{run_id}/artifacts", token)
+    items = artifacts.get("artifacts") or []
+    if name:
+        items = [item for item in items if item.get("name") == name]
+    target_dir = Path(output_dir)
+    target_dir.mkdir(parents=True, exist_ok=True)
+    files = []
+    for artifact in items:
+        artifact_name = _safe_artifact_name(str(artifact.get("name") or artifact.get("id") or "artifact"))
+        artifact_id = artifact.get("id")
+        url = f"https://api.github.com/repos/{owner}/{repo_name}/actions/artifacts/{artifact_id}/zip"
+        response = requests.get(url, headers=github_api_headers(token), timeout=60)
+        if not response.ok:
+            detail = _response_error_detail(response)
+            raise click.ClickException(f"GitHub API error ({response.status_code}) downloading artifact {artifact_name}: {detail}")
+        zip_path = target_dir / f"{artifact_name}.zip"
+        if zip_path.exists():
+            raise click.ClickException(f"Refusing to overwrite existing artifact file: {zip_path}")
+        with zip_path.open("xb") as handle:
+            handle.write(response.content)
+        extract_dir = target_dir / artifact_name
+        if extract_dir.exists():
+            raise click.ClickException(f"Refusing to overwrite existing artifact directory: {extract_dir}")
+        try:
+            with zipfile.ZipFile(zip_path) as archive:
+                _safe_extract_zip(archive, extract_dir)
+        except zipfile.BadZipFile:
+            extract_dir = target_dir
+        files.append({"name": artifact_name, "zip_path": str(zip_path), "path": str(extract_dir), "size_in_bytes": artifact.get("size_in_bytes")})
+    return {"id": run_id, "output_dir": str(target_dir), "files": files}
+
+
+def _safe_artifact_name(value: str) -> str:
+    import re
+
+    name = Path(value).name.strip()
+    name = re.sub(r"[^A-Za-z0-9_.-]+", "-", name).strip(".-")
+    return name or "artifact"
+
+
+def _safe_extract_zip(archive: zipfile.ZipFile, extract_dir: Path) -> None:
+    max_members = 1000
+    max_total_bytes = 500 * 1024 * 1024
+    members = archive.infolist()
+    if len(members) > max_members:
+        raise click.ClickException(f"Artifact zip has too many files: {len(members)} > {max_members}")
+    extract_root = extract_dir.resolve()
+    total_size = 0
+    for member in members:
+        member_name = member.filename
+        member_path = Path(member_name)
+        if member_path.is_absolute() or ".." in member_path.parts:
+            raise click.ClickException(f"unsafe artifact path: {member_name}")
+        total_size += int(member.file_size or 0)
+        if total_size > max_total_bytes:
+            raise click.ClickException(f"Artifact zip is too large after extraction: {total_size} bytes")
+        destination = (extract_dir / member_name).resolve()
+        if extract_root not in {destination, *destination.parents}:
+            raise click.ClickException(f"unsafe artifact path: {member_name}")
+        if destination.exists():
+            raise click.ClickException(f"Refusing to overwrite existing artifact member: {destination}")
+    extract_dir.mkdir(parents=True, exist_ok=False)
+    for member in members:
+        destination = extract_dir / member.filename
+        if member.is_dir():
+            destination.mkdir(parents=True, exist_ok=True)
+            continue
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        with archive.open(member, "r") as source, destination.open("xb") as target:
+            target.write(source.read())
 
 def get_pr_list(client, repo: str, state: str, limit: int) -> list[dict]:
     repo_obj = client.get_repo(repo)

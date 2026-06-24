@@ -93,6 +93,45 @@ Currently available: `run view` / `run logs`. Next priorities:
 - `run cancel`
 - `run download`
 
+
+## Implemented Scope In This PR (2026-06-25)
+
+Following this design, the current `repo fork` PR now also lands the remaining common interfaces with the same CLI + Python API layering:
+
+### Repo
+
+| Command | Python API | Status | Notes |
+|---|---|---|---|
+| `chatgh repo view [REPOSITORY] [-R/--repo REPOSITORY]` | `view_repo(repo, token)` | Implemented | Reads the repository payload; supports JSON output. |
+| `chatgh repo clone REPOSITORY [DIRECTORY]` | `clone_repo(repo, directory, ssh, token)` | Implemented | Safe clone; refuses to overwrite a non-empty target directory and does not change workspace remotes by default. |
+| `chatgh repo sync [REPOSITORY]` | `sync_repo(repo, branch, remote, ff_only, token)` | Implemented | Explicit `git fetch` + `git pull --ff-only`; defaults to current checkout/current branch. |
+| `chatgh repo edit [REPOSITORY]` | `edit_repo(repo, description, homepage, default_branch, visibility, accept_visibility_change_consequences, token)` | Implemented | Small safe subset: description/homepage/default-branch/visibility; visibility changes require explicit consequence acknowledgement. |
+| `chatgh repo fork ...` | `fork_repo(...)` | Implemented | Supports gh-like positional repository, `--org`, `--fork-name`, and ChatGH `--if-exists use`. |
+
+### PR
+
+| Command | Python API | Status | Notes |
+|---|---|---|---|
+| `chatgh pr status` | `status_prs(repo, token)` | Implemented | Current implementation summarizes open PRs; authored/review-requested can be expanded later. |
+| `chatgh pr diff NUMBER` | `diff_pr(repo, number, token)` | Implemented | Emits GitHub diff text for review workflows. |
+| `chatgh pr close NUMBER` | `close_pr(repo, number, comment, delete_branch, token)` | Implemented | Closes a remote PR; `--delete-branch` currently records the request but does not delete branches by default. |
+| `chatgh pr reopen NUMBER` | `reopen_pr(repo, number, token)` | Implemented | Reopens a PR. |
+| `chatgh pr review NUMBER` | `review_pr(repo, number, event, body, token)` | Implemented | Supports `--approve`, `--request-changes`, `--comment`, and body/body-file. |
+| `chatgh pr ready NUMBER` | `ready_pr(repo, number, token)` | Implemented | Draft -> ready_for_review. |
+| `chatgh pr update-branch NUMBER` | `update_pr_branch(repo, number, expected_head_sha, token)` | Implemented | Calls GitHub's update-branch API. |
+
+### Actions run
+
+| Command | Python API | Status | Notes |
+|---|---|---|---|
+| `chatgh run list` | `list_runs(repo, branch, status, event, limit, token)` | Implemented | Supports branch/status/event/limit and JSON output. |
+| `chatgh run watch RUN_ID` | `watch_run(repo, run_id, interval, timeout, token)` | Implemented | Requires timeout to avoid hanging agent runs. |
+| `chatgh run rerun RUN_ID` | `rerun_run(repo, run_id, token)` | Implemented | Remote mutation; outputs run id/status. |
+| `chatgh run cancel RUN_ID` | `cancel_run(repo, run_id, token)` | Implemented | Remote mutation; outputs run id/status. |
+| `chatgh run download RUN_ID` | `download_run_artifacts(repo, run_id, name, output_dir, token)` | Implemented | Downloads and extracts artifacts; output location is explicit through `--dir`/current directory. |
+
+This PR still excludes high-risk commands such as `repo delete/archive/rename` and `pr checkout`; those need separate safety gates and user confirmation before implementation.
+
 ## Testing Requirements
 
 Every new interface should cover at least:

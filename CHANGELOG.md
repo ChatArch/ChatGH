@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 本项目按日期记录更新；正式发版信息也维护在本文件。
 
 ## 2026-06-24
+- 批量对齐官方 `gh` 常见接口：新增 `repo view/clone/sync/edit`、`pr status/diff/close/reopen/review/ready/update-branch`、`run list/watch/rerun/cancel/download`，并为这些命令补齐可 import 的 Python API、JSON 输出和 mock CLI 测试。
 - 新增 `chatgh repo fork`：支持把 source 仓库 fork 到目标 user/org，可自定义目标仓库名、`--default-branch-only`、`--if-exists use` 与 JSON 输出；复用已有仓库时会校验 source，避免误认同名非匹配 fork。
 - 准备 `0.2.6` 补丁版本：恢复 `chatgh pr create/comment/edit/merge` 公开 CLI surface，并把 ChatEnv 依赖窗口推进到 `chatenv>=0.2.0,<0.3.0` 以对齐已发布的 shared config runtime。
 - 恢复 `chatgh pr create/comment/edit/merge` 公开 CLI surface，复用已存在的 GitHub helper 层；`merge` 默认 `--method squash` 与 `--check`，写操作支持 `--json-output` 和 body/message file。

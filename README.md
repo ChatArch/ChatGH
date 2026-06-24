@@ -61,20 +61,42 @@ chatgh set-token --help
 
 命令树：
 
-- `chatgh pr list`：generated-layer PR 列表。
-- `chatgh pr view NUMBER`：generated-layer PR 详情。
-- `chatgh pr checks NUMBER`：generated-layer PR head commit check runs。
-- 当前公开 `chatgh pr` 命令面包含 `list/create/view/comment/edit/checks/merge`；写操作复用 ChatGH token resolution，且不会打印 token。
-- `chatgh repo list`：列出 user/org 下的仓库；默认 table，支持 `--json-output`、`--limit`、`--sort updated|created|pushed|name|stars|open-prs|open-issues`、`--direction asc|desc`，字段包含 visibility、stars、open PRs、open issues、created/updated time 等。
-- `chatgh repo create`：创建仓库；默认 private，可用 `--public` 显式创建公开仓库。
-- `chatgh repo fork`：把 source 仓库 fork 到目标 user/org，兼容 `gh` 风格位置参数、`--org`、`--fork-name`，并保留 ChatGH 显式 `--source`、`--owner`、`--name`、`--default-branch-only`、`--if-exists use` 和 JSON 输出。
-- `chatgh repo protection`：查看单个仓库或 owner 下仓库的默认分支保护与 repository rulesets；治理/规则审计不挤进 `repo list` 默认表格。
-- `chatgh run view`：查看 workflow run 和 jobs。
-- `chatgh run logs`：查看 job 日志，支持 tail 和落盘。
+- `chatgh pr list/create/view/comment/edit/checks/merge`：已有 PR 基础流程；`merge` 默认 `--check`，不能当 dry-run。
+- `chatgh pr status/diff/close/reopen/review/ready/update-branch`：本轮补齐的常见 lifecycle/review 命令；写操作复用 ChatGH token resolution，且不会打印 token。
+- `chatgh repo list/create/fork/protection`：已有仓库列表、创建、fork、保护规则检查。
+- `chatgh repo view/clone/sync/edit`：本轮补齐的常见 repo 命令；`clone/sync` 对本地 git 副作用保持显式、保守，不覆盖已有非空目录。
+- `chatgh run view/logs`：查看 workflow run 和 job logs。
+- `chatgh run list/watch/rerun/cancel/download`：本轮补齐的 Actions run 运维命令；`watch` 有 timeout，`rerun/cancel` 属于远端 mutation。
 - `chatgh repo-perms`：查看 token 权限和派生 capabilities。
 - `chatgh set-token`：为当前 GitHub 仓库配置 repo 级 HTTPS token。
 
 ## 常用流程
+
+### Repo view / clone / sync / edit
+
+```bash
+chatgh repo view ChatArch/ChatGH --json-output
+chatgh repo clone ChatArch/ChatGH ./ChatGH-copy
+chatgh repo sync --repo ChatArch/ChatGH --branch master --remote origin --json-output
+chatgh repo edit ChatArch/ChatGH --description "GitHub helpers" --json-output
+chatgh repo edit ChatArch/ChatGH --visibility private --accept-visibility-change-consequences --json-output
+```
+
+`repo clone` 会拒绝覆盖已有非空目录；`repo sync` 默认使用 `git pull --ff-only`。`repo edit` 当前只支持 description、homepage、default-branch 和 visibility 小子集；设置 `--visibility` 时必须显式传 `--accept-visibility-change-consequences`。
+
+### PR lifecycle / review
+
+```bash
+chatgh pr status --repo ChatArch/ChatGH --json-output
+chatgh pr diff 14 --repo ChatArch/ChatGH
+chatgh pr close 14 --repo ChatArch/ChatGH --comment "Superseded" --json-output
+chatgh pr reopen 14 --repo ChatArch/ChatGH --json-output
+chatgh pr review 14 --repo ChatArch/ChatGH --approve --body-file review.md
+chatgh pr ready 14 --repo ChatArch/ChatGH --json-output
+chatgh pr update-branch 14 --repo ChatArch/ChatGH --expected-head-sha SHA --json-output
+```
+
+`close/reopen/review/ready/update-branch` 都是远端写操作；执行前应确认目标 PR。
 
 ### 创建 PR
 
@@ -120,6 +142,12 @@ chatgh pr checks 123 --repo octocat/Hello-World --json-output
 ### 查看 Actions run 和 job logs
 
 ```bash
+chatgh run list --repo octocat/Hello-World --limit 20
+chatgh run watch 123456789 --repo octocat/Hello-World --timeout 600
+chatgh run rerun 123456789 --repo octocat/Hello-World --json-output
+chatgh run cancel 123456789 --repo octocat/Hello-World --json-output
+chatgh run download 123456789 --repo octocat/Hello-World --dir ./artifacts
+
 chatgh run view --repo octocat/Hello-World --run-id 123456789
 chatgh run view --repo octocat/Hello-World --run-id 123456789 --json-output
 

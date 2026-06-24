@@ -310,23 +310,34 @@ def github_api_get_json(
 
 
 def github_api_get_text(
-    repo: str, path: str, token: Optional[str], params: Optional[dict] = None
+    repo: str,
+    path: str,
+    token: Optional[str],
+    params: Optional[dict] = None,
+    headers: Optional[dict] = None,
 ) -> str:
-    response = github_api_request(repo, path, token, params=params)
+    response = github_api_request(repo, path, token, params=params, headers=headers)
     return response.text
 
 
 def github_api_request(
-    repo: str, path: str, token: Optional[str], params: Optional[dict] = None
+    repo: str,
+    path: str,
+    token: Optional[str],
+    params: Optional[dict] = None,
+    headers: Optional[dict] = None,
 ):
     import requests
 
     owner, name = split_repo(repo)
     url = f"https://api.github.com/repos/{owner}/{name}{path}"
     try:
+        request_headers = github_api_headers(token)
+        if headers:
+            request_headers.update(headers)
         response = requests.get(
             url,
-            headers=github_api_headers(token),
+            headers=request_headers,
             params=params,
             timeout=30,
             allow_redirects=True,

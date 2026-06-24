@@ -93,6 +93,45 @@ chatgh repo fork --source Wei-Shaw/claude-relay-service --owner ChatArch --name 
 - `run cancel`
 - `run download`
 
+
+## 本轮落地范围（2026-06-25）
+
+按本 design，本轮在当前 `repo fork` PR 中把剩余常见接口一次性补入同一套 CLI + Python API 分层：
+
+### Repo
+
+| 命令 | Python API | 状态 | 说明 |
+|---|---|---|---|
+| `chatgh repo view [REPOSITORY] [-R/--repo REPOSITORY]` | `view_repo(repo, token)` | 已实现 | 读取仓库基础 payload，支持 JSON。 |
+| `chatgh repo clone REPOSITORY [DIRECTORY]` | `clone_repo(repo, directory, ssh, token)` | 已实现 | 安全 clone；目标目录非空则拒绝覆盖；不默认改 workspace remote。 |
+| `chatgh repo sync [REPOSITORY]` | `sync_repo(repo, branch, remote, ff_only, token)` | 已实现 | 显式 `git fetch` + `git pull --ff-only`，默认当前 checkout/current branch。 |
+| `chatgh repo edit [REPOSITORY]` | `edit_repo(repo, description, homepage, default_branch, visibility, accept_visibility_change_consequences, token)` | 已实现 | 小子集：description/homepage/default-branch/visibility；visibility 必须显式确认后果。 |
+| `chatgh repo fork ...` | `fork_repo(...)` | 已实现 | 已支持 gh-like 位置参数、`--org`、`--fork-name` 和 ChatGH `--if-exists use`。 |
+
+### PR
+
+| 命令 | Python API | 状态 | 说明 |
+|---|---|---|---|
+| `chatgh pr status` | `status_prs(repo, token)` | 已实现 | 当前实现汇总 open PR；后续可扩展 authored/review-requested。 |
+| `chatgh pr diff NUMBER` | `diff_pr(repo, number, token)` | 已实现 | 直接输出 GitHub diff text，服务 review。 |
+| `chatgh pr close NUMBER` | `close_pr(repo, number, comment, delete_branch, token)` | 已实现 | 远端关闭 PR；`--delete-branch` 当前只记录请求，不默认删分支。 |
+| `chatgh pr reopen NUMBER` | `reopen_pr(repo, number, token)` | 已实现 | 重新打开 PR。 |
+| `chatgh pr review NUMBER` | `review_pr(repo, number, event, body, token)` | 已实现 | 支持 `--approve` / `--request-changes` / `--comment` 与 body/body-file。 |
+| `chatgh pr ready NUMBER` | `ready_pr(repo, number, token)` | 已实现 | draft -> ready_for_review。 |
+| `chatgh pr update-branch NUMBER` | `update_pr_branch(repo, number, expected_head_sha, token)` | 已实现 | 调 GitHub update-branch API。 |
+
+### Actions run
+
+| 命令 | Python API | 状态 | 说明 |
+|---|---|---|---|
+| `chatgh run list` | `list_runs(repo, branch, status, event, limit, token)` | 已实现 | 支持 branch/status/event/limit 与 JSON。 |
+| `chatgh run watch RUN_ID` | `watch_run(repo, run_id, interval, timeout, token)` | 已实现 | 必须有 timeout，避免长时间阻塞。 |
+| `chatgh run rerun RUN_ID` | `rerun_run(repo, run_id, token)` | 已实现 | 远端 mutation，输出 run id/status。 |
+| `chatgh run cancel RUN_ID` | `cancel_run(repo, run_id, token)` | 已实现 | 远端 mutation，输出 run id/status。 |
+| `chatgh run download RUN_ID` | `download_run_artifacts(repo, run_id, name, output_dir, token)` | 已实现 | 下载并解压 artifacts，默认显式 `--dir`/当前目录。 |
+
+本轮仍不包含高风险 `repo delete/archive/rename`、`pr checkout` 等会更强烈改变远端或本地 checkout 的命令；这些需要单独确认 safety gate。
+
 ## 测试要求
 
 每个新增接口至少覆盖：

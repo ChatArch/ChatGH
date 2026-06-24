@@ -76,6 +76,32 @@ chatgh set-token --help
 
 ## 常用流程
 
+### Repo view / clone / sync / edit
+
+```bash
+chatgh repo view ChatArch/ChatGH --json-output
+chatgh repo clone ChatArch/ChatGH ./ChatGH-copy
+chatgh repo sync --repo ChatArch/ChatGH --branch master --remote origin --json-output
+chatgh repo edit ChatArch/ChatGH --description "GitHub helpers" --json-output
+chatgh repo edit ChatArch/ChatGH --visibility private --accept-visibility-change-consequences --json-output
+```
+
+`repo clone` 会拒绝覆盖已有非空目录；`repo sync` 默认使用 `git pull --ff-only`。`repo edit` 当前只支持 description、homepage、default-branch 和 visibility 小子集；设置 `--visibility` 时必须显式传 `--accept-visibility-change-consequences`。
+
+### PR lifecycle / review
+
+```bash
+chatgh pr status --repo ChatArch/ChatGH --json-output
+chatgh pr diff 14 --repo ChatArch/ChatGH
+chatgh pr close 14 --repo ChatArch/ChatGH --comment "Superseded" --json-output
+chatgh pr reopen 14 --repo ChatArch/ChatGH --json-output
+chatgh pr review 14 --repo ChatArch/ChatGH --approve --body-file review.md
+chatgh pr ready 14 --repo ChatArch/ChatGH --json-output
+chatgh pr update-branch 14 --repo ChatArch/ChatGH --expected-head-sha SHA --json-output
+```
+
+`close/reopen/review/ready/update-branch` 都是远端写操作；执行前应确认目标 PR。
+
 ### 创建 PR
 
 ```bash
@@ -120,6 +146,12 @@ chatgh pr checks 123 --repo octocat/Hello-World --json-output
 ### 查看 Actions run 和 job logs
 
 ```bash
+chatgh run list --repo octocat/Hello-World --limit 20
+chatgh run watch 123456789 --repo octocat/Hello-World --timeout 600
+chatgh run rerun 123456789 --repo octocat/Hello-World --json-output
+chatgh run cancel 123456789 --repo octocat/Hello-World --json-output
+chatgh run download 123456789 --repo octocat/Hello-World --dir ./artifacts
+
 chatgh run view --repo octocat/Hello-World --run-id 123456789
 chatgh run view --repo octocat/Hello-World --run-id 123456789 --json-output
 
