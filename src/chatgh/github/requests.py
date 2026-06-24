@@ -4,7 +4,9 @@ from datetime import datetime, timezone
 from typing import Optional
 from urllib.parse import quote
 
-from chatgh.github.api import github_api_get_json, github_api_get_text
+import click
+
+from chatgh.github.api import github_api_get_json, github_api_get_text, github_api_headers, split_repo
 
 
 def get_repo_list(
@@ -62,6 +64,182 @@ def post_repo_create(
     payload = _build_repo_payload(repo)
     payload["created"] = True
     return payload
+
+
+def post_repo_fork(
+    source: str,
+    owner: str,
+    name: str,
+    default_branch_only: bool,
+    if_exists: str,
+    token: Optional[str],
+) -> dict:
+    import requests
+
+    source_owner, source_name = split_repo(source)
+    target_full_name = f"{owner}/{name}"
+    existing = _get_repo_json_optional(target_full_name, token)
+    if existing is not None:
+        if if_exists != "use":
+            raise ValueError(f"Repository already exists: {target_full_name}")
+        source_full_name = _source_full_name_from_repo_json(existing)
+        if not _repo_names_equal(source_full_name, source):
+            actual = source_full_name or "a non-fork repository"
+            raise ValueError(
+                f"Repository already exists but is {actual}, not a fork of {source}: {target_full_name}"
+            )
+        payload = _build_repo_payload_from_json(existing)
+        payload["created"] = False
+        payload["source_full_name"] = source_full_name
+        return payload
+
+    request_payload = _build_fork_request_payload(owner, name, default_branch_only, token)
+    url = f"https://api.github.com/repos/{source_owner}/{source_name}/forks"
+    try:
+        response = requests.post(
+            url,
+            headers=github_api_headers(token),
+            json=request_payload,
+            timeout=30,
+        )
+    except requests.RequestException as exc:
+        raise click.ClickException(f"GitHub API request failed for /forks: {exc}") from exc
+    if not response.ok:
+        detail = _response_error_detail(response)
+        raise click.ClickException(
+            f"GitHub API error ({response.status_code}) for /forks: {detail}. If this repository should use a dedicated token, run `chatgh set-token` inside the repo to add a matching git credential entry."
+        )
+    try:
+        repo_payload = response.json()
+    except ValueError as exc:
+        raise click.ClickException("GitHub API returned non-JSON response for /forks") from exc
+    payload = _build_repo_payload_from_json(repo_payload)
+    payload["created"] = True
+    payload["source_full_name"] = _source_full_name_from_repo_json(repo_payload) or source
+    return payload
+
+
+def _get_repo_json_optional(repo: str, token: Optional[str]) -> Optional[dict]:
+    import requests
+
+    owner, name = split_repo(repo)
+    url = f"https://api.github.com/repos/{owner}/{name}"
+    try:
+        response = requests.get(url, headers=github_api_headers(token), timeout=30)
+    except requests.RequestException as exc:
+        raise click.ClickException(f"GitHub API request failed for {repo}: {exc}") from exc
+    if response.status_code == 404:
+        return None
+    if not response.ok:
+        detail = _response_error_detail(response)
+        raise click.ClickException(f"GitHub API error ({response.status_code}) for {repo}: {detail}")
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        raise click.ClickException(f"GitHub API returned non-JSON response for {repo}") from exc
+    return payload if isinstance(payload, dict) else None
+
+
+def _build_fork_request_payload(
+    owner: str,
+    name: str,
+    default_branch_only: bool,
+    token: Optional[str],
+) -> dict[str, object]:
+    payload: dict[str, object] = {"name": name}
+    if _github_owner_type(owner, token) == "Organization":
+        payload["organization"] = owner
+    else:
+        authenticated_login = _authenticated_user_login(token)
+        if not _repo_names_equal(authenticated_login, owner):
+            raise click.ClickException(
+                "Forking into a user account requires --owner to match the authenticated GitHub user. "
+                "Use an organization owner or authenticate as the target user."
+            )
+    if default_branch_only:
+        payload["default_branch_only"] = True
+    return payload
+
+
+def _github_owner_type(owner: str, token: Optional[str]) -> str:
+    payload = _github_get_json_url(f"https://api.github.com/users/{owner}", token, f"users/{owner}")
+    owner_type = str(payload.get("type") or "")
+    return owner_type or "User"
+
+
+def _authenticated_user_login(token: Optional[str]) -> Optional[str]:
+    payload = _github_get_json_url("https://api.github.com/user", token, "user")
+    login = payload.get("login")
+    return str(login) if login else None
+
+
+def _github_get_json_url(url: str, token: Optional[str], label: str) -> dict:
+    import requests
+
+    try:
+        response = requests.get(url, headers=github_api_headers(token), timeout=30)
+    except requests.RequestException as exc:
+        raise click.ClickException(f"GitHub API request failed for {label}: {exc}") from exc
+    if not response.ok:
+        detail = _response_error_detail(response)
+        raise click.ClickException(f"GitHub API error ({response.status_code}) for {label}: {detail}")
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        raise click.ClickException(f"GitHub API returned non-JSON response for {label}") from exc
+    return payload if isinstance(payload, dict) else {}
+
+
+def _response_error_detail(response) -> str:
+    detail = (response.text or "").strip()
+    try:
+        payload = response.json()
+        if isinstance(payload, dict) and payload.get("message"):
+            detail = str(payload["message"])
+    except ValueError:
+        pass
+    return detail or "unknown error"
+
+
+def _source_full_name_from_repo_json(payload: dict) -> Optional[str]:
+    for key in ("source", "parent"):
+        candidate = payload.get(key)
+        if isinstance(candidate, dict) and candidate.get("full_name"):
+            return str(candidate["full_name"])
+    return None
+
+
+def _repo_names_equal(left: Optional[str], right: Optional[str]) -> bool:
+    if not left or not right:
+        return False
+    return left.strip().lower() == right.strip().lower()
+
+
+def _build_repo_payload_from_json(payload: dict) -> dict:
+    open_prs = None
+    open_issues_reported = payload.get("open_issues_count")
+    open_issues = int(open_issues_reported or 0) if open_issues_reported is not None else None
+    return {
+        "name": payload.get("name"),
+        "full_name": payload.get("full_name"),
+        "private": payload.get("private"),
+        "visibility": payload.get("visibility") or ("private" if payload.get("private") else "public"),
+        "stars": int(payload.get("stargazers_count") or 0),
+        "forks": int(payload.get("forks_count") or 0),
+        "open_prs": open_prs,
+        "open_issues": open_issues,
+        "open_issues_reported": open_issues_reported,
+        "archived": bool(payload.get("archived", False)),
+        "fork": bool(payload.get("fork", False)),
+        "created_at": payload.get("created_at"),
+        "updated_at": payload.get("updated_at"),
+        "pushed_at": payload.get("pushed_at"),
+        "html_url": payload.get("html_url"),
+        "clone_url": payload.get("clone_url"),
+        "ssh_url": payload.get("ssh_url"),
+        "default_branch": payload.get("default_branch"),
+        "description": payload.get("description"),
+    }
 
 
 def get_pr_list(client, repo: str, state: str, limit: int) -> list[dict]:

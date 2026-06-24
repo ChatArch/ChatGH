@@ -16,6 +16,7 @@ from chatgh.github.api import (
     resolve_token,
     resolve_token_with_source,
     save_github_token_to_env,
+    split_repo,
 )
 from chatgh.github.render import (
     collect_merge_blockers,
@@ -38,6 +39,7 @@ from chatgh.github.requests import (
     post_pr_create,
     post_pr_merge,
     post_repo_create,
+    post_repo_fork,
 )
 
 
@@ -91,6 +93,36 @@ def create_repo(
     client = get_client(token, require_token=True, credential_path=credential_path)
     try:
         return post_repo_create(client, owner, name, private, description, if_exists)
+    except ValueError as exc:
+        raise click.ClickException(str(exc)) from exc
+
+
+def fork_repo(
+    source: str,
+    owner: str,
+    name: Optional[str],
+    default_branch_only: bool,
+    if_exists: str,
+    token: Optional[str],
+) -> dict:
+    source_repo = resolve_repo(source)
+    _, source_name = split_repo(source_repo)
+    target_name = name or source_name
+    credential_path = credential_path_from_repo(f"{owner}/{target_name}")
+    resolved_token = resolve_token(token, credential_path=credential_path)
+    if not resolved_token:
+        raise click.ClickException(
+            "Missing token. Pass --token or run `chatgh set-token` inside the current repository to configure a repo-scoped GitHub credential."
+        )
+    try:
+        return post_repo_fork(
+            source_repo,
+            owner=owner,
+            name=target_name,
+            default_branch_only=default_branch_only,
+            if_exists=if_exists,
+            token=resolved_token,
+        )
     except ValueError as exc:
         raise click.ClickException(str(exc)) from exc
 

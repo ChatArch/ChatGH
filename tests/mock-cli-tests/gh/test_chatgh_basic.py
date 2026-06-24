@@ -2,7 +2,7 @@ import pytest
 from click.testing import CliRunner
 
 from chatgh.cli import main as cli
-from chatgh.github.requests import _build_repo_payload, _parse_time
+from chatgh.github.requests import _build_repo_payload, _parse_time, post_repo_fork
 
 
 pytestmark = pytest.mark.mock_cli
@@ -404,6 +404,281 @@ def test_chatgh_repo_create_defaults_private(monkeypatch, runner):
         "private": True,
         "if_exists": "error",
     }
+
+
+def test_chatgh_repo_fork_defaults_target_name(monkeypatch, runner):
+    captured = {}
+
+    def fake_fork(source, owner, name, default_branch_only, if_exists, token):
+        captured.update(
+            {
+                "source": source,
+                "owner": owner,
+                "name": name,
+                "default_branch_only": default_branch_only,
+                "if_exists": if_exists,
+                "token": token,
+            }
+        )
+        return {
+            "full_name": "ChatArch/claude-relay-service",
+            "source_full_name": source,
+            "created": True,
+            "html_url": "https://github.com/ChatArch/claude-relay-service",
+        }
+
+    monkeypatch.setattr("chatgh.github.cli.fork_repo", fake_fork)
+
+    result = runner.invoke(
+        cli,
+        ["repo", "fork", "--source", "Wei-Shaw/claude-relay-service", "--owner", "ChatArch"],
+    )
+
+    assert result.exit_code == 0
+    assert "forked: ChatArch/claude-relay-service <- Wei-Shaw/claude-relay-service" in result.output
+    assert "https://github.com/ChatArch/claude-relay-service" in result.output
+    assert captured == {
+        "source": "Wei-Shaw/claude-relay-service",
+        "owner": "ChatArch",
+        "name": None,
+        "default_branch_only": False,
+        "if_exists": "error",
+        "token": None,
+    }
+
+
+def test_chatgh_repo_fork_renders_existing_json(monkeypatch, runner):
+    monkeypatch.setattr(
+        "chatgh.github.cli.fork_repo",
+        lambda source, owner, name, default_branch_only, if_exists, token: {
+            "full_name": "ChatArch/claude-relay-service",
+            "source_full_name": source,
+            "created": False,
+            "html_url": "https://github.com/ChatArch/claude-relay-service",
+        },
+    )
+
+    result = runner.invoke(
+        cli,
+        [
+            "repo",
+            "fork",
+            "--source",
+            "Wei-Shaw/claude-relay-service",
+            "--owner",
+            "ChatArch",
+            "--if-exists",
+            "use",
+            "--json-output",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert '"full_name": "ChatArch/claude-relay-service"' in result.output
+    assert '"source_full_name": "Wei-Shaw/claude-relay-service"' in result.output
+    assert '"created": false' in result.output
+
+
+def test_chatgh_repo_fork_rejects_invalid_source(runner):
+    result = runner.invoke(
+        cli,
+        ["repo", "fork", "--source", "not-a-repo", "--owner", "ChatArch", "-I"],
+    )
+
+    assert result.exit_code != 0
+    assert "Repo must be in owner/name form" in result.output
+
+
+def test_post_repo_fork_reuses_existing_matching_fork(monkeypatch):
+    calls = []
+
+    class FakeResponse:
+        def __init__(self, status_code, payload):
+            self.status_code = status_code
+            self._payload = payload
+            self.ok = 200 <= status_code < 300
+            self.text = ""
+
+        def json(self):
+            return self._payload
+
+    def fake_get(url, headers, timeout):
+        calls.append(("get", url))
+        return FakeResponse(
+            200,
+            {
+                "name": "claude-relay-service",
+                "full_name": "ChatArch/claude-relay-service",
+                "private": False,
+                "visibility": "public",
+                "stargazers_count": 0,
+                "forks_count": 0,
+                "open_issues_count": 0,
+                "archived": False,
+                "fork": True,
+                "html_url": "https://github.com/ChatArch/claude-relay-service",
+                "clone_url": "https://github.com/ChatArch/claude-relay-service.git",
+                "ssh_url": "git@github.com:ChatArch/claude-relay-service.git",
+                "default_branch": "main",
+                "description": None,
+                "source": {"full_name": "Wei-Shaw/claude-relay-service"},
+            },
+        )
+
+    def fake_post(url, headers, json, timeout):
+        calls.append(("post", url))
+        raise AssertionError("POST should not run for a matching existing fork")
+
+    monkeypatch.setattr("requests.get", fake_get)
+    monkeypatch.setattr("requests.post", fake_post)
+
+    payload = post_repo_fork(
+        "Wei-Shaw/claude-relay-service",
+        owner="ChatArch",
+        name="claude-relay-service",
+        default_branch_only=False,
+        if_exists="use",
+        token="token",
+    )
+
+    assert payload["created"] is False
+    assert payload["full_name"] == "ChatArch/claude-relay-service"
+    assert payload["source_full_name"] == "Wei-Shaw/claude-relay-service"
+    assert calls == [("get", "https://api.github.com/repos/ChatArch/claude-relay-service")]
+
+
+def test_post_repo_fork_rejects_existing_non_fork(monkeypatch):
+    class FakeResponse:
+        status_code = 200
+        ok = True
+        text = ""
+
+        def json(self):
+            return {
+                "name": "claude-relay-service",
+                "full_name": "ChatArch/claude-relay-service",
+                "fork": False,
+            }
+
+    monkeypatch.setattr("requests.get", lambda url, headers, timeout: FakeResponse())
+
+    with pytest.raises(ValueError, match="not a fork of Wei-Shaw/claude-relay-service"):
+        post_repo_fork(
+            "Wei-Shaw/claude-relay-service",
+            owner="ChatArch",
+            name="claude-relay-service",
+            default_branch_only=False,
+            if_exists="use",
+            token="token",
+        )
+
+
+def test_post_repo_fork_omits_organization_for_authenticated_user_target(monkeypatch):
+    calls = []
+
+    class FakeResponse:
+        def __init__(self, status_code, payload):
+            self.status_code = status_code
+            self._payload = payload
+            self.ok = 200 <= status_code < 300
+            self.text = ""
+
+        def json(self):
+            return self._payload
+
+    def fake_get(url, headers, timeout):
+        calls.append(("get", url))
+        if url == "https://api.github.com/repos/rex/claude-relay-service":
+            return FakeResponse(404, {"message": "Not Found"})
+        if url == "https://api.github.com/users/rex":
+            return FakeResponse(200, {"login": "rex", "type": "User"})
+        if url == "https://api.github.com/user":
+            return FakeResponse(200, {"login": "rex"})
+        raise AssertionError(f"unexpected GET {url}")
+
+    def fake_post(url, headers, json, timeout):
+        calls.append(("post", url, json))
+        return FakeResponse(
+            202,
+            {
+                "name": "claude-relay-service",
+                "full_name": "rex/claude-relay-service",
+                "private": False,
+                "fork": True,
+                "html_url": "https://github.com/rex/claude-relay-service",
+                "source": {"full_name": "Wei-Shaw/claude-relay-service"},
+            },
+        )
+
+    monkeypatch.setattr("requests.get", fake_get)
+    monkeypatch.setattr("requests.post", fake_post)
+
+    payload = post_repo_fork(
+        "Wei-Shaw/claude-relay-service",
+        owner="rex",
+        name="claude-relay-service",
+        default_branch_only=True,
+        if_exists="error",
+        token="token",
+    )
+
+    assert payload["created"] is True
+    assert ("post", "https://api.github.com/repos/Wei-Shaw/claude-relay-service/forks", {"name": "claude-relay-service", "default_branch_only": True}) in calls
+
+
+def test_post_repo_fork_includes_organization_for_org_target(monkeypatch):
+    calls = []
+
+    class FakeResponse:
+        def __init__(self, status_code, payload):
+            self.status_code = status_code
+            self._payload = payload
+            self.ok = 200 <= status_code < 300
+            self.text = ""
+
+        def json(self):
+            return self._payload
+
+    def fake_get(url, headers, timeout):
+        calls.append(("get", url))
+        if url == "https://api.github.com/repos/ChatArch/claude-relay-service":
+            return FakeResponse(404, {"message": "Not Found"})
+        if url == "https://api.github.com/users/ChatArch":
+            return FakeResponse(200, {"login": "ChatArch", "type": "Organization"})
+        raise AssertionError(f"unexpected GET {url}")
+
+    def fake_post(url, headers, json, timeout):
+        calls.append(("post", url, json))
+        return FakeResponse(
+            202,
+            {
+                "name": "claude-relay-service",
+                "full_name": "ChatArch/claude-relay-service",
+                "private": False,
+                "fork": True,
+                "html_url": "https://github.com/ChatArch/claude-relay-service",
+                "source": {"full_name": "Wei-Shaw/claude-relay-service"},
+            },
+        )
+
+    monkeypatch.setattr("requests.get", fake_get)
+    monkeypatch.setattr("requests.post", fake_post)
+
+    payload = post_repo_fork(
+        "Wei-Shaw/claude-relay-service",
+        owner="ChatArch",
+        name="claude-relay-service",
+        default_branch_only=False,
+        if_exists="error",
+        token="token",
+    )
+
+    assert payload["created"] is True
+    assert (
+        "post",
+        "https://api.github.com/repos/Wei-Shaw/claude-relay-service/forks",
+        {"name": "claude-relay-service", "organization": "ChatArch"},
+    ) in calls
 
 
 def test_repo_sort_time_handles_naive_and_missing_values():

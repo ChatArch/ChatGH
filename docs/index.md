@@ -66,8 +66,9 @@ chatgh set-token --help
 - `chatgh pr checks NUMBER`：generated-layer PR head commit check runs。
 - `chatgh repo list`：列出 user/org 下的仓库；默认 table，支持 `--json-output`、`--limit`、`--sort updated|created|pushed|name|stars|open-prs|open-issues`、`--direction asc|desc`，字段包含 visibility、stars、open PRs、open issues、created/updated time 等。
 - `chatgh repo create`：创建仓库；默认 private，可用 `--public` 显式创建公开仓库。
+- `chatgh repo fork`：把 source 仓库 fork 到目标 user/org，支持自定义目标仓库名、`--default-branch-only`、`--if-exists use` 和 JSON 输出。
 - `chatgh repo protection`：查看单个仓库或 owner 下仓库的默认分支保护与 repository rulesets；治理/规则审计不挤进 `repo list` 默认表格。
-- 当前公开 `chatgh pr` 命令面只包含 `list/view/checks`；PR 创建、评论、合并和编辑流程仍由内部 helper 支持，后续作为独立 CLI 命令恢复前不在帮助与文档中承诺。
+- 当前公开 `chatgh pr` 命令面包含 `list/create/view/comment/edit/checks/merge`；写操作复用 ChatGH token resolution，且不会打印 token。
 - `chatgh run view`：查看 workflow run 和 jobs。
 - `chatgh run logs`：查看 job 日志，支持 tail 和落盘。
 - `chatgh repo-perms`：查看 token 权限和派生 capabilities。
@@ -138,6 +139,16 @@ chatgh pr merge 123 --repo octocat/Hello-World --method squash --check
 ```
 
 `pr merge` 默认使用 `--method squash` 和 `--check`，会在合并前读取 PR checks 并拒绝非绿色状态。合并仍然是高风险远程 mutation，实际执行前应先确认 PR 状态和用户授权。
+
+### Fork 仓库
+
+```bash
+chatgh repo fork --source octocat/Hello-World --owner ChatArch
+chatgh repo fork --source octocat/Hello-World --owner ChatArch --name hello-world-copy --default-branch-only
+chatgh repo fork --source octocat/Hello-World --owner ChatArch --if-exists use --json-output
+```
+
+`repo fork` 通过 GitHub Fork API 创建目标仓库；目标仓库名默认沿用 source repo 名。目标为 organization 时会传递 GitHub API 的 `organization` 字段；目标为 user account 时，`--owner` 必须匹配当前认证用户。`--if-exists use` 只会复用已存在且匹配 source 的 fork，避免把同名非匹配仓库误当成功结果。
 
 ### 查看仓库保护规则
 

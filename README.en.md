@@ -66,6 +66,7 @@ Command tree:
 - `chatgh pr checks NUMBER`: generated-layer PR head commit check runs.
 - `chatgh repo list`: list repositories for a user/org; defaults to table output and supports `--json-output`, `--limit`, `--sort updated|created|pushed|name|stars|open-prs|open-issues`, and `--direction asc|desc`, with visibility, stars, open PRs/issues, and timestamps.
 - `chatgh repo create`: create a repository; defaults to private and supports `--public`.
+- `chatgh repo fork`: fork a source repository into a target user/org, with optional target name, `--default-branch-only`, `--if-exists use`, and JSON output.
 - `chatgh repo protection`: inspect default-branch protection and repository rulesets for one repo or for an owner inventory; use this instead of crowding governance fields into `repo list`.
 - The public `chatgh pr` command surface includes `list/create/view/comment/edit/checks/merge`; write commands use the same ChatGH token resolution and keep secrets out of output.
 - `chatgh run view`: show a workflow run and its jobs.
@@ -138,6 +139,16 @@ chatgh pr merge 123 --repo octocat/Hello-World --method squash --check
 ```
 
 `pr merge` defaults to `--method squash` and `--check`, reading PR checks before merge and refusing non-green states. Merging is still a high-risk remote mutation; confirm PR status and user authorization before running it.
+
+### Fork Repositories
+
+```bash
+chatgh repo fork --source octocat/Hello-World --owner ChatArch
+chatgh repo fork --source octocat/Hello-World --owner ChatArch --name hello-world-copy --default-branch-only
+chatgh repo fork --source octocat/Hello-World --owner ChatArch --if-exists use --json-output
+```
+
+`repo fork` uses the GitHub Fork API. The target repository name defaults to the source repository name. Organization targets send GitHub's `organization` field; user-account targets require `--owner` to match the authenticated user. `--if-exists use` only reuses an existing fork when it matches the requested source, avoiding false success on an unrelated same-name repository.
 
 ### Inspect Repository Protection
 

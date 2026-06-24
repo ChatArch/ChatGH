@@ -17,6 +17,7 @@ from chatstyle.tui.prompt import BACK_VALUE, ask_text
 from chatgh.github.api import resolve_repo_from_git_remote, resolve_token
 from chatgh.github.commands import (
     create_repo,
+    fork_repo,
     inspect_repo_protection,
     list_repo_protections,
     list_repos,
@@ -53,6 +54,14 @@ REPO_CREATE_SCHEMA = CommandSchema(
     fields=(
         CommandField("owner", prompt="GitHub owner or organization", required=True),
         CommandField("name", prompt="repository name", required=True),
+    ),
+)
+
+REPO_FORK_SCHEMA = CommandSchema(
+    name="repo-fork",
+    fields=(
+        CommandField("source", prompt="source repository (owner/name)", required=True),
+        CommandField("owner", prompt="target GitHub owner or organization", required=True),
     ),
 )
 
@@ -277,6 +286,43 @@ def repo_create(owner, name, description, public_repo, if_exists, json_output, t
     created = "created" if payload.get("created") else "existing"
     private = "private" if payload.get("private") else "public"
     click.echo(f"{created}: {payload['full_name']} ({private})")
+    if payload.get("html_url"):
+        click.echo(payload["html_url"])
+
+
+@repo_group.command(name="fork")
+@click.option("--source", required=False, help="Source repository in owner/name form.")
+@click.option("--owner", required=False, help="Target GitHub owner or organization.")
+@click.option("--name", default=None, help="Target repository name. Defaults to the source repository name.")
+@click.option("--default-branch-only", is_flag=True, help="Fork only the source default branch.")
+@click.option("--if-exists", type=click.Choice(["error", "use"]), default="error", show_default=True)
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token.")
+@add_interactive_option
+def repo_fork(source, owner, name, default_branch_only, if_exists, json_output, token, interactive):
+    """Fork a repository into a target owner or organization."""
+    inputs = resolve_command_inputs(
+        schema=REPO_FORK_SCHEMA,
+        provided={"source": source, "owner": owner},
+        interactive=interactive,
+        usage="Usage: chatgh repo fork --source OWNER/REPO --owner TEXT [-i|-I]",
+        prompt_runtime_override=TEXT_PROMPT_RUNTIME,
+        interactive_resolver_override=resolve_cli_interactive_mode,
+    )
+    payload = fork_repo(
+        inputs["source"],
+        inputs["owner"],
+        name,
+        default_branch_only,
+        if_exists,
+        token,
+    )
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    state = "forked" if payload.get("created") else "existing"
+    source_name = payload.get("source_full_name") or inputs["source"]
+    click.echo(f"{state}: {payload['full_name']} <- {source_name}")
     if payload.get("html_url"):
         click.echo(payload["html_url"])
 

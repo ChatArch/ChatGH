@@ -94,7 +94,7 @@ def get_github_config_token() -> Optional[str]:
     return GitHubConfig.GITHUB_ACCESS_TOKEN.value
 
 
-def credential_path_from_repo(repo: str) -> dict[str, str]:
+def credential_path_from_repo(repo: str) -> CredentialQuery:
     normalized = repo.strip().removesuffix(".git")
     return {"protocol": "https", "host": "github.com", "path": normalized}
 
