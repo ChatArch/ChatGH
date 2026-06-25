@@ -61,19 +61,42 @@ chatgh set-token --help
 
 命令树：
 
-- `chatgh pr list`：generated-layer PR 列表。
-- `chatgh pr view NUMBER`：generated-layer PR 详情。
-- `chatgh pr checks NUMBER`：generated-layer PR head commit check runs。
-- 当前公开 `chatgh pr` 命令面只包含 `list/view/checks`；PR 创建、评论、合并和编辑流程仍由内部 helper 支持，后续作为独立 CLI 命令恢复前不在帮助与文档中承诺。
-- `chatgh repo list`：列出 user/org 下的仓库；默认 table，支持 `--json-output`、`--limit`、`--sort updated|created|pushed|name|stars|open-prs|open-issues`、`--direction asc|desc`，字段包含 visibility、stars、open PRs、open issues、created/updated time 等。
-- `chatgh repo create`：创建仓库；默认 private，可用 `--public` 显式创建公开仓库。
-- `chatgh repo protection`：查看单个仓库或 owner 下仓库的默认分支保护与 repository rulesets；治理/规则审计不挤进 `repo list` 默认表格。
-- `chatgh run view`：查看 workflow run 和 jobs。
-- `chatgh run logs`：查看 job 日志，支持 tail 和落盘。
+- `chatgh pr list/create/view/comment/edit/checks/merge`：已有 PR 基础流程；`merge` 默认 `--check`，不能当 dry-run。
+- `chatgh pr status/diff/close/reopen/review/ready/update-branch`：本轮补齐的常见 lifecycle/review 命令；写操作复用 ChatGH token resolution，且不会打印 token。
+- `chatgh repo list/create/fork/protection`：已有仓库列表、创建、fork、保护规则检查。
+- `chatgh repo view/clone/sync/edit`：本轮补齐的常见 repo 命令；`clone/sync` 对本地 git 副作用保持显式、保守，不覆盖已有非空目录。
+- `chatgh run view/logs`：查看 workflow run 和 job logs。
+- `chatgh run list/watch/rerun/cancel/download`：本轮补齐的 Actions run 运维命令；`watch` 有 timeout，`rerun/cancel` 属于远端 mutation。
 - `chatgh repo-perms`：查看 token 权限和派生 capabilities。
 - `chatgh set-token`：为当前 GitHub 仓库配置 repo 级 HTTPS token。
 
 ## 常用流程
+
+### Repo view / clone / sync / edit
+
+```bash
+chatgh repo view ChatArch/ChatGH --json-output
+chatgh repo clone ChatArch/ChatGH ./ChatGH-copy
+chatgh repo sync --repo ChatArch/ChatGH --branch master --remote origin --json-output
+chatgh repo edit ChatArch/ChatGH --description "GitHub helpers" --json-output
+chatgh repo edit ChatArch/ChatGH --visibility private --accept-visibility-change-consequences --json-output
+```
+
+`repo clone` 会拒绝覆盖已有非空目录；`repo sync` 默认使用 `git pull --ff-only`。`repo edit` 当前只支持 description、homepage、default-branch 和 visibility 小子集；设置 `--visibility` 时必须显式传 `--accept-visibility-change-consequences`。
+
+### PR lifecycle / review
+
+```bash
+chatgh pr status --repo ChatArch/ChatGH --json-output
+chatgh pr diff 14 --repo ChatArch/ChatGH
+chatgh pr close 14 --repo ChatArch/ChatGH --comment "Superseded" --json-output
+chatgh pr reopen 14 --repo ChatArch/ChatGH --json-output
+chatgh pr review 14 --repo ChatArch/ChatGH --approve --body-file review.md
+chatgh pr ready 14 --repo ChatArch/ChatGH --json-output
+chatgh pr update-branch 14 --repo ChatArch/ChatGH --expected-head-sha SHA --json-output
+```
+
+`close/reopen/review/ready/update-branch` 都是远端写操作；执行前应确认目标 PR。
 
 ### 创建 PR
 
@@ -119,6 +142,12 @@ chatgh pr checks 123 --repo octocat/Hello-World --json-output
 ### 查看 Actions run 和 job logs
 
 ```bash
+chatgh run list --repo octocat/Hello-World --limit 20
+chatgh run watch 123456789 --repo octocat/Hello-World --timeout 600
+chatgh run rerun 123456789 --repo octocat/Hello-World --json-output
+chatgh run cancel 123456789 --repo octocat/Hello-World --json-output
+chatgh run download 123456789 --repo octocat/Hello-World --dir ./artifacts
+
 chatgh run view --repo octocat/Hello-World --run-id 123456789
 chatgh run view --repo octocat/Hello-World --run-id 123456789 --json-output
 
@@ -138,6 +167,21 @@ chatgh pr merge 123 --repo octocat/Hello-World --method squash --check
 ```
 
 `pr merge` 默认使用 `--method squash` 和 `--check`，会在合并前读取 PR checks 并拒绝非绿色状态。合并仍然是高风险远程 mutation，实际执行前应先确认 PR 状态和用户授权。
+
+### Fork 仓库
+
+```bash
+# gh-like 形态
+chatgh repo fork octocat/Hello-World --org ChatArch
+chatgh repo fork octocat/Hello-World --org ChatArch --fork-name hello-world-copy --default-branch-only
+
+# ChatGH 显式/自动化形态
+chatgh repo fork --source octocat/Hello-World --owner ChatArch
+chatgh repo fork --source octocat/Hello-World --owner ChatArch --name hello-world-copy --default-branch-only
+chatgh repo fork --source octocat/Hello-World --owner ChatArch --if-exists use --json-output
+```
+
+`repo fork` 通过 GitHub Fork API 创建目标仓库；目标仓库名默认沿用 source repo 名。它兼容官方 `gh repo fork [<repository>] --org ... --fork-name ...` 的常见形态，同时保留 ChatGH 的显式 `--source/--owner/--name` 和 `--json-output/--if-exists use` 自动化扩展。目标为 organization 时会传递 GitHub API 的 `organization` 字段；目标为 user account 时，`--owner` 必须匹配当前认证用户。`--if-exists use` 只会复用已存在且匹配 source 的 fork，避免把同名非匹配仓库误当成功结果。
 
 ### 查看仓库保护规则
 
@@ -223,7 +267,9 @@ checks = client.get_pr_checks("octocat/Hello-World", 1)
 
 ## 开发参考
 
-扩展 `chatgh` 时优先查官方文档：
+扩展 `chatgh` 时应先看项目内接口规范：`docs/gh-interface-alignment.md`。常见 GitHub 能力要先参考官方 GitHub CLI `gh` 的命令形态和帮助文本；如果官方已有能力，优先兼容其命名、位置参数和常见 alias，再结合 ChatGH 的鉴权、JSON、安全门和 Python API 落地；如果官方没有，才设计 ChatGH-native surface。官方 `gh` 只作接口参考，不作为运行依赖、CI/ops fallback 或真实操作路径。
+
+扩展时也要查官方 API 文档：
 
 - GitHub REST API: https://docs.github.com/en/rest
 - Pull requests API: https://docs.github.com/en/rest/pulls/pulls

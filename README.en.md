@@ -61,19 +61,42 @@ chatgh set-token --help
 
 Command tree:
 
-- `chatgh pr list`: generated-layer PR list.
-- `chatgh pr view NUMBER`: generated-layer PR details.
-- `chatgh pr checks NUMBER`: generated-layer PR head commit check runs.
-- `chatgh repo list`: list repositories for a user/org; defaults to table output and supports `--json-output`, `--limit`, `--sort updated|created|pushed|name|stars|open-prs|open-issues`, and `--direction asc|desc`, with visibility, stars, open PRs/issues, and timestamps.
-- `chatgh repo create`: create a repository; defaults to private and supports `--public`.
-- `chatgh repo protection`: inspect default-branch protection and repository rulesets for one repo or for an owner inventory; use this instead of crowding governance fields into `repo list`.
-- The public `chatgh pr` command surface includes `list/create/view/comment/edit/checks/merge`; write commands use the same ChatGH token resolution and keep secrets out of output.
-- `chatgh run view`: show a workflow run and its jobs.
-- `chatgh run logs`: show job logs, with tail and file output support.
+- `chatgh pr list/create/view/comment/edit/checks/merge`: existing PR workflow commands; `merge` defaults to `--check` and must not be used as a dry-run.
+- `chatgh pr status/diff/close/reopen/review/ready/update-branch`: common lifecycle/review commands added in this batch; write commands use ChatGH token resolution and keep secrets out of output.
+- `chatgh repo list/create/fork/protection`: repository list/create/fork/protection commands.
+- `chatgh repo view/clone/sync/edit`: common repository commands added in this batch; `clone/sync` keep local git side effects explicit and conservative.
+- `chatgh run view/logs`: workflow run and job-log inspection.
+- `chatgh run list/watch/rerun/cancel/download`: Actions run operations added in this batch; `watch` has a timeout and `rerun/cancel` are real remote mutations.
 - `chatgh repo-perms`: show token permissions and derived capabilities.
 - `chatgh set-token`: configure a repo-scoped HTTPS token for the current GitHub repository.
 
 ## Common Workflows
+
+### Repo View / Clone / Sync / Edit
+
+```bash
+chatgh repo view ChatArch/ChatGH --json-output
+chatgh repo clone ChatArch/ChatGH ./ChatGH-copy
+chatgh repo sync --repo ChatArch/ChatGH --branch master --remote origin --json-output
+chatgh repo edit ChatArch/ChatGH --description "GitHub helpers" --json-output
+chatgh repo edit ChatArch/ChatGH --visibility private --accept-visibility-change-consequences --json-output
+```
+
+`repo clone` refuses to overwrite a non-empty target directory. `repo sync` defaults to `git pull --ff-only` and refuses to sync a mismatched explicit repository from the wrong checkout. `repo edit` currently supports description, homepage, default branch, and visibility; `--visibility` requires `--accept-visibility-change-consequences`.
+
+### PR Lifecycle / Review
+
+```bash
+chatgh pr status --repo ChatArch/ChatGH --json-output
+chatgh pr diff 14 --repo ChatArch/ChatGH
+chatgh pr close 14 --repo ChatArch/ChatGH --comment "Superseded" --json-output
+chatgh pr reopen 14 --repo ChatArch/ChatGH --json-output
+chatgh pr review 14 --repo ChatArch/ChatGH --approve --body-file review.md --json-output
+chatgh pr ready 14 --repo ChatArch/ChatGH --json-output
+chatgh pr update-branch 14 --repo ChatArch/ChatGH --expected-head-sha SHA --json-output
+```
+
+`close/reopen/review/ready/update-branch` are remote write operations; confirm the target PR before running them.
 
 ### Create A PR
 
@@ -119,6 +142,12 @@ If the GitHub token cannot access the check-runs API, the command stores that er
 ### Inspect Actions Runs And Job Logs
 
 ```bash
+chatgh run list --repo octocat/Hello-World --limit 20
+chatgh run watch 123456789 --repo octocat/Hello-World --timeout 600
+chatgh run rerun 123456789 --repo octocat/Hello-World --json-output
+chatgh run cancel 123456789 --repo octocat/Hello-World --json-output
+chatgh run download 123456789 --repo octocat/Hello-World --dir ./artifacts
+
 chatgh run view --repo octocat/Hello-World --run-id 123456789
 chatgh run view --repo octocat/Hello-World --run-id 123456789 --json-output
 
@@ -138,6 +167,21 @@ chatgh pr merge 123 --repo octocat/Hello-World --method squash --check
 ```
 
 `pr merge` defaults to `--method squash` and `--check`, reading PR checks before merge and refusing non-green states. Merging is still a high-risk remote mutation; confirm PR status and user authorization before running it.
+
+### Fork Repositories
+
+```bash
+# gh-like shape
+chatgh repo fork octocat/Hello-World --org ChatArch
+chatgh repo fork octocat/Hello-World --org ChatArch --fork-name hello-world-copy --default-branch-only
+
+# ChatGH explicit / automation-friendly shape
+chatgh repo fork --source octocat/Hello-World --owner ChatArch
+chatgh repo fork --source octocat/Hello-World --owner ChatArch --name hello-world-copy --default-branch-only
+chatgh repo fork --source octocat/Hello-World --owner ChatArch --if-exists use --json-output
+```
+
+`repo fork` uses the GitHub Fork API. The target repository name defaults to the source repository name. It accepts the common official `gh repo fork [<repository>] --org ... --fork-name ...` shape while preserving ChatGH's explicit `--source/--owner/--name` and `--json-output/--if-exists use` automation extensions. Organization targets send GitHub's `organization` field; user-account targets require `--owner` to match the authenticated user. `--if-exists use` only reuses an existing fork when it matches the requested source, avoiding false success on an unrelated same-name repository.
 
 ### Inspect Repository Protection
 
@@ -223,7 +267,9 @@ The long-term `chattool gh` implementation has moved to `chatgh`. ChatTool may k
 
 ## Development Reference
 
-When extending `chatgh`, prefer official documentation:
+When extending `chatgh`, start from the project interface guide: `docs/gh-interface-alignment.en.md`. For common GitHub capabilities, first inspect the official GitHub CLI `gh` command shape and help text. If `gh` already has the capability, prefer compatible names, positional arguments, and common aliases, then implement it through ChatGH's own auth, JSON, safety gates, and Python API. If `gh` does not have it, design a ChatGH-native surface. Official `gh` is reference-only; it is not a runtime dependency, CI/ops fallback, or real operation path.
+
+Also consult official API documentation:
 
 - GitHub REST API: https://docs.github.com/en/rest
 - Pull requests API: https://docs.github.com/en/rest/pulls/pulls

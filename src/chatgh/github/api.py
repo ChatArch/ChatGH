@@ -94,7 +94,7 @@ def get_github_config_token() -> Optional[str]:
     return GitHubConfig.GITHUB_ACCESS_TOKEN.value
 
 
-def credential_path_from_repo(repo: str) -> dict[str, str]:
+def credential_path_from_repo(repo: str) -> CredentialQuery:
     normalized = repo.strip().removesuffix(".git")
     return {"protocol": "https", "host": "github.com", "path": normalized}
 
@@ -310,23 +310,34 @@ def github_api_get_json(
 
 
 def github_api_get_text(
-    repo: str, path: str, token: Optional[str], params: Optional[dict] = None
+    repo: str,
+    path: str,
+    token: Optional[str],
+    params: Optional[dict] = None,
+    headers: Optional[dict] = None,
 ) -> str:
-    response = github_api_request(repo, path, token, params=params)
+    response = github_api_request(repo, path, token, params=params, headers=headers)
     return response.text
 
 
 def github_api_request(
-    repo: str, path: str, token: Optional[str], params: Optional[dict] = None
+    repo: str,
+    path: str,
+    token: Optional[str],
+    params: Optional[dict] = None,
+    headers: Optional[dict] = None,
 ):
     import requests
 
     owner, name = split_repo(repo)
     url = f"https://api.github.com/repos/{owner}/{name}{path}"
     try:
+        request_headers = github_api_headers(token)
+        if headers:
+            request_headers.update(headers)
         response = requests.get(
             url,
-            headers=github_api_headers(token),
+            headers=request_headers,
             params=params,
             timeout=30,
             allow_redirects=True,

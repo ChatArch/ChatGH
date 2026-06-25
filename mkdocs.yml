@@ -6,4 +6,6 @@ theme:
   language: zh
 nav:
   - 首页: index.md
+  - 接口对齐规范: gh-interface-alignment.md
   - English: index.en.md
+  - English interface alignment: gh-interface-alignment.en.md
