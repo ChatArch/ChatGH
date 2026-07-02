@@ -103,7 +103,7 @@ def _resolve_field_id(owner: str, number: int, field_id: Optional[str], field_na
         return field_id
     if not field_name:
         raise click.ClickException("Pass --field-id or --field-name.")
-    matches = [field for field in list_fields(owner, number, token) if field.get("name") == field_name]
+    matches = [field for field in list_fields(owner, number, token=token) if field.get("name") == field_name]
     if not matches:
         raise click.ClickException(f"Project field not found by name: {field_name}")
     if len(matches) > 1:
@@ -217,11 +217,12 @@ def project_copy(number, owner, target_owner, title, drafts, json_output, token)
 @project_group.command(name="field-list")
 @click.argument("number", type=int)
 @click.option("--owner", required=True, help="GitHub user or organization owner.")
+@click.option("--limit", default=50, type=click.IntRange(min=1), show_default=True)
 @click.option("--json-output", is_flag=True, help="Output JSON.")
 @click.option("--token", default=None, help="GitHub token.")
-def project_field_list(number, owner, json_output, token):
+def project_field_list(number, owner, limit, json_output, token):
     """List project fields."""
-    _echo_payload(list_fields(owner, number, token), json_output)
+    _echo_payload(list_fields(owner, number, limit=limit, token=token), json_output)
 
 
 @project_group.command(name="field-create")

@@ -140,14 +140,15 @@ def list_projects(owner: str, limit: int = 30, closed: bool = False, token: Opti
     resolved = _resolved_token(owner, token)
     payload = _rest_request_owner("GET", owner, "/projectsV2", resolved, params={"per_page": limit})
     items = payload if isinstance(payload, list) else payload.get("projects", []) if isinstance(payload, dict) else []
+    normalized = [_normalize_node_payload(item) for item in items]
     if closed:
-        return list(items)
-    return [item for item in items if not item.get("closed")]
+        return normalized
+    return [item for item in normalized if str(item.get("state") or "").lower() != "closed" and not item.get("closed_at")]
 
 
 def get_project(owner: str, number: int | str, token: Optional[str] = None) -> dict:
     resolved = _resolved_token(owner, token)
-    return _rest_request_owner("GET", owner, f"/projectsV2/{int(number)}", resolved)
+    return _normalize_node_payload(_rest_request_owner("GET", owner, f"/projectsV2/{int(number)}", resolved))
 
 
 def create_project(owner: str, title: str, token: Optional[str] = None) -> dict:
@@ -207,9 +208,9 @@ def copy_project(owner: str, number: int | str, target_owner: str, title: str, *
     return (data.get("copyProjectV2") or {}).get("projectV2") or {}
 
 
-def list_fields(owner: str, number: int | str, token: Optional[str] = None) -> list[dict]:
+def list_fields(owner: str, number: int | str, limit: int = 50, token: Optional[str] = None) -> list[dict]:
     resolved = _resolved_token(owner, token)
-    payload = _rest_request_owner("GET", owner, f"/projectsV2/{int(number)}/fields", resolved)
+    payload = _rest_request_owner("GET", owner, f"/projectsV2/{int(number)}/fields", resolved, params={"per_page": limit})
     items = payload if isinstance(payload, list) else payload.get("fields", []) if isinstance(payload, dict) else []
     return [_normalize_node_payload(item) for item in items]
 
@@ -223,9 +224,9 @@ def create_field(owner: str, number: int | str, name: str, data_type: str, *, op
 
 
 def delete_field(owner: str, field_id: str, token: Optional[str] = None) -> dict:
-    query = "mutation($input:DeleteProjectV2FieldInput!) { deleteProjectV2Field(input:$input) { deletedFieldId } }"
-    data = _graphql(owner, query, {"input": {"fieldId": field_id}}, token)
-    return {"deleted": True, "field_id": (data.get("deleteProjectV2Field") or {}).get("deletedFieldId", field_id)}
+    query = "mutation($input:DeleteProjectV2FieldInput!) { deleteProjectV2Field(input:$input) { clientMutationId } }"
+    _graphql(owner, query, {"input": {"fieldId": field_id}}, token)
+    return {"deleted": True, "field_id": field_id}
 
 
 def list_items(owner: str, number: int | str, *, limit: int = 50, token: Optional[str] = None) -> list[dict]:
