@@ -97,7 +97,7 @@ chatgh project item edit 3 --owner ChatArch --id PROJECT_ITEM_ID --field-id FIEL
 chatgh project field list 3 --owner ChatArch --json-output
 ```
 
-`project` does not replicate the official flat `gh project` tree. ChatGH organizes Project lifecycle, `item`, and `field` separately: `project item add/edit/list/...` and `project field list/create/delete` are the main entries, and flat `item-add` / `field-list` compatibility aliases are intentionally not kept. ChatGH still does not depend on official `gh auth`: it uses `--token`, repo-local tokens, and ChatEnv `GITHUB_ACCESS_TOKEN`; remote mutations keep ChatGH safety gates; and each CLI command is backed by importable `chatgh.github.projects` Python APIs. `project item edit` expands GitHub Projects v2 field value types with `--text`, `--number`, `--date`, `--single-select-option-id`, `--iteration-id`, and `--clear`., `--iteration-id`, and `--clear`.
+`project` does not replicate the official flat `gh project` tree. ChatGH organizes Project lifecycle, `item`, and `field` separately: `project item add/edit/list/...` and `project field list/create/delete` are the main entries, and flat `item-add` / `field-list` compatibility aliases are intentionally not kept. ChatGH still does not depend on official `gh auth`: it uses `--token`, repo-local tokens, and ChatEnv `GITHUB_ACCESS_TOKEN`; remote mutations keep ChatGH safety gates; and each CLI command is backed by importable `chatgh.github.projects` Python APIs. Every recoverable missing-input path in `project` follows ChatStyle: default auto-prompt, `CHATARCH_AUTO_PROMPT=0/false/no/off` fail-fast behavior for machine/CI callers, `-i` force-interactive, and `-I` no-interactive. Destructive confirmations still require explicit `--confirm`. `project item edit` expands GitHub Projects v2 field value types with `--text`, `--number`, `--date`, `--single-select-option-id`, `--iteration-id`, and `--clear`.
 
 ### PR Lifecycle / Review
 
@@ -239,7 +239,8 @@ Do not put tokens in remote URLs, and do not log raw `extraHeader` values. With 
 Recoverable missing parameters are handled through `chatstyle`:
 
 - Default mode: prompt automatically when a terminal is interactive and required values are missing.
-- `-i/--interactive`: force prompting.
+- `CHATARCH_AUTO_PROMPT=0/false/no/off`: disable default auto-prompting so machines/CI fail fast on missing inputs.
+- `-i/--interactive`: force prompting, even when `CHATARCH_AUTO_PROMPT=off`.
 - `-I/--no-interactive`: disable prompts and fail clearly when required values are missing.
 
 Token inputs use password prompts and are not echoed.

@@ -68,6 +68,124 @@ def test_project_item_edit_expands_item_field_value_options(runner):
         assert option in result.output
 
 
+def test_project_commands_expose_chatstyle_interactive_flags(runner):
+    for args in [
+        ["project", "list"],
+        ["project", "create"],
+        ["project", "view"],
+        ["project", "item", "list"],
+        ["project", "item", "create"],
+        ["project", "field", "list"],
+        ["project", "field", "create"],
+    ]:
+        result = runner.invoke(cli, [*args, "--help"])
+        assert result.exit_code == 0, result.output
+        assert "-i" in result.output
+        assert "-I" in result.output
+
+
+def test_project_list_prompts_for_missing_owner(monkeypatch, runner):
+    captured = {}
+
+    monkeypatch.setattr("chatgh.github.project_cli.is_interactive_available", lambda: True)
+    monkeypatch.setattr("chatgh.github.project_cli.ask_text", lambda prompt, **kwargs: "ChatArch")
+
+    def fake_list_projects(owner, limit, closed, token):
+        captured.update({"owner": owner, "limit": limit, "closed": closed, "token": token})
+        return []
+
+    monkeypatch.setattr("chatgh.github.project_cli.list_projects", fake_list_projects)
+
+    result = runner.invoke(cli, ["project", "list"])
+
+    assert result.exit_code == 0
+    assert captured == {"owner": "ChatArch", "limit": 30, "closed": False, "token": None}
+
+
+def test_project_list_no_interactive_fails_for_missing_owner(runner):
+    result = runner.invoke(cli, ["project", "list", "-I"])
+
+    assert result.exit_code != 0
+    assert "Missing required value: owner" in result.output
+
+
+def test_project_list_respects_chatarch_auto_prompt_off(monkeypatch, runner):
+    monkeypatch.setenv("CHATARCH_AUTO_PROMPT", "off")
+    monkeypatch.setattr("chatgh.github.project_cli.is_interactive_available", lambda: True)
+    monkeypatch.setattr("chatgh.github.project_cli.ask_text", lambda prompt, **kwargs: "ChatArch")
+
+    result = runner.invoke(cli, ["project", "list"])
+
+    assert result.exit_code != 0
+    assert "Missing required value: owner" in result.output
+
+
+def test_project_list_force_interactive_ignores_chatarch_auto_prompt_off(monkeypatch, runner):
+    captured = {}
+    monkeypatch.setenv("CHATARCH_AUTO_PROMPT", "off")
+    monkeypatch.setattr("chatgh.github.project_cli.is_interactive_available", lambda: True)
+    monkeypatch.setattr("chatgh.github.project_cli.ask_text", lambda prompt, **kwargs: "ChatArch")
+
+    def fake_list_projects(owner, limit, closed, token):
+        captured.update({"owner": owner, "limit": limit, "closed": closed, "token": token})
+        return []
+
+    monkeypatch.setattr("chatgh.github.project_cli.list_projects", fake_list_projects)
+
+    result = runner.invoke(cli, ["project", "list", "-i"])
+
+    assert result.exit_code == 0
+    assert captured["owner"] == "ChatArch"
+
+
+def test_project_create_prompts_for_missing_owner_and_title(monkeypatch, runner):
+    prompts = iter(["ChatArch", "Roadmap"])
+    captured = {}
+
+    monkeypatch.setattr("chatgh.github.project_cli.is_interactive_available", lambda: True)
+    monkeypatch.setattr("chatgh.github.project_cli.ask_text", lambda prompt, **kwargs: next(prompts))
+
+    def fake_create_project(owner, title, token):
+        captured.update({"owner": owner, "title": title, "token": token})
+        return {"title": title}
+
+    monkeypatch.setattr("chatgh.github.project_cli.create_project", fake_create_project)
+
+    result = runner.invoke(cli, ["project", "create", "--json-output"])
+
+    assert result.exit_code == 0
+    assert captured == {"owner": "ChatArch", "title": "Roadmap", "token": None}
+    assert '"Roadmap"' in result.output
+
+
+def test_project_create_no_interactive_fails_for_missing_owner(runner):
+    result = runner.invoke(cli, ["project", "create", "-I"])
+
+    assert result.exit_code != 0
+    assert "Missing required value: owner" in result.output
+
+
+def test_project_delete_interactive_does_not_prompt_for_confirmation(monkeypatch, runner):
+    prompts = iter(["3", "ChatArch"])
+    called = False
+
+    monkeypatch.setattr("chatgh.github.project_cli.is_interactive_available", lambda: True)
+    monkeypatch.setattr("chatgh.github.project_cli.ask_text", lambda prompt, **kwargs: next(prompts))
+
+    def fake_delete_project(owner, number, token):
+        nonlocal called
+        called = True
+        return {"deleted": True}
+
+    monkeypatch.setattr("chatgh.github.project_cli.delete_project", fake_delete_project)
+
+    result = runner.invoke(cli, ["project", "delete", "-i"])
+
+    assert result.exit_code != 0
+    assert "--confirm" in result.output
+    assert called is False
+
+
 def test_project_python_api_exports_importable_functions():
     from chatgh.github import projects
 
@@ -337,6 +455,109 @@ def test_project_item_edit_rejects_clear_with_value(runner):
 
     assert result.exit_code != 0
     assert "cannot be combined" in result.output
+
+
+def test_project_item_add_prompts_for_missing_url(monkeypatch, runner):
+    prompts = iter(["3", "acme", "https://github.com/acme/repo/issues/4"])
+    captured = {}
+
+    monkeypatch.setattr("chatgh.github.project_cli.is_interactive_available", lambda: True)
+    monkeypatch.setattr("chatgh.github.project_cli.ask_text", lambda prompt, **kwargs: next(prompts))
+
+    def fake_add_item(owner, number, url, content_id, token):
+        captured.update({"owner": owner, "number": number, "url": url, "content_id": content_id, "token": token})
+        return {"id": "PVTI_url"}
+
+    monkeypatch.setattr("chatgh.github.project_cli.add_item", fake_add_item)
+
+    result = runner.invoke(cli, ["project", "item", "add", "-i", "--json-output"])
+
+    assert result.exit_code == 0
+    assert captured == {
+        "owner": "acme",
+        "number": 3,
+        "url": "https://github.com/acme/repo/issues/4",
+        "content_id": None,
+        "token": None,
+    }
+
+
+def test_project_item_edit_prompts_for_field_id_and_text_value(monkeypatch, runner):
+    prompts = iter(["3", "acme", "PVTI_1", "PVTF_status", "Done"])
+    captured = {}
+
+    monkeypatch.setattr("chatgh.github.project_cli.is_interactive_available", lambda: True)
+    monkeypatch.setattr("chatgh.github.project_cli.ask_text", lambda prompt, **kwargs: next(prompts))
+
+    def fake_update_item_field(owner, number, item_id, field_id, value, token):
+        captured.update({"owner": owner, "number": number, "item_id": item_id, "field_id": field_id, "value": value})
+        return {"id": item_id}
+
+    monkeypatch.setattr("chatgh.github.project_cli.update_item_field", fake_update_item_field)
+
+    result = runner.invoke(cli, ["project", "item", "edit", "-i", "--json-output"])
+
+    assert result.exit_code == 0
+    assert captured == {"owner": "acme", "number": 3, "item_id": "PVTI_1", "field_id": "PVTF_status", "value": {"text": "Done"}}
+
+
+def test_project_link_prompts_for_repo_id(monkeypatch, runner):
+    prompts = iter(["3", "acme", "R_1"])
+    captured = {}
+
+    monkeypatch.setattr("chatgh.github.project_cli.is_interactive_available", lambda: True)
+    monkeypatch.setattr("chatgh.github.project_cli.ask_text", lambda prompt, **kwargs: next(prompts))
+
+    def fake_link_repository(owner, number, repo_id, token):
+        captured.update({"owner": owner, "number": number, "repo_id": repo_id, "token": token})
+        return {"id": repo_id}
+
+    monkeypatch.setattr("chatgh.github.project_cli.link_repository", fake_link_repository)
+
+    result = runner.invoke(cli, ["project", "link", "-i", "--json-output"])
+
+    assert result.exit_code == 0
+    assert captured == {"owner": "acme", "number": 3, "repo_id": "R_1", "token": None}
+
+
+def test_project_unlink_prompts_for_repo_id_but_not_confirm(monkeypatch, runner):
+    prompts = iter(["3", "acme", "R_1"])
+    captured = {}
+
+    monkeypatch.setattr("chatgh.github.project_cli.is_interactive_available", lambda: True)
+    monkeypatch.setattr("chatgh.github.project_cli.ask_text", lambda prompt, **kwargs: next(prompts))
+
+    def fake_unlink_repository(owner, number, repo_id, token):
+        captured.update({"owner": owner, "number": number, "repo_id": repo_id, "token": token})
+        return {"id": repo_id}
+
+    monkeypatch.setattr("chatgh.github.project_cli.unlink_repository", fake_unlink_repository)
+
+    result = runner.invoke(cli, ["project", "unlink", "-i", "--confirm", "R_1", "--json-output"])
+
+    assert result.exit_code == 0
+    assert captured == {"owner": "acme", "number": 3, "repo_id": "R_1", "token": None}
+
+
+def test_project_field_create_rejects_prompted_invalid_data_type(monkeypatch, runner):
+    prompts = iter(["3", "acme", "BadField", "bogus"])
+    called = False
+
+    monkeypatch.setattr("chatgh.github.project_cli.is_interactive_available", lambda: True)
+    monkeypatch.setattr("chatgh.github.project_cli.ask_text", lambda prompt, **kwargs: next(prompts))
+
+    def fake_create_field(owner, number, name, data_type, options, token):
+        nonlocal called
+        called = True
+        return {"id": "PVTF_bad"}
+
+    monkeypatch.setattr("chatgh.github.project_cli.create_field", fake_create_field)
+
+    result = runner.invoke(cli, ["project", "field", "create", "-i"])
+
+    assert result.exit_code != 0
+    assert "Invalid value for --data-type" in result.output
+    assert called is False
 
 
 def test_project_field_list_dispatches_to_python_api(monkeypatch, runner):

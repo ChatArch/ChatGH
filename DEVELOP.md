@@ -4,7 +4,8 @@
 
 - Use `chatstyle>=0.1.0` and `chatenv>=0.1.1` as the canonical CLI interaction runtime.
 - Prefer `CommandSchema`, `CommandField`, `add_interactive_option()`, and `resolve_command_inputs()` for new commands.
-- Missing required args should auto-enter interactive mode when recoverable.
+- Missing required args should auto-enter interactive mode when recoverable and `CHATARCH_AUTO_PROMPT` is not false.
+- `CHATARCH_AUTO_PROMPT=0/false/no/off` disables default auto-prompting for machine/CI callers.
 - `-i` forces interactive mode; `-I` disables prompting and must fail fast.
 - Prompt defaults must match actual execution defaults.
 - Sensitive values must stay masked in prompts and summaries.
