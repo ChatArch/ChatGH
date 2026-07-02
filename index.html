@@ -1,0 +1,1176 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://chatarch.github.io/ChatGH/">
+      
+      
+      
+        <link rel="next" href="gh-interface-alignment/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>chatgh 文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#chatgh" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="." title="chatgh 文档" class="md-header__button md-logo" aria-label="chatgh 文档" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            chatgh 文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              首页
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ChatArch/ChatGH" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="." title="chatgh 文档" class="md-nav__button md-logo" aria-label="chatgh 文档" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    chatgh 文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ChatArch/ChatGH" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="." class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        安装
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        配置模型
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="配置模型">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Token 来源
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        仓库推断
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI 入口
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        常用流程
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="常用流程">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#repo-view-clone-sync-edit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repo view / clone / sync / edit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pr-lifecycle-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PR lifecycle / review
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        创建 PR
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pr_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        查看 PR
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        查看 CI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#actions-run-job-logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        查看 Actions run 和 job logs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pr_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        评论、合并和编辑 PR
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fork" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fork 仓库
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        查看仓库保护规则
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#token_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        配置和检查 token
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        交互模式
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        推荐的 PR/CI 工作流
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#python-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Python API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chattool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        与 ChatTool 的关系
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        开发参考
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="gh-interface-alignment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    接口对齐规范
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="index.en/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    English
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="gh-interface-alignment.en/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    English interface alignment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        安装
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        配置模型
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="配置模型">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#token" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Token 来源
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        仓库推断
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI 入口
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        常用流程
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="常用流程">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#repo-view-clone-sync-edit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repo view / clone / sync / edit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pr-lifecycle-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PR lifecycle / review
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        创建 PR
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pr_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        查看 PR
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        查看 CI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#actions-run-job-logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        查看 Actions run 和 job logs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pr_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        评论、合并和编辑 PR
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fork" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fork 仓库
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        查看仓库保护规则
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#token_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        配置和检查 token
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        交互模式
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        推荐的 PR/CI 工作流
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#python-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Python API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chattool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        与 ChatTool 的关系
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        开发参考
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="chatgh">chatgh 文档</h1>
+<p><code>chatgh</code> 是 ChatArch 的 GitHub CLI 与 Python API 包，承载从 <code>chattool gh</code> 迁移出的 PR、CI、Actions run/job logs、仓库权限和 token 配置能力。新脚本和文档应直接使用 <code>chatgh</code>；<code>chattool gh</code> 只作为 ChatTool 侧兼容入口。</p>
+<h2 id="_1">安装</h2>
+<pre><code class="language-bash">pip install chatgh
+# 开发态
+pip install -e &quot;.[dev]&quot;
+</code></pre>
+<h2 id="_2">配置模型</h2>
+<p>默认行为：</p>
+<ul>
+<li><code>repo</code>：优先使用显式 <code>--repo owner/repo</code>，未传时从当前 git remote 推断。</li>
+<li><code>token</code>：优先使用显式 <code>--token</code>，其次读取当前仓库 <code>.git/config</code> 中 repo-local HTTPS auth header，再回退 typed env 里的 <code>GITHUB_ACCESS_TOKEN</code>。</li>
+<li>输出：默认是人类可读格式；支持 <code>--json-output</code> 的命令会输出稳定 JSON，适合脚本消费。</li>
+</ul>
+<h3 id="token">Token 来源</h3>
+<p>Token 解析顺序稳定为：</p>
+<ol>
+<li>显式 <code>--token</code>。</li>
+<li>当前仓库 <code>.git/config</code> 中的 repo-local HTTPS auth header，路径为规范化后的 <code>https://github.com/owner/repo.git</code>。</li>
+<li>typed env 中的 <code>GITHUB_ACCESS_TOKEN</code>。</li>
+</ol>
+<p>可以用 <code>chatenv</code> 查看或配置 typed env：</p>
+<pre><code class="language-bash">chatenv init -t gh
+chatenv cat -t gh
+</code></pre>
+<p>安装 <code>chatgh</code> 后，它会通过 <code>chatenv.configs</code> entry point 注册 <code>GitHubConfig</code>，所以 <code>chatenv list</code> 会出现 <code>[GitHub]</code> 分组，<code>-t gh</code> / <code>-t github</code> 可以解析到同一份 GitHub typed env。</p>
+<p><code>ghp_xxx</code> / <code>github_pat_xxx</code> 都是 GitHub Personal Access Token。通常 clone/fetch/push 至少需要 contents 读写权限；PR 评论、合并和 Actions 读取按仓库策略补充对应权限。</p>
+<h3 id="_3">仓库推断</h3>
+<p>未传 <code>--repo</code> 时，<code>chatgh</code> 会检查当前仓库 remote，并优先使用 <code>origin</code>，再尝试其它 remote。支持：</p>
+<ul>
+<li><code>https://github.com/octocat/Hello-World.git</code></li>
+<li><code>https://github.com/octocat/Hello-World</code></li>
+<li><code>git@github.com:octocat/Hello-World.git</code></li>
+<li><code>ssh://git@github.com/octocat/Hello-World.git</code></li>
+</ul>
+<p>写入 repo-local HTTPS auth header 时，path 会规范化为 <code>https://github.com/octocat/Hello-World.git</code>。</p>
+<h2 id="cli">CLI 入口</h2>
+<pre><code class="language-bash">chatgh --help
+chatgh pr --help
+chatgh repo --help
+chatgh run --help
+chatgh repo-perms --help
+chatgh set-token --help
+</code></pre>
+<p>命令树：</p>
+<ul>
+<li><code>chatgh pr list</code>：generated-layer PR 列表。</li>
+<li><code>chatgh pr view NUMBER</code>：generated-layer PR 详情。</li>
+<li><code>chatgh pr checks NUMBER</code>：generated-layer PR head commit check runs。</li>
+<li><code>chatgh repo list</code>：列出 user/org 下的仓库；默认 table，支持 <code>--json-output</code>、<code>--limit</code>、<code>--sort updated|created|pushed|name|stars|open-prs|open-issues</code>、<code>--direction asc|desc</code>，字段包含 visibility、stars、open PRs、open issues、created/updated time 等。</li>
+<li><code>chatgh repo create</code>：创建仓库；默认 private，可用 <code>--public</code> 显式创建公开仓库。</li>
+<li><code>chatgh repo fork</code>：把 source 仓库 fork 到目标 user/org，兼容 <code>gh</code> 风格位置参数、<code>--org</code>、<code>--fork-name</code>，并保留 ChatGH 显式 <code>--source</code>、<code>--owner</code>、<code>--name</code>、<code>--default-branch-only</code>、<code>--if-exists use</code> 和 JSON 输出。</li>
+<li><code>chatgh repo protection</code>：查看单个仓库或 owner 下仓库的默认分支保护与 repository rulesets；治理/规则审计不挤进 <code>repo list</code> 默认表格。</li>
+<li>当前公开 <code>chatgh pr</code> 命令面包含 <code>list/create/view/comment/edit/checks/merge</code>；写操作复用 ChatGH token resolution，且不会打印 token。</li>
+<li><code>chatgh run view</code>：查看 workflow run 和 jobs。</li>
+<li><code>chatgh run logs</code>：查看 job 日志，支持 tail 和落盘。</li>
+<li><code>chatgh repo-perms</code>：查看 token 权限和派生 capabilities。</li>
+<li><code>chatgh set-token</code>：为当前 GitHub 仓库配置 repo 级 HTTPS token。</li>
+</ul>
+<h2 id="_4">常用流程</h2>
+<h3 id="repo-view-clone-sync-edit">Repo view / clone / sync / edit</h3>
+<pre><code class="language-bash">chatgh repo view ChatArch/ChatGH --json-output
+chatgh repo clone ChatArch/ChatGH ./ChatGH-copy
+chatgh repo sync --repo ChatArch/ChatGH --branch master --remote origin --json-output
+chatgh repo edit ChatArch/ChatGH --description &quot;GitHub helpers&quot; --json-output
+chatgh repo edit ChatArch/ChatGH --visibility private --accept-visibility-change-consequences --json-output
+</code></pre>
+<p><code>repo clone</code> 会拒绝覆盖已有非空目录；<code>repo sync</code> 默认使用 <code>git pull --ff-only</code>。<code>repo edit</code> 当前只支持 description、homepage、default-branch 和 visibility 小子集；设置 <code>--visibility</code> 时必须显式传 <code>--accept-visibility-change-consequences</code>。</p>
+<h3 id="pr-lifecycle-review">PR lifecycle / review</h3>
+<pre><code class="language-bash">chatgh pr status --repo ChatArch/ChatGH --json-output
+chatgh pr diff 14 --repo ChatArch/ChatGH
+chatgh pr close 14 --repo ChatArch/ChatGH --comment &quot;Superseded&quot; --json-output
+chatgh pr reopen 14 --repo ChatArch/ChatGH --json-output
+chatgh pr review 14 --repo ChatArch/ChatGH --approve --body-file review.md
+chatgh pr ready 14 --repo ChatArch/ChatGH --json-output
+chatgh pr update-branch 14 --repo ChatArch/ChatGH --expected-head-sha SHA --json-output
+</code></pre>
+<p><code>close/reopen/review/ready/update-branch</code> 都是远端写操作；执行前应确认目标 PR。</p>
+<h3 id="pr">创建 PR</h3>
+<pre><code class="language-bash">chatgh pr create --repo octocat/Hello-World --base main --head rex/feature --title &quot;Add feature&quot; --body-file pr-body.md
+chatgh pr create --repo octocat/Hello-World --base main --head rex/feature --title &quot;Add feature&quot; --body &quot;Short body&quot; --json-output
+</code></pre>
+<p><code>pr create</code> 会使用当前 ChatGH token resolution 逻辑，不会打印 token。缺少 <code>base/head/title</code> 时，可在交互终端自动补问；非交互可用 <code>-I</code> 明确失败。</p>
+<h3 id="pr_1">查看 PR</h3>
+<pre><code class="language-bash">chatgh pr list --repo octocat/Hello-World --state open --limit 20
+chatgh pr view 123 --repo octocat/Hello-World
+chatgh pr view 123 --repo octocat/Hello-World --json-output
+</code></pre>
+<p><code>pr view</code> 输出会包含：</p>
+<ul>
+<li>PR number、title、state、author、URL。</li>
+<li>base/head branch。</li>
+<li><code>mergeable</code> 和 <code>mergeable_state</code>。</li>
+<li>created/updated/merged timestamps。</li>
+</ul>
+<h3 id="ci">查看 CI</h3>
+<pre><code class="language-bash">chatgh pr checks 123 --repo octocat/Hello-World
+chatgh pr checks 123 --repo octocat/Hello-World --json-output
+</code></pre>
+<p><code>pr checks</code> 按 PR head commit 汇总三层信息：</p>
+<ul>
+<li>combined status</li>
+<li>check runs</li>
+<li>workflow runs</li>
+</ul>
+<p>当前公开 CLI 不提供 <code>--wait</code> / <code>--interval</code> / <code>--timeout</code> 参数；需要等待终态时，在外层流程中轮询 <code>chatgh pr checks</code>。</p>
+<p>如果 GitHub token 无权读取 check-runs API，命令会把 check-runs 错误放进 payload，同时仍尽量展示 combined status 和 workflow runs。</p>
+<h3 id="actions-run-job-logs">查看 Actions run 和 job logs</h3>
+<pre><code class="language-bash">chatgh run list --repo octocat/Hello-World --limit 20
+chatgh run watch 123456789 --repo octocat/Hello-World --timeout 600
+chatgh run rerun 123456789 --repo octocat/Hello-World --json-output
+chatgh run cancel 123456789 --repo octocat/Hello-World --json-output
+chatgh run download 123456789 --repo octocat/Hello-World --dir ./artifacts
+
+chatgh run view --repo octocat/Hello-World --run-id 123456789
+chatgh run view --repo octocat/Hello-World --run-id 123456789 --json-output
+
+chatgh run logs --repo octocat/Hello-World --job-id 987654321
+chatgh run logs --repo octocat/Hello-World --job-id 987654321 --tail 0
+chatgh run logs --repo octocat/Hello-World --job-id 987654321 --tail 200 --output job.log
+</code></pre>
+<p><code>run logs</code> 默认只输出尾部日志；<code>--tail 0</code> 输出完整日志；<code>--output</code> 会把完整日志写入文件，终端仍显示 tail。</p>
+<h3 id="pr_2">评论、合并和编辑 PR</h3>
+<pre><code class="language-bash">chatgh pr comment 123 --repo octocat/Hello-World --body-file review-note.md
+chatgh pr edit 123 --repo octocat/Hello-World --title &quot;New title&quot; --body-file pr-body.md
+chatgh pr merge 123 --repo octocat/Hello-World --method squash --check
+</code></pre>
+<p><code>pr merge</code> 默认使用 <code>--method squash</code> 和 <code>--check</code>，会在合并前读取 PR checks 并拒绝非绿色状态。合并仍然是高风险远程 mutation，实际执行前应先确认 PR 状态和用户授权。</p>
+<h3 id="fork">Fork 仓库</h3>
+<pre><code class="language-bash"># gh-like 形态
+chatgh repo fork octocat/Hello-World --org ChatArch
+chatgh repo fork octocat/Hello-World --org ChatArch --fork-name hello-world-copy --default-branch-only
+
+# ChatGH 显式/自动化形态
+chatgh repo fork --source octocat/Hello-World --owner ChatArch
+chatgh repo fork --source octocat/Hello-World --owner ChatArch --name hello-world-copy --default-branch-only
+chatgh repo fork --source octocat/Hello-World --owner ChatArch --if-exists use --json-output
+</code></pre>
+<p><code>repo fork</code> 通过 GitHub Fork API 创建目标仓库；目标仓库名默认沿用 source repo 名。它兼容官方 <code>gh repo fork [&lt;repository&gt;] --org ... --fork-name ...</code> 的常见形态，同时保留 ChatGH 的显式 <code>--source/--owner/--name</code> 和 <code>--json-output/--if-exists use</code> 自动化扩展。目标为 organization 时会传递 GitHub API 的 <code>organization</code> 字段；目标为 user account 时，<code>--owner</code> 必须匹配当前认证用户。<code>--if-exists use</code> 只会复用已存在且匹配 source 的 fork，避免把同名非匹配仓库误当成功结果。</p>
+<h3 id="_5">查看仓库保护规则</h3>
+<pre><code class="language-bash">chatgh repo protection --repo octocat/Hello-World
+chatgh repo protection --repo octocat/Hello-World --json-output
+chatgh repo protection --owner octocat --limit 50 --jobs 8
+chatgh repo protection --owner octocat --limit 50 --jobs 8 --json-output
+</code></pre>
+<p><code>repo protection</code> 会展示默认分支、是否 protected、classic branch protection 细节（例如是否要求 PR、review 数量、是否允许 force push / deletion），以及 GitHub 可读取时的 repository ruleset 摘要。部分 private 仓库可能因为 GitHub plan/visibility 限制读取 rulesets 返回错误；命令会在 JSON 里保留该错误，同时尽量展示 branch protection 状态。owner inventory 模式会先列仓库，再用 <code>--jobs</code> 并发检查每个仓库，输出顺序保持稳定。</p>
+<h3 id="token_1">配置和检查 token</h3>
+<pre><code class="language-bash">chatgh repo-perms --repo octocat/Hello-World --json-output
+chatgh repo-perms --repo octocat/Hello-World --full-json
+
+chatgh set-token --token &quot;$GITHUB_ACCESS_TOKEN&quot;
+chatgh set-token --token &quot;$GITHUB_ACCESS_TOKEN&quot; --save-env
+</code></pre>
+<p><code>repo-perms</code> 会展示：</p>
+<ul>
+<li>token 来源和 mask 后的 token。</li>
+<li>GitHub 返回的 <code>permissions</code>。</li>
+<li>派生 capabilities：<code>can_read_pr</code>、<code>can_comment_pr</code>、<code>can_merge_pr</code>、<code>can_view_checks</code>、<code>can_view_actions</code>。</li>
+</ul>
+<p><code>set-token</code> 只在当前目录能识别 GitHub remote 时生效。默认只写入当前仓库自己的 <code>.git/config</code>：</p>
+<pre><code class="language-ini">[http &quot;https://github.com/octocat/Hello-World.git&quot;]
+    extraHeader = Authorization: Basic &lt;base64(x-access-token:TOKEN)&gt;
+</code></pre>
+<p>不要把 token 写进 remote URL，也不要把 raw <code>extraHeader</code> 输出到日志。传 <code>--save-env</code> 时会同步写入 typed env 的 <code>GITHUB_ACCESS_TOKEN</code>。</p>
+<h2 id="_6">交互模式</h2>
+<p>所有缺少可恢复关键参数的命令都走 <code>chatstyle</code>：</p>
+<ul>
+<li>默认模式：终端可交互且缺参时自动补问。</li>
+<li><code>-i/--interactive</code>：强制进入补问流程。</li>
+<li><code>-I/--no-interactive</code>：完全禁用补问，缺参时直接报错。</li>
+</ul>
+<p>token 类输入使用 password prompt，不会明文回显。</p>
+<h2 id="prci">推荐的 PR/CI 工作流</h2>
+<p>在创建 PR、汇报“CI 是否通过”或准备 merge 前，先同步最新 base：</p>
+<pre><code class="language-bash">git fetch origin main
+</code></pre>
+<p>然后确认：</p>
+<ul>
+<li><code>chatgh pr view</code> / <code>chatgh pr checks</code> 显示 <code>mergeable</code> 不是 <code>False</code>，<code>mergeable_state</code> 不是 <code>dirty</code>。</li>
+<li>本地基于最新 base 做过 merge 或 rebase 演练，并在该结果上跑过最相关测试。</li>
+<li>CI 需要终态时，在外层流程中轮询 <code>chatgh pr checks</code>，不要只看一次快照。</li>
+</ul>
+<h2 id="python-api">Python API</h2>
+<pre><code class="language-python">from chatgh.github.client import GitHubClient
+
+client = GitHubClient(user_name=&quot;octocat&quot;, token=&quot;ghp_...&quot;)
+prs = client.get_pull_requests(&quot;Hello-World&quot;)
+view = client.get_pr_view(&quot;octocat/Hello-World&quot;, 1)
+checks = client.get_pr_checks(&quot;octocat/Hello-World&quot;, 1)
+</code></pre>
+<p>底层模块也可按需导入：</p>
+<ul>
+<li><code>chatgh.github.api</code>：token、仓库解析、git credential 和 REST 请求基础能力。</li>
+<li><code>chatgh.github.commands</code>：CLI 使用的业务流程函数。</li>
+<li><code>chatgh.github.requests</code>：PR/checks/actions payload 构造。</li>
+<li><code>chatgh.github.render</code>：人类可读输出、merge blocker 和 tail helper。</li>
+</ul>
+<h2 id="chattool">与 ChatTool 的关系</h2>
+<p><code>chattool gh</code> 的长期实现已迁移到 <code>chatgh</code>。ChatTool 可以保留薄 wrapper 兼容旧命令，但不应继续维护一份 forked GitHub 实现。ChatTool 内涉及 GitHub token/remote 的辅助逻辑也应导入 <code>chatgh.github.api</code>。</p>
+<h2 id="_7">开发参考</h2>
+<p>扩展 <code>chatgh</code> 时应先看项目内接口规范：<code>docs/gh-interface-alignment.md</code>。常见 GitHub 能力要先参考官方 GitHub CLI <code>gh</code> 的命令形态和帮助文本；如果官方已有能力，优先兼容其命名、位置参数和常见 alias，再结合 ChatGH 的鉴权、JSON、安全门和 Python API 落地；如果官方没有，才设计 ChatGH-native surface。官方 <code>gh</code> 只作接口参考，不作为运行依赖、CI/ops fallback 或真实操作路径。</p>
+<p>扩展时也要查官方 API 文档：</p>
+<ul>
+<li>GitHub REST API: https://docs.github.com/en/rest</li>
+<li>Pull requests API: https://docs.github.com/en/rest/pulls/pulls</li>
+<li>Check runs API: https://docs.github.com/en/rest/checks/runs</li>
+<li>Workflow runs API: https://docs.github.com/en/rest/actions/workflow-runs</li>
+<li>Workflow jobs API: https://docs.github.com/en/rest/actions/workflow-jobs</li>
+<li>Commit statuses API: https://docs.github.com/en/rest/commits/statuses</li>
+<li>PyGithub: https://pygithub.readthedocs.io/</li>
+</ul>
+<p>本地验证：</p>
+<pre><code class="language-bash">python -m pytest -q
+python -m build
+mkdocs build --strict
+</code></pre>
+<p>默认测试使用 mock/fake payload 和临时目录，不调用真实 GitHub API，也不会污染真实 git credential 或 env 配置。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": [], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

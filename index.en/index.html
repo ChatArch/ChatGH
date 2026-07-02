@@ -1,0 +1,1174 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://chatarch.github.io/ChatGH/index.en/">
+      
+      
+        <link rel="prev" href="../gh-interface-alignment/">
+      
+      
+        <link rel="next" href="../gh-interface-alignment.en/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>English - chatgh 文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#chatgh-docs" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href=".." title="chatgh 文档" class="md-header__button md-logo" aria-label="chatgh 文档" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            chatgh 文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              English
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ChatArch/ChatGH" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="chatgh 文档" class="md-nav__button md-logo" aria-label="chatgh 文档" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    chatgh 文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ChatArch/ChatGH" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gh-interface-alignment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    接口对齐规范
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    English
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    English
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#token-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Token Sources
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#repository-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repository Inference
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli-entry-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI Entry Points
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Workflows
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Workflows">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#repo-view-clone-sync-edit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repo View / Clone / Sync / Edit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pr-lifecycle-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PR Lifecycle / Review
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-a-pr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create A PR
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#view-prs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        View PRs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inspect-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inspect CI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inspect-actions-runs-and-job-logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inspect Actions Runs And Job Logs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comment-merge-and-edit-prs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comment, Merge, And Edit PRs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fork-repositories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fork Repositories
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inspect-repository-protection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inspect Repository Protection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configure-and-inspect-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configure And Inspect Tokens
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interactive-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interactive Mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommended-prci-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommended PR/CI Workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#python-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Python API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#relationship-with-chattool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Relationship With ChatTool
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#development-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gh-interface-alignment.en/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    English interface alignment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Installation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#token-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Token Sources
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#repository-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repository Inference
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli-entry-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI Entry Points
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common Workflows
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Common Workflows">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#repo-view-clone-sync-edit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repo View / Clone / Sync / Edit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pr-lifecycle-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PR Lifecycle / Review
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-a-pr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create A PR
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#view-prs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        View PRs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inspect-ci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inspect CI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inspect-actions-runs-and-job-logs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inspect Actions Runs And Job Logs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comment-merge-and-edit-prs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comment, Merge, And Edit PRs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fork-repositories" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fork Repositories
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inspect-repository-protection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inspect Repository Protection
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configure-and-inspect-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configure And Inspect Tokens
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interactive-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interactive Mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommended-prci-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommended PR/CI Workflow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#python-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Python API
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#relationship-with-chattool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Relationship With ChatTool
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#development-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development Reference
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="chatgh-docs">chatgh Docs</h1>
+<p><code>chatgh</code> is the ChatArch GitHub CLI and Python API package. It carries the PR, CI, Actions run/job log, repository permission, and token configuration features migrated from <code>chattool gh</code>. New scripts and docs should call <code>chatgh</code> directly; <code>chattool gh</code> is only a ChatTool-side compatibility entry point.</p>
+<h2 id="installation">Installation</h2>
+<pre><code class="language-bash">pip install chatgh
+# development
+pip install -e &quot;.[dev]&quot;
+</code></pre>
+<h2 id="configuration-model">Configuration Model</h2>
+<p>Default behavior:</p>
+<ul>
+<li><code>repo</code>: explicit <code>--repo owner/repo</code> wins; otherwise <code>chatgh</code> infers the repository from the current git remote.</li>
+<li><code>token</code>: explicit <code>--token</code> wins, then the repo-local HTTPS auth header in the current repository's <code>.git/config</code>, then <code>GITHUB_ACCESS_TOKEN</code> from typed env.</li>
+<li>Output: human-readable by default; commands with <code>--json-output</code> emit stable JSON for scripts.</li>
+</ul>
+<h3 id="token-sources">Token Sources</h3>
+<p>Token resolution order is stable:</p>
+<ol>
+<li>Explicit <code>--token</code>.</li>
+<li>Repo-local HTTPS auth header in the current repository's <code>.git/config</code>, with the path normalized to <code>https://github.com/owner/repo.git</code>.</li>
+<li><code>GITHUB_ACCESS_TOKEN</code> from typed env.</li>
+</ol>
+<p>Use <code>chatenv</code> to inspect or configure typed env:</p>
+<pre><code class="language-bash">chatenv init -t gh
+chatenv cat -t gh
+</code></pre>
+<p>After <code>chatgh</code> is installed, it registers <code>GitHubConfig</code> through the <code>chatenv.configs</code> entry point, so <code>chatenv list</code> shows a <code>[GitHub]</code> group and <code>-t gh</code> / <code>-t github</code> resolve to the same GitHub typed env.</p>
+<p><code>ghp_xxx</code> and <code>github_pat_xxx</code> are GitHub Personal Access Tokens. Clone/fetch/push usually require contents read/write permissions; PR comments, merges, and Actions inspection may require additional repository permissions.</p>
+<h3 id="repository-inference">Repository Inference</h3>
+<p>When <code>--repo</code> is omitted, <code>chatgh</code> checks git remotes in the current repository. It tries <code>origin</code> first, then other remotes. Supported forms:</p>
+<ul>
+<li><code>https://github.com/octocat/Hello-World.git</code></li>
+<li><code>https://github.com/octocat/Hello-World</code></li>
+<li><code>git@github.com:octocat/Hello-World.git</code></li>
+<li><code>ssh://git@github.com/octocat/Hello-World.git</code></li>
+</ul>
+<p>When writing a repo-local HTTPS auth header, the path is normalized to <code>https://github.com/octocat/Hello-World.git</code>.</p>
+<h2 id="cli-entry-points">CLI Entry Points</h2>
+<pre><code class="language-bash">chatgh --help
+chatgh pr --help
+chatgh repo --help
+chatgh run --help
+chatgh repo-perms --help
+chatgh set-token --help
+</code></pre>
+<p>Command tree:</p>
+<ul>
+<li><code>chatgh pr list/create/view/comment/edit/checks/merge</code>: existing PR workflow commands; <code>merge</code> defaults to <code>--check</code> and must not be used as a dry-run.</li>
+<li><code>chatgh pr status/diff/close/reopen/review/ready/update-branch</code>: common lifecycle/review commands added in this batch; write commands use ChatGH token resolution and keep secrets out of output.</li>
+<li><code>chatgh repo list/create/fork/protection</code>: repository list/create/fork/protection commands.</li>
+<li><code>chatgh repo view/clone/sync/edit</code>: common repository commands added in this batch; <code>clone/sync</code> keep local git side effects explicit and conservative.</li>
+<li><code>chatgh run view/logs</code>: workflow run and job-log inspection.</li>
+<li><code>chatgh run list/watch/rerun/cancel/download</code>: Actions run operations added in this batch; <code>watch</code> has a timeout and <code>rerun/cancel</code> are real remote mutations.</li>
+<li><code>chatgh repo-perms</code>: show token permissions and derived capabilities.</li>
+<li><code>chatgh set-token</code>: configure a repo-scoped HTTPS token for the current GitHub repository.</li>
+</ul>
+<h2 id="common-workflows">Common Workflows</h2>
+<h3 id="repo-view-clone-sync-edit">Repo View / Clone / Sync / Edit</h3>
+<pre><code class="language-bash">chatgh repo view ChatArch/ChatGH --json-output
+chatgh repo clone ChatArch/ChatGH ./ChatGH-copy
+chatgh repo sync --repo ChatArch/ChatGH --branch master --remote origin --json-output
+chatgh repo edit ChatArch/ChatGH --description &quot;GitHub helpers&quot; --json-output
+chatgh repo edit ChatArch/ChatGH --visibility private --accept-visibility-change-consequences --json-output
+</code></pre>
+<p><code>repo clone</code> refuses to overwrite a non-empty target directory. <code>repo sync</code> defaults to <code>git pull --ff-only</code> and refuses to sync a mismatched explicit repository from the wrong checkout. <code>repo edit</code> currently supports description, homepage, default branch, and visibility; <code>--visibility</code> requires <code>--accept-visibility-change-consequences</code>.</p>
+<h3 id="pr-lifecycle-review">PR Lifecycle / Review</h3>
+<pre><code class="language-bash">chatgh pr status --repo ChatArch/ChatGH --json-output
+chatgh pr diff 14 --repo ChatArch/ChatGH
+chatgh pr close 14 --repo ChatArch/ChatGH --comment &quot;Superseded&quot; --json-output
+chatgh pr reopen 14 --repo ChatArch/ChatGH --json-output
+chatgh pr review 14 --repo ChatArch/ChatGH --approve --body-file review.md --json-output
+chatgh pr ready 14 --repo ChatArch/ChatGH --json-output
+chatgh pr update-branch 14 --repo ChatArch/ChatGH --expected-head-sha SHA --json-output
+</code></pre>
+<p><code>close/reopen/review/ready/update-branch</code> are remote write operations; confirm the target PR before running them.</p>
+<h3 id="create-a-pr">Create A PR</h3>
+<pre><code class="language-bash">chatgh pr create --repo octocat/Hello-World --base main --head rex/feature --title &quot;Add feature&quot; --body-file pr-body.md
+chatgh pr create --repo octocat/Hello-World --base main --head rex/feature --title &quot;Add feature&quot; --body &quot;Short body&quot; --json-output
+</code></pre>
+<p><code>pr create</code> uses the existing ChatGH token resolution flow and does not print tokens. Missing <code>base/head/title</code> values can be prompted interactively; use <code>-I</code> to fail clearly in non-interactive mode.</p>
+<h3 id="view-prs">View PRs</h3>
+<pre><code class="language-bash">chatgh pr list --repo octocat/Hello-World --state open --limit 20
+chatgh pr view 123 --repo octocat/Hello-World
+chatgh pr view 123 --repo octocat/Hello-World --json-output
+</code></pre>
+<p><code>pr view</code> output includes:</p>
+<ul>
+<li>PR number, title, state, author, and URL.</li>
+<li>base/head branches.</li>
+<li><code>mergeable</code> and <code>mergeable_state</code>.</li>
+<li>created/updated/merged timestamps.</li>
+</ul>
+<h3 id="inspect-ci">Inspect CI</h3>
+<pre><code class="language-bash">chatgh pr checks 123 --repo octocat/Hello-World
+chatgh pr checks 123 --repo octocat/Hello-World --json-output
+</code></pre>
+<p><code>pr checks</code> summarizes three layers for the PR head commit:</p>
+<ul>
+<li>combined status</li>
+<li>check runs</li>
+<li>workflow runs</li>
+</ul>
+<p>The public CLI currently does not expose <code>--wait</code> / <code>--interval</code> / <code>--timeout</code>; when a terminal CI result is needed, poll <code>chatgh pr checks</code> from the surrounding workflow.</p>
+<p>If the GitHub token cannot access the check-runs API, the command stores that error in the payload while still showing combined status and workflow runs when available.</p>
+<h3 id="inspect-actions-runs-and-job-logs">Inspect Actions Runs And Job Logs</h3>
+<pre><code class="language-bash">chatgh run list --repo octocat/Hello-World --limit 20
+chatgh run watch 123456789 --repo octocat/Hello-World --timeout 600
+chatgh run rerun 123456789 --repo octocat/Hello-World --json-output
+chatgh run cancel 123456789 --repo octocat/Hello-World --json-output
+chatgh run download 123456789 --repo octocat/Hello-World --dir ./artifacts
+
+chatgh run view --repo octocat/Hello-World --run-id 123456789
+chatgh run view --repo octocat/Hello-World --run-id 123456789 --json-output
+
+chatgh run logs --repo octocat/Hello-World --job-id 987654321
+chatgh run logs --repo octocat/Hello-World --job-id 987654321 --tail 0
+chatgh run logs --repo octocat/Hello-World --job-id 987654321 --tail 200 --output job.log
+</code></pre>
+<p><code>run logs</code> shows tail output by default; <code>--tail 0</code> prints the full log; <code>--output</code> writes the full log to a file while the terminal still shows the selected tail.</p>
+<h3 id="comment-merge-and-edit-prs">Comment, Merge, And Edit PRs</h3>
+<pre><code class="language-bash">chatgh pr comment 123 --repo octocat/Hello-World --body-file review-note.md
+chatgh pr edit 123 --repo octocat/Hello-World --title &quot;New title&quot; --body-file pr-body.md
+chatgh pr merge 123 --repo octocat/Hello-World --method squash --check
+</code></pre>
+<p><code>pr merge</code> defaults to <code>--method squash</code> and <code>--check</code>, reading PR checks before merge and refusing non-green states. Merging is still a high-risk remote mutation; confirm PR status and user authorization before running it.</p>
+<h3 id="fork-repositories">Fork Repositories</h3>
+<pre><code class="language-bash"># gh-like shape
+chatgh repo fork octocat/Hello-World --org ChatArch
+chatgh repo fork octocat/Hello-World --org ChatArch --fork-name hello-world-copy --default-branch-only
+
+# ChatGH explicit / automation-friendly shape
+chatgh repo fork --source octocat/Hello-World --owner ChatArch
+chatgh repo fork --source octocat/Hello-World --owner ChatArch --name hello-world-copy --default-branch-only
+chatgh repo fork --source octocat/Hello-World --owner ChatArch --if-exists use --json-output
+</code></pre>
+<p><code>repo fork</code> uses the GitHub Fork API. The target repository name defaults to the source repository name. It accepts the common official <code>gh repo fork [&lt;repository&gt;] --org ... --fork-name ...</code> shape while preserving ChatGH's explicit <code>--source/--owner/--name</code> and <code>--json-output/--if-exists use</code> automation extensions. Organization targets send GitHub's <code>organization</code> field; user-account targets require <code>--owner</code> to match the authenticated user. <code>--if-exists use</code> only reuses an existing fork when it matches the requested source, avoiding false success on an unrelated same-name repository.</p>
+<h3 id="inspect-repository-protection">Inspect Repository Protection</h3>
+<pre><code class="language-bash">chatgh repo protection --repo octocat/Hello-World
+chatgh repo protection --repo octocat/Hello-World --json-output
+chatgh repo protection --owner octocat --limit 50 --jobs 8
+chatgh repo protection --owner octocat --limit 50 --jobs 8 --json-output
+</code></pre>
+<p><code>repo protection</code> reports the default branch, whether it is protected, classic branch protection details such as required PR reviews / review count / force-push and deletion flags, and repository ruleset summaries when GitHub exposes them. Some private repositories may return a GitHub plan/visibility error for rulesets; the command preserves that error in JSON while still reporting the branch protection state when available. Owner inventory mode lists repositories first, then checks each repository concurrently with <code>--jobs</code> while preserving stable output order.</p>
+<h3 id="configure-and-inspect-tokens">Configure And Inspect Tokens</h3>
+<pre><code class="language-bash">chatgh repo-perms --repo octocat/Hello-World --json-output
+chatgh repo-perms --repo octocat/Hello-World --full-json
+
+chatgh set-token --token &quot;$GITHUB_ACCESS_TOKEN&quot;
+chatgh set-token --token &quot;$GITHUB_ACCESS_TOKEN&quot; --save-env
+</code></pre>
+<p><code>repo-perms</code> shows:</p>
+<ul>
+<li>token source and masked token.</li>
+<li><code>permissions</code> returned by GitHub.</li>
+<li>derived capabilities: <code>can_read_pr</code>, <code>can_comment_pr</code>, <code>can_merge_pr</code>, <code>can_view_checks</code>, <code>can_view_actions</code>.</li>
+</ul>
+<p><code>set-token</code> only works when the current directory has a recognizable GitHub remote. By default it writes only the current repository's <code>.git/config</code>:</p>
+<pre><code class="language-ini">[http &quot;https://github.com/octocat/Hello-World.git&quot;]
+    extraHeader = Authorization: Basic &lt;base64(x-access-token:TOKEN)&gt;
+</code></pre>
+<p>Do not put tokens in remote URLs, and do not log raw <code>extraHeader</code> values. With <code>--save-env</code>, <code>set-token</code> also writes typed env <code>GITHUB_ACCESS_TOKEN</code>.</p>
+<h2 id="interactive-mode">Interactive Mode</h2>
+<p>Recoverable missing parameters are handled through <code>chatstyle</code>:</p>
+<ul>
+<li>Default mode: prompt automatically when a terminal is interactive and required values are missing.</li>
+<li><code>-i/--interactive</code>: force prompting.</li>
+<li><code>-I/--no-interactive</code>: disable prompts and fail clearly when required values are missing.</li>
+</ul>
+<p>Token inputs use password prompts and are not echoed.</p>
+<h2 id="recommended-prci-workflow">Recommended PR/CI Workflow</h2>
+<p>Before creating a PR, reporting CI status, or preparing to merge, fetch the latest base:</p>
+<pre><code class="language-bash">git fetch origin main
+</code></pre>
+<p>Then confirm:</p>
+<ul>
+<li><code>chatgh pr view</code> / <code>chatgh pr checks</code> do not show <code>mergeable=False</code> or <code>mergeable_state=dirty</code>.</li>
+<li>You have locally merged or rebased against the latest base and run the most relevant tests on that result.</li>
+<li>Poll <code>chatgh pr checks</code> from the surrounding workflow when you need a terminal CI result; do not rely on a one-shot snapshot.</li>
+</ul>
+<h2 id="python-api">Python API</h2>
+<pre><code class="language-python">from chatgh.github.client import GitHubClient
+
+client = GitHubClient(user_name=&quot;octocat&quot;, token=&quot;ghp_...&quot;)
+prs = client.get_pull_requests(&quot;Hello-World&quot;)
+view = client.get_pr_view(&quot;octocat/Hello-World&quot;, 1)
+checks = client.get_pr_checks(&quot;octocat/Hello-World&quot;, 1)
+</code></pre>
+<p>Lower-level modules are also available:</p>
+<ul>
+<li><code>chatgh.github.api</code>: token, repository inference, git credential, and REST request helpers.</li>
+<li><code>chatgh.github.commands</code>: workflow functions used by the CLI.</li>
+<li><code>chatgh.github.requests</code>: PR/checks/actions payload construction.</li>
+<li><code>chatgh.github.render</code>: human-readable output, merge blockers, and tail helpers.</li>
+</ul>
+<h2 id="relationship-with-chattool">Relationship With ChatTool</h2>
+<p>The long-term <code>chattool gh</code> implementation has moved to <code>chatgh</code>. ChatTool may keep a thin wrapper for compatibility, but it should not maintain a forked GitHub implementation. ChatTool helpers that need GitHub token/remote logic should import <code>chatgh.github.api</code>.</p>
+<h2 id="development-reference">Development Reference</h2>
+<p>When extending <code>chatgh</code>, start from the project interface guide: <code>docs/gh-interface-alignment.en.md</code>. For common GitHub capabilities, first inspect the official GitHub CLI <code>gh</code> command shape and help text. If <code>gh</code> already has the capability, prefer compatible names, positional arguments, and common aliases, then implement it through ChatGH's own auth, JSON, safety gates, and Python API. If <code>gh</code> does not have it, design a ChatGH-native surface. Official <code>gh</code> is reference-only; it is not a runtime dependency, CI/ops fallback, or real operation path.</p>
+<p>Also consult official API documentation:</p>
+<ul>
+<li>GitHub REST API: https://docs.github.com/en/rest</li>
+<li>Pull requests API: https://docs.github.com/en/rest/pulls/pulls</li>
+<li>Check runs API: https://docs.github.com/en/rest/checks/runs</li>
+<li>Workflow runs API: https://docs.github.com/en/rest/actions/workflow-runs</li>
+<li>Workflow jobs API: https://docs.github.com/en/rest/actions/workflow-jobs</li>
+<li>Commit statuses API: https://docs.github.com/en/rest/commits/statuses</li>
+<li>PyGithub: https://pygithub.readthedocs.io/</li>
+</ul>
+<p>Local validation:</p>
+<pre><code class="language-bash">python -m pytest -q
+python -m build
+mkdocs build --strict
+</code></pre>
+<p>Default tests use mock/fake payloads and temporary paths. They do not call the live GitHub API or write real git credentials or env config.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

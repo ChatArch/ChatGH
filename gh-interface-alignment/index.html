@@ -1,0 +1,1020 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://chatarch.github.io/ChatGH/gh-interface-alignment/">
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../index.en/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>接口对齐规范 - chatgh 文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#chatgh-gh" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href=".." title="chatgh 文档" class="md-header__button md-logo" aria-label="chatgh 文档" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            chatgh 文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              接口对齐规范
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ChatArch/ChatGH" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="chatgh 文档" class="md-nav__button md-logo" aria-label="chatgh 文档" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    chatgh 文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ChatArch/ChatGH" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    接口对齐规范
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    接口对齐规范
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        基本原则
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        代码组织
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI 兼容策略
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#repo-fork" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        repo fork 对齐示例
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        批量迁移优先级
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="批量迁移优先级">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-1repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1：repo 命令族
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2pr-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2：PR lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-3actions-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3：Actions run
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2026-06-25" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        本轮落地范围（2026-06-25）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="本轮落地范围（2026-06-25）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PR
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#actions-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actions run
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        测试要求
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../index.en/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    English
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gh-interface-alignment.en/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    English interface alignment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        基本原则
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        代码组织
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CLI 兼容策略
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#repo-fork" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        repo fork 对齐示例
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        批量迁移优先级
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="批量迁移优先级">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-1repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1：repo 命令族
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2pr-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2：PR lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-3actions-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3：Actions run
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2026-06-25" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        本轮落地范围（2026-06-25）
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="本轮落地范围（2026-06-25）">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Repo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PR
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#actions-run" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actions run
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        测试要求
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="chatgh-gh">ChatGH 与官方 <code>gh</code> 接口对齐规范</h1>
+<p>ChatGH 是 ChatArch / Arch 系列工具的 GitHub 操作基础层。它应该让熟悉 GitHub CLI <code>gh</code> 的人和模型能低成本迁移，同时保留 ChatArch 自有的鉴权、安全门、JSON 输出和 Python API 复用能力。</p>
+<h2 id="_1">基本原则</h2>
+<ol>
+<li><strong>官方 <code>gh</code> 先作接口参考</strong>：新增常见 GitHub 能力前，先查看对应的官方 <code>gh &lt;group&gt; &lt;command&gt; --help</code> 和 GitHub REST/API 文档。</li>
+<li><strong>不把官方 <code>gh</code> 当运行依赖</strong>：官方 <code>gh</code> 只用于命令形态、参数命名、帮助文本和用户习惯参考；真实操作仍由 ChatGH 自己的 Python API / REST 实现完成。</li>
+<li><strong>如果官方已有能力，优先借鉴形态</strong>：命令名、位置参数、常见长参/短参应尽量兼容；如果与 ChatGH 语义冲突，要保留 ChatGH 更安全、更自动化友好的行为并在文档里说明差异。</li>
+<li><strong>如果官方没有能力，再设计 ChatGH-native surface</strong>：新设计也要保持命名清晰、JSON 稳定、可测试、可被 Python 调用。</li>
+<li><strong>CLI + Python API 双落地</strong>：CLI 是人和模型调用/review 的界面；背后的函数必须是可 import 的 Python API，供 ChatArch 自动化和其他 Arch 工具复用。</li>
+</ol>
+<h2 id="_2">代码组织</h2>
+<p>新增接口应遵循当前分层：</p>
+<pre><code class="language-text">src/chatgh/
+  cli.py                         # top-level command registration
+  commands/pr.py                 # PR CLI command group
+  github/cli.py                  # repo/run/repo-perms/set-token CLI groups
+  github/commands.py             # Python command/service functions; CLI calls here
+  github/requests.py             # GitHub API / payload functions
+  github/api.py                  # token, repo resolution, low-level helpers
+  github/render.py               # human-readable output helpers
+</code></pre>
+<p>规则：</p>
+<ul>
+<li>CLI 层只做参数解析、交互补问、输出格式选择。</li>
+<li>业务流程函数放在 <code>chatgh.github.commands</code> 或更合适的 service module。</li>
+<li>GitHub API 细节放在 <code>chatgh.github.requests</code> / <code>api.py</code>。</li>
+<li>人类输出与 JSON payload 分离：Python 函数返回 payload，CLI 只决定 table/summary 或 <code>--json-output</code>。</li>
+<li>每个新增 CLI 应有同名或近似 Python API，例如 <code>chatgh repo view</code> 对应 <code>view_repo(...)</code>。</li>
+</ul>
+<h2 id="cli">CLI 兼容策略</h2>
+<ul>
+<li>官方有位置参数时，ChatGH 应考虑兼容位置参数。</li>
+<li>官方常见短参/长参若无冲突，应提供 alias。例如 <code>-R/--repo</code>、<code>--org</code>、<code>--fork-name</code>。</li>
+<li>保留 ChatGH 自有扩展：<code>--json-output</code>、<code>--token</code>、repo-local auth / ChatEnv token resolution、<code>--if-exists use</code>、PR merge safety gate。</li>
+<li>对本地 git 有副作用的行为默认保持克制。<code>clone</code>、<code>remote</code>、<code>sync</code> 等能力必须有明确参数、清晰输出和测试，不能默认覆盖已有 checkout/remote。</li>
+</ul>
+<h2 id="repo-fork"><code>repo fork</code> 对齐示例</h2>
+<p>官方 <code>gh repo fork</code> 的常见形态是位置参数 + <code>--org</code> / <code>--fork-name</code>。ChatGH 同时支持官方形态和显式自动化形态：</p>
+<pre><code class="language-bash"># gh-like, convenient for humans and model callers familiar with gh
+chatgh repo fork Wei-Shaw/claude-relay-service --org ChatArch --fork-name claude-relay-service
+
+# ChatGH explicit, convenient for automation and idempotent workflows
+chatgh repo fork --source Wei-Shaw/claude-relay-service --owner ChatArch --name claude-relay-service --if-exists use --json-output
+</code></pre>
+<p>映射：</p>
+<ul>
+<li>positional <code>REPO</code> -&gt; <code>source</code></li>
+<li><code>--org</code> -&gt; <code>owner</code> for organization targets</li>
+<li><code>--fork-name</code> -&gt; <code>name</code></li>
+<li><code>--json-output</code> and <code>--if-exists use</code> are ChatGH automation extensions</li>
+</ul>
+<h2 id="_3">批量迁移优先级</h2>
+<h3 id="phase-1repo">Phase 1：repo 命令族</h3>
+<ul>
+<li><code>repo view [REPO] [-R/--repo REPO] [--json-output]</code></li>
+<li><code>repo fork [REPO] --org/--owner ... --fork-name/--name ...</code></li>
+<li><code>repo clone REPO [DIR]</code>，默认不破坏已有 checkout/remote</li>
+<li><code>repo sync [REPO]</code>，先明确 API/git 边界</li>
+<li><code>repo edit</code> 小子集：description/homepage/default-branch/visibility</li>
+</ul>
+<h3 id="phase-2pr-lifecycle">Phase 2：PR lifecycle</h3>
+<p>当前已有 <code>create/list/view/comment/edit/checks/merge</code>。后续优先补：</p>
+<ul>
+<li><code>pr status</code></li>
+<li><code>pr diff</code></li>
+<li><code>pr close</code></li>
+<li><code>pr reopen</code></li>
+<li><code>pr review</code></li>
+<li><code>pr ready</code></li>
+<li><code>pr update-branch</code></li>
+</ul>
+<p><code>pr merge</code> 继续保持安全门；merge 命令是真实远端 mutation，不得当 dry-run 使用。</p>
+<h3 id="phase-3actions-run">Phase 3：Actions run</h3>
+<p>当前已有 <code>run view</code> / <code>run logs</code>。后续优先补：</p>
+<ul>
+<li><code>run list</code></li>
+<li><code>run watch</code>，必须有 timeout</li>
+<li><code>run rerun</code></li>
+<li><code>run cancel</code></li>
+<li><code>run download</code></li>
+</ul>
+<h2 id="2026-06-25">本轮落地范围（2026-06-25）</h2>
+<p>按本 design，本轮在当前 <code>repo fork</code> PR 中把剩余常见接口一次性补入同一套 CLI + Python API 分层：</p>
+<h3 id="repo">Repo</h3>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>Python API</th>
+<th>状态</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>chatgh repo view [REPOSITORY] [-R/--repo REPOSITORY]</code></td>
+<td><code>view_repo(repo, token)</code></td>
+<td>已实现</td>
+<td>读取仓库基础 payload，支持 JSON。</td>
+</tr>
+<tr>
+<td><code>chatgh repo clone REPOSITORY [DIRECTORY]</code></td>
+<td><code>clone_repo(repo, directory, ssh, token)</code></td>
+<td>已实现</td>
+<td>安全 clone；目标目录非空则拒绝覆盖；不默认改 workspace remote。</td>
+</tr>
+<tr>
+<td><code>chatgh repo sync [REPOSITORY]</code></td>
+<td><code>sync_repo(repo, branch, remote, ff_only, token)</code></td>
+<td>已实现</td>
+<td>显式 <code>git fetch</code> + <code>git pull --ff-only</code>，默认当前 checkout/current branch。</td>
+</tr>
+<tr>
+<td><code>chatgh repo edit [REPOSITORY]</code></td>
+<td><code>edit_repo(repo, description, homepage, default_branch, visibility, accept_visibility_change_consequences, token)</code></td>
+<td>已实现</td>
+<td>小子集：description/homepage/default-branch/visibility；visibility 必须显式确认后果。</td>
+</tr>
+<tr>
+<td><code>chatgh repo fork ...</code></td>
+<td><code>fork_repo(...)</code></td>
+<td>已实现</td>
+<td>已支持 gh-like 位置参数、<code>--org</code>、<code>--fork-name</code> 和 ChatGH <code>--if-exists use</code>。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="pr">PR</h3>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>Python API</th>
+<th>状态</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>chatgh pr status</code></td>
+<td><code>status_prs(repo, token)</code></td>
+<td>已实现</td>
+<td>当前实现汇总 open PR；后续可扩展 authored/review-requested。</td>
+</tr>
+<tr>
+<td><code>chatgh pr diff NUMBER</code></td>
+<td><code>diff_pr(repo, number, token)</code></td>
+<td>已实现</td>
+<td>直接输出 GitHub diff text，服务 review。</td>
+</tr>
+<tr>
+<td><code>chatgh pr close NUMBER</code></td>
+<td><code>close_pr(repo, number, comment, delete_branch, token)</code></td>
+<td>已实现</td>
+<td>远端关闭 PR；<code>--delete-branch</code> 当前只记录请求，不默认删分支。</td>
+</tr>
+<tr>
+<td><code>chatgh pr reopen NUMBER</code></td>
+<td><code>reopen_pr(repo, number, token)</code></td>
+<td>已实现</td>
+<td>重新打开 PR。</td>
+</tr>
+<tr>
+<td><code>chatgh pr review NUMBER</code></td>
+<td><code>review_pr(repo, number, event, body, token)</code></td>
+<td>已实现</td>
+<td>支持 <code>--approve</code> / <code>--request-changes</code> / <code>--comment</code> 与 body/body-file。</td>
+</tr>
+<tr>
+<td><code>chatgh pr ready NUMBER</code></td>
+<td><code>ready_pr(repo, number, token)</code></td>
+<td>已实现</td>
+<td>draft -&gt; ready_for_review。</td>
+</tr>
+<tr>
+<td><code>chatgh pr update-branch NUMBER</code></td>
+<td><code>update_pr_branch(repo, number, expected_head_sha, token)</code></td>
+<td>已实现</td>
+<td>调 GitHub update-branch API。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="actions-run">Actions run</h3>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>Python API</th>
+<th>状态</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>chatgh run list</code></td>
+<td><code>list_runs(repo, branch, status, event, limit, token)</code></td>
+<td>已实现</td>
+<td>支持 branch/status/event/limit 与 JSON。</td>
+</tr>
+<tr>
+<td><code>chatgh run watch RUN_ID</code></td>
+<td><code>watch_run(repo, run_id, interval, timeout, token)</code></td>
+<td>已实现</td>
+<td>必须有 timeout，避免长时间阻塞。</td>
+</tr>
+<tr>
+<td><code>chatgh run rerun RUN_ID</code></td>
+<td><code>rerun_run(repo, run_id, token)</code></td>
+<td>已实现</td>
+<td>远端 mutation，输出 run id/status。</td>
+</tr>
+<tr>
+<td><code>chatgh run cancel RUN_ID</code></td>
+<td><code>cancel_run(repo, run_id, token)</code></td>
+<td>已实现</td>
+<td>远端 mutation，输出 run id/status。</td>
+</tr>
+<tr>
+<td><code>chatgh run download RUN_ID</code></td>
+<td><code>download_run_artifacts(repo, run_id, name, output_dir, token)</code></td>
+<td>已实现</td>
+<td>下载并解压 artifacts，默认显式 <code>--dir</code>/当前目录。</td>
+</tr>
+</tbody>
+</table>
+<p>本轮仍不包含高风险 <code>repo delete/archive/rename</code>、<code>pr checkout</code> 等会更强烈改变远端或本地 checkout 的命令；这些需要单独确认 safety gate。</p>
+<h2 id="_4">测试要求</h2>
+<p>每个新增接口至少覆盖：</p>
+<ol>
+<li>Python API / request payload 行为。</li>
+<li>CLI 参数映射、alias、错误语义、<code>--json-output</code>。</li>
+<li>token 不泄漏。</li>
+<li>写操作的目标对象和安全边界。</li>
+<li>对本地 git 有副作用的命令必须测试不覆盖已有 remote/dirty checkout。</li>
+</ol>
+<p>新增能力应先写失败测试，再实现最小代码，通过后再同步 README/docs。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
