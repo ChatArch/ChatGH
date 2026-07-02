@@ -54,6 +54,7 @@ When writing a repo-local HTTPS auth header, the path is normalized to `https://
 chatgh --help
 chatgh pr --help
 chatgh repo --help
+chatgh project --help
 chatgh run --help
 chatgh repo-perms --help
 chatgh set-token --help
@@ -65,6 +66,7 @@ Command tree:
 - `chatgh pr status/diff/close/reopen/review/ready/update-branch`: common lifecycle/review commands added in this batch; write commands use ChatGH token resolution and keep secrets out of output.
 - `chatgh repo list/create/fork/protection`: repository list/create/fork/protection commands.
 - `chatgh repo view/clone/sync/edit`: common repository commands added in this batch; `clone/sync` keep local git side effects explicit and conservative.
+- `chatgh project list/view/create/edit/close/delete/copy/field-list/field-create/field-delete/item-list/item-add/item-create/item-edit/item-archive/item-delete/link/unlink/mark-template`: GitHub Projects v2 commands shaped after official `gh project`, while auth, JSON output, safety gates, and Python APIs follow ChatGH conventions.
 - `chatgh run view/logs`: workflow run and job-log inspection.
 - `chatgh run list/watch/rerun/cancel/download`: Actions run operations added in this batch; `watch` has a timeout and `rerun/cancel` are real remote mutations.
 - `chatgh repo-perms`: show token permissions and derived capabilities.
@@ -83,6 +85,19 @@ chatgh repo edit ChatArch/ChatGH --visibility private --accept-visibility-change
 ```
 
 `repo clone` refuses to overwrite a non-empty target directory. `repo sync` defaults to `git pull --ff-only` and refuses to sync a mismatched explicit repository from the wrong checkout. `repo edit` currently supports description, homepage, default branch, and visibility; `--visibility` requires `--accept-visibility-change-consequences`.
+
+### GitHub Projects
+
+```bash
+chatgh project list --owner ChatArch --json-output
+chatgh project view 3 --owner ChatArch --json-output
+chatgh project create --owner ChatArch --title "Roadmap" --json-output
+chatgh project item-add 3 --owner ChatArch --content-id ISSUE_OR_PR_NODE_ID --json-output
+chatgh project item-edit 3 --owner ChatArch --id PROJECT_ITEM_ID --field-id FIELD_ID --text "In progress" --json-output
+chatgh project field-list 3 --owner ChatArch --json-output
+```
+
+`project` command names intentionally follow official `gh project` names such as `field-list`, `item-add`, and `mark-template`. ChatGH still does not depend on official `gh auth`: it uses `--token`, repo-local tokens, and ChatEnv `GITHUB_ACCESS_TOKEN`; remote mutations keep ChatGH safety gates; and each CLI command is backed by importable `chatgh.github.projects` Python APIs. `item-edit` expands GitHub Projects v2 field value types with `--text`, `--number`, `--date`, `--single-select-option-id`, `--iteration-id`, and `--clear`.
 
 ### PR Lifecycle / Review
 

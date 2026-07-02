@@ -54,6 +54,7 @@ chatenv cat -t gh
 chatgh --help
 chatgh pr --help
 chatgh repo --help
+chatgh project --help
 chatgh run --help
 chatgh repo-perms --help
 chatgh set-token --help
@@ -87,6 +88,19 @@ chatgh repo edit ChatArch/ChatGH --visibility private --accept-visibility-change
 ```
 
 `repo clone` 会拒绝覆盖已有非空目录；`repo sync` 默认使用 `git pull --ff-only`。`repo edit` 当前只支持 description、homepage、default-branch 和 visibility 小子集；设置 `--visibility` 时必须显式传 `--accept-visibility-change-consequences`。
+
+### GitHub Projects
+
+```bash
+chatgh project list --owner ChatArch --json-output
+chatgh project view 3 --owner ChatArch --json-output
+chatgh project create --owner ChatArch --title "Roadmap" --json-output
+chatgh project item-add 3 --owner ChatArch --content-id ISSUE_OR_PR_NODE_ID --json-output
+chatgh project item-edit 3 --owner ChatArch --id PROJECT_ITEM_ID --field-id FIELD_ID --text "In progress" --json-output
+chatgh project field-list 3 --owner ChatArch --json-output
+```
+
+`project` 命令名尽量与官方 `gh project` 保持一致，例如 `field-list`、`item-add`、`mark-template`。不同点是：ChatGH 不使用官方 `gh auth`，继续使用 `--token` / repo-local token / ChatEnv `GITHUB_ACCESS_TOKEN`；写操作保留 ChatGH 安全门；每个 CLI 背后有可 import 的 `chatgh.github.projects` Python API。`item-edit` 对 GitHub Projects v2 的字段值类型做了展开参数（`--text`、`--number`、`--date`、`--single-select-option-id`、`--iteration-id`、`--clear`）。
 
 ### PR lifecycle / review
 

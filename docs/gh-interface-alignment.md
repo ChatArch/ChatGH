@@ -143,3 +143,7 @@ chatgh repo fork --source Wei-Shaw/claude-relay-service --owner ChatArch --name 
 5. 对本地 git 有副作用的命令必须测试不覆盖已有 remote/dirty checkout。
 
 新增能力应先写失败测试，再实现最小代码，通过后再同步 README/docs。
+
+## GitHub Projects v2
+
+`chatgh project` 按官方 `gh project` 命令形态设计：`list`、`view`、`create`、`edit`、`close`、`delete`、`copy`、`field-list`、`field-create`、`field-delete`、`item-list`、`item-add`、`item-create`、`item-edit`、`item-archive`、`item-delete`、`link`、`unlink`、`mark-template`。运行时仍使用 ChatGH 自有鉴权、JSON 输出、安全门和可 import Python API。只有 item field/字段值编辑是有意展开的区域，因为 Projects v2 字段值有 text/number/date/single-select/iteration 等不同形态。

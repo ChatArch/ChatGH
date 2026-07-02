@@ -143,3 +143,7 @@ Every new interface should cover at least:
 5. For commands with local git side effects, tests proving they do not overwrite existing remotes or dirty checkouts.
 
 Write failing tests first, implement the smallest code that passes, then update README/docs.
+
+## GitHub Projects v2
+
+`chatgh project` follows the official `gh project` command shape: `list`, `view`, `create`, `edit`, `close`, `delete`, `copy`, `field-list`, `field-create`, `field-delete`, `item-list`, `item-add`, `item-create`, `item-edit`, `item-archive`, `item-delete`, `link`, `unlink`, and `mark-template`. The runtime still uses ChatGH auth, JSON output, safety gates, and importable Python APIs. Item field editing is the one intentionally expanded area because Projects v2 field values have distinct text/number/date/single-select/iteration shapes.
