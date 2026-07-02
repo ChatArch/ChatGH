@@ -143,3 +143,7 @@ chatgh repo fork --source Wei-Shaw/claude-relay-service --owner ChatArch --name 
 5. 对本地 git 有副作用的命令必须测试不覆盖已有 remote/dirty checkout。
 
 新增能力应先写失败测试，再实现最小代码，通过后再同步 README/docs。
+
+## GitHub Projects v2
+
+`chatgh project` 不按官方 `gh project` 扁平树复刻。官方 `gh project` 只作为能力/语义参考；ChatGH 的 Project CLI 以自己的结构为准：`project list/view/create/edit/close/delete/copy` 管 Project 本体，`project item list/add/create/edit/archive/delete` 管 Project item，`project field list/create/delete` 管字段结构，`link/unlink/mark-template` 暂保留在顶层。ChatGH 不保留 `item-add` / `field-list` 这类 item/field 扁平兼容入口。运行时仍使用 ChatGH 自有鉴权、JSON 输出、安全门、ChatStyle 缺参补问和可 import Python API。`project` 命令默认可在交互终端自动补问，`CHATARCH_AUTO_PROMPT=0/false/no/off` 关闭默认补问，`-i` 强制交互，`-I` 禁用交互；危险确认仍必须显式传 `--confirm`。`project item edit` 是字段值编辑入口，需要展开 text/number/date/single-select/iteration/clear 等不同形态。

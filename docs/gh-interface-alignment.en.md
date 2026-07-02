@@ -143,3 +143,7 @@ Every new interface should cover at least:
 5. For commands with local git side effects, tests proving they do not overwrite existing remotes or dirty checkouts.
 
 Write failing tests first, implement the smallest code that passes, then update README/docs.
+
+## GitHub Projects v2
+
+`chatgh project` does not copy the official flat `gh project` tree. Official `gh project` is only a capability/semantic reference. ChatGH uses its own structure: `project list/view/create/edit/close/delete/copy` manages project lifecycle, `project item list/add/create/edit/archive/delete` manages items, `project field list/create/delete` manages field structure, and `link/unlink/mark-template` remain top-level for now. ChatGH intentionally does not keep flat item/field compatibility entries such as `item-add` or `field-list`. Runtime behavior still uses ChatGH auth, JSON output, safety gates, ChatStyle missing-input prompts, and importable Python APIs. `project` commands auto-prompt by default on interactive terminals, `CHATARCH_AUTO_PROMPT=0/false/no/off` disables default prompting for machine/CI callers, `-i` forces interaction, and `-I` disables interaction; destructive confirmations still require explicit `--confirm`. `project item edit` is the field-value editing entry and expands text/number/date/single-select/iteration/clear shapes.

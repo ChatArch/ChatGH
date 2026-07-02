@@ -54,6 +54,7 @@ chatenv cat -t gh
 chatgh --help
 chatgh pr --help
 chatgh repo --help
+chatgh project --help
 chatgh run --help
 chatgh repo-perms --help
 chatgh set-token --help
@@ -65,6 +66,7 @@ chatgh set-token --help
 - `chatgh pr status/diff/close/reopen/review/ready/update-branch`：本轮补齐的常见 lifecycle/review 命令；写操作复用 ChatGH token resolution，且不会打印 token。
 - `chatgh repo list/create/fork/protection`：已有仓库列表、创建、fork、保护规则检查。
 - `chatgh repo view/clone/sync/edit`：本轮补齐的常见 repo 命令；`clone/sync` 对本地 git 副作用保持显式、保守，不覆盖已有非空目录。
+- `chatgh project list/view/create/edit/close/delete/copy` 与 `chatgh project item ...`、`chatgh project field ...`、`link/unlink/mark-template`：GitHub Projects v2 命令面。官方 `gh project` 只作为能力参考；ChatGH 打开 `item` 和 `field` 子树，不保留 `item-add` / `field-list` 扁平兼容入口。鉴权、JSON 输出、安全门和 Python API 走 ChatGH 自有规范。
 - `chatgh run view/logs`：查看 workflow run 和 job logs。
 - `chatgh run list/watch/rerun/cancel/download`：本轮补齐的 Actions run 运维命令；`watch` 有 timeout，`rerun/cancel` 属于远端 mutation。
 - `chatgh repo-perms`：查看 token 权限和派生 capabilities。
@@ -83,6 +85,19 @@ chatgh repo edit ChatArch/ChatGH --visibility private --accept-visibility-change
 ```
 
 `repo clone` 会拒绝覆盖已有非空目录；`repo sync` 默认使用 `git pull --ff-only`。`repo edit` 当前只支持 description、homepage、default-branch 和 visibility 小子集；设置 `--visibility` 时必须显式传 `--accept-visibility-change-consequences`。
+
+### GitHub Projects
+
+```bash
+chatgh project list --owner ChatArch --json-output
+chatgh project view 3 --owner ChatArch --json-output
+chatgh project create --owner ChatArch --title "Roadmap" --json-output
+chatgh project item add 3 --owner ChatArch --content-id ISSUE_OR_PR_NODE_ID --json-output
+chatgh project item edit 3 --owner ChatArch --id PROJECT_ITEM_ID --field-id FIELD_ID --text "In progress" --json-output
+chatgh project field list 3 --owner ChatArch --json-output
+```
+
+`project` 命令树不复刻官方 `gh project` 扁平形态。ChatGH 将 Project 本体、`item`、`field` 分开组织：`project item add/edit/list/...` 与 `project field list/create/delete` 是主入口，不保留 `item-add` / `field-list` 兼容别名。ChatGH 不使用官方 `gh auth`，继续使用 `--token` / repo-local token / ChatEnv `GITHUB_ACCESS_TOKEN`；写操作保留 ChatGH 安全门；每个 CLI 背后有可 import 的 `chatgh.github.projects` Python API。`project` 所有可恢复缺参路径遵守 ChatStyle：默认可自动补问，`CHATARCH_AUTO_PROMPT=off` 可让机器调用缺参时报错，`-i` 强制交互，`-I` 禁止交互。`project item edit` 对 GitHub Projects v2 的字段值类型做展开参数（`--text`、`--number`、`--date`、`--single-select-option-id`、`--iteration-id`、`--clear`）。
 
 ### PR lifecycle / review
 
@@ -224,7 +239,8 @@ chatgh set-token --token "$GITHUB_ACCESS_TOKEN" --save-env
 所有缺少可恢复关键参数的命令都走 `chatstyle`：
 
 - 默认模式：终端可交互且缺参时自动补问。
-- `-i/--interactive`：强制进入补问流程。
+- `CHATARCH_AUTO_PROMPT=0/false/no/off`：关闭默认自动补问，缺参时直接报错，适合机器/CI 调用。
+- `-i/--interactive`：强制进入补问流程，即使 `CHATARCH_AUTO_PROMPT=off` 也会尝试交互。
 - `-I/--no-interactive`：完全禁用补问，缺参时直接报错。
 
 token 类输入使用 password prompt，不会明文回显。

@@ -54,6 +54,7 @@ When writing a repo-local HTTPS auth header, the path is normalized to `https://
 chatgh --help
 chatgh pr --help
 chatgh repo --help
+chatgh project --help
 chatgh run --help
 chatgh repo-perms --help
 chatgh set-token --help
@@ -65,6 +66,7 @@ Command tree:
 - `chatgh pr status/diff/close/reopen/review/ready/update-branch`: common lifecycle/review commands added in this batch; write commands use ChatGH token resolution and keep secrets out of output.
 - `chatgh repo list/create/fork/protection`: repository list/create/fork/protection commands.
 - `chatgh repo view/clone/sync/edit`: common repository commands added in this batch; `clone/sync` keep local git side effects explicit and conservative.
+- `chatgh project list/view/create/edit/close/delete/copy`, `chatgh project item ...`, `chatgh project field ...`, and `link/unlink/mark-template`: GitHub Projects v2 commands. Official `gh project` is only a capability reference; ChatGH opens native `item` and `field` subtrees and does not keep flat `item-add` / `field-list` compatibility entries. Auth, JSON output, safety gates, and Python APIs follow ChatGH conventions.
 - `chatgh run view/logs`: workflow run and job-log inspection.
 - `chatgh run list/watch/rerun/cancel/download`: Actions run operations added in this batch; `watch` has a timeout and `rerun/cancel` are real remote mutations.
 - `chatgh repo-perms`: show token permissions and derived capabilities.
@@ -83,6 +85,19 @@ chatgh repo edit ChatArch/ChatGH --visibility private --accept-visibility-change
 ```
 
 `repo clone` refuses to overwrite a non-empty target directory. `repo sync` defaults to `git pull --ff-only` and refuses to sync a mismatched explicit repository from the wrong checkout. `repo edit` currently supports description, homepage, default branch, and visibility; `--visibility` requires `--accept-visibility-change-consequences`.
+
+### GitHub Projects
+
+```bash
+chatgh project list --owner ChatArch --json-output
+chatgh project view 3 --owner ChatArch --json-output
+chatgh project create --owner ChatArch --title "Roadmap" --json-output
+chatgh project item add 3 --owner ChatArch --content-id ISSUE_OR_PR_NODE_ID --json-output
+chatgh project item edit 3 --owner ChatArch --id PROJECT_ITEM_ID --field-id FIELD_ID --text "In progress" --json-output
+chatgh project field list 3 --owner ChatArch --json-output
+```
+
+`project` does not replicate the official flat `gh project` tree. ChatGH organizes Project lifecycle, `item`, and `field` separately: `project item add/edit/list/...` and `project field list/create/delete` are the main entries, and flat `item-add` / `field-list` compatibility aliases are intentionally not kept. ChatGH still does not depend on official `gh auth`: it uses `--token`, repo-local tokens, and ChatEnv `GITHUB_ACCESS_TOKEN`; remote mutations keep ChatGH safety gates; and each CLI command is backed by importable `chatgh.github.projects` Python APIs. Every recoverable missing-input path in `project` follows ChatStyle: default auto-prompt, `CHATARCH_AUTO_PROMPT=0/false/no/off` fail-fast behavior for machine/CI callers, `-i` force-interactive, and `-I` no-interactive. Destructive confirmations still require explicit `--confirm`. `project item edit` expands GitHub Projects v2 field value types with `--text`, `--number`, `--date`, `--single-select-option-id`, `--iteration-id`, and `--clear`.
 
 ### PR Lifecycle / Review
 
@@ -224,7 +239,8 @@ Do not put tokens in remote URLs, and do not log raw `extraHeader` values. With 
 Recoverable missing parameters are handled through `chatstyle`:
 
 - Default mode: prompt automatically when a terminal is interactive and required values are missing.
-- `-i/--interactive`: force prompting.
+- `CHATARCH_AUTO_PROMPT=0/false/no/off`: disable default auto-prompting so machines/CI fail fast on missing inputs.
+- `-i/--interactive`: force prompting, even when `CHATARCH_AUTO_PROMPT=off`.
 - `-I/--no-interactive`: disable prompts and fail clearly when required values are missing.
 
 Token inputs use password prompts and are not echoed.

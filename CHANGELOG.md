@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 本项目按日期记录更新；正式发版信息也维护在本文件。
 
+## 2026-07-03
+- 开始 `chatgh project` GitHub Projects v2 命令面：按 ChatGH 自有结构设计 project command group：Project 本体命令保持顶层，item/field 作为 `project item ...` / `project field ...` 子树打开；不保留官方 `gh project` 的 item/field 扁平兼容入口。新增 Projects Python API、字段值编辑展开参数、JSON 输出和安全门测试。
+- `chatgh project` 继续使用 ChatGH 自有 token resolution / ChatEnv / repo-local credential 规范，不依赖官方 `gh auth`。
+- `chatgh project` 全命令接入 ChatStyle 缺参补问：默认终端可交互时自动补问，`CHATARCH_AUTO_PROMPT=0/false/no/off` 让机器/CI 缺参时报错，`-i` 强制交互，`-I` 禁用交互；危险确认仍必须显式 `--confirm`，不会由交互补问绕过。
+
 ## 2026-07-01
 - 准备 `0.2.8` 补丁版本：发布 `chatgh repo clone`，用于首次 clone 时复用已解析 token 并写入 repo-local HTTPS auth header。
 - 新增 `chatgh repo clone`：首次 clone 私有仓库时可直接复用已解析到的 token，在 `git clone` 阶段注入一次性 HTTPS auth header，并在 clone 完成后把 repo-local token 写入目标仓库 `.git/config`，避免“先 clone 再 set-token”的死锁。
