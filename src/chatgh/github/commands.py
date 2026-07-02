@@ -13,6 +13,8 @@ from chatgh.github.api import (
     configure_github_https_token,
     credential_path_from_repo,
     get_client,
+    github_auth_extraheader,
+    github_https_url,
     resolve_repo,
     resolve_repo_from_git_remote,
     resolve_token,
@@ -173,18 +175,34 @@ def edit_repo(
     )
 
 
-def clone_repo(repo: str, directory: Optional[str], ssh: bool, token: Optional[str]) -> dict:
+def clone_repo(
+    repo: str,
+    directory: Optional[str],
+    ssh: bool,
+    token: Optional[str],
+    set_token_after: bool = True,
+) -> dict:
     resolved_repo = resolve_repo(repo)
     _owner, name = split_repo(resolved_repo)
     target_dir = Path(directory or name)
     if target_dir.exists() and any(target_dir.iterdir()):
         raise click.ClickException(f"Target directory already exists and is not empty: {target_dir}")
-    url = f"git@github.com:{resolved_repo}.git" if ssh else f"https://github.com/{resolved_repo}.git"
-    command = ["git", "clone", url, str(target_dir)]
+    credential_path = credential_path_from_repo(resolved_repo)
+    url = f"git@github.com:{resolved_repo}.git" if ssh else github_https_url(credential_path)
+    resolved_token = None if ssh else resolve_token(token, credential_path=credential_path)
+
+    command = ["git"]
+    if resolved_token:
+        command.extend(["-c", f"http.{url}.extraHeader={github_auth_extraheader(resolved_token)}"])
+    command.extend(["clone", url, str(target_dir)])
     result = subprocess.run(command, check=False, capture_output=True, text=True)
     if result.returncode != 0:
         raise click.ClickException((result.stderr or result.stdout or "git clone failed").strip())
-    return {"repo": resolved_repo, "path": str(target_dir), "url": url}
+    token_configured = False
+    if resolved_token and set_token_after:
+        configure_github_https_token(credential_path, resolved_token, cwd=str(target_dir))
+        token_configured = True
+    return {"repo": resolved_repo, "path": str(target_dir), "url": url, "token_configured": token_configured}
 
 
 def sync_repo(repo: Optional[str], branch: Optional[str], remote: str, ff_only: bool, token: Optional[str]) -> dict:

@@ -2,11 +2,13 @@
 
 import click
 
+from chatgh import __version__
 from chatgh.commands.pr import pr_group
 from chatgh.github.cli import repo_group, repo_permissions, run_group, set_repo_token
 
 
 @click.group()
+@click.version_option(__version__, prog_name="chatgh")
 def main() -> None:
     """GitHub helpers (PR, actions, repo)."""
 

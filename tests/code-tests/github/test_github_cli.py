@@ -182,6 +182,64 @@ def test_merge_pr_without_check_keeps_current_behavior(monkeypatch):
     assert result["url"].endswith("/138")
 
 
+def test_clone_repo_uses_one_shot_auth_header_and_sets_repo_token(monkeypatch, tmp_path):
+    calls = []
+    configured = []
+
+    def fake_run(args, check, **kwargs):
+        calls.append(args)
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(gh_commands.subprocess, "run", fake_run)
+    monkeypatch.setattr(gh_commands, "resolve_token", lambda *args, **kwargs: "secret-token")
+    monkeypatch.setattr(
+        gh_commands,
+        "configure_github_https_token",
+        lambda credential, token, cwd=None: configured.append((credential, token, cwd)),
+    )
+
+    payload = gh_commands.clone_repo("ChatArch/ChatTea", "tea", False, None)
+
+    command = calls[0]
+    assert command[:2] == ["git", "-c"]
+    assert command[-3:] == ["clone", "https://github.com/ChatArch/ChatTea.git", "tea"]
+    assert "secret-token" not in " ".join(command)
+    assert configured == [
+        (
+            {"protocol": "https", "host": "github.com", "path": "ChatArch/ChatTea"},
+            "secret-token",
+            "tea",
+        )
+    ]
+    assert payload["repo"] == "ChatArch/ChatTea"
+    assert payload["token_configured"] is True
+
+
+def test_clone_repo_without_token_skips_auth_config(monkeypatch, tmp_path):
+    calls = []
+    configured = []
+
+    def fake_run(args, check, **kwargs):
+        calls.append(args)
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(gh_commands.subprocess, "run", fake_run)
+    monkeypatch.setattr(gh_commands, "resolve_token", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        gh_commands,
+        "configure_github_https_token",
+        lambda *args, **kwargs: configured.append(args),
+    )
+
+    payload = gh_commands.clone_repo("ChatArch/ChatTea", None, False, None)
+
+    assert calls == [["git", "clone", "https://github.com/ChatArch/ChatTea.git", "ChatTea"]]
+    assert configured == []
+    assert payload["token_configured"] is False
+
+
 def test_check_pr_wait_loops_until_complete(monkeypatch):
     payloads = iter(
         [

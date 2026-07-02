@@ -123,6 +123,64 @@ def test_chatgh_repo_help_commands(runner):
     assert result.exit_code == 0
     assert "list" in result.output
     assert "create" in result.output
+    assert "clone" in result.output
+
+
+def test_chatgh_repo_clone_supports_positional_repo_and_directory(monkeypatch, runner):
+    captured = {}
+
+    def fake_clone(repo, directory, ssh, token, set_token_after):
+        captured.update(
+            {
+                "repo": repo,
+                "directory": directory,
+                "ssh": ssh,
+                "token": token,
+                "set_token_after": set_token_after,
+            }
+        )
+        return {
+            "repo": repo,
+            "clone_url": f"https://github.com/{repo}.git",
+            "path": "/workspace/ChatTea",
+            "token_configured": True,
+        }
+
+    monkeypatch.setattr("chatgh.github.cli.clone_repo", fake_clone)
+
+    result = runner.invoke(cli, ["repo", "clone", "ChatArch/ChatTea", "ChatTea"])
+
+    assert result.exit_code == 0
+    assert "Cloned ChatArch/ChatTea to /workspace/ChatTea" in result.output
+    assert "Token: configured" in result.output
+    assert captured == {
+        "repo": "ChatArch/ChatTea",
+        "directory": "ChatTea",
+        "ssh": False,
+        "token": None,
+        "set_token_after": True,
+    }
+
+
+def test_chatgh_repo_clone_renders_json(monkeypatch, runner):
+    monkeypatch.setattr(
+        "chatgh.github.cli.clone_repo",
+        lambda repo, directory, ssh, token, set_token_after: {
+            "repo": repo,
+            "clone_url": f"https://github.com/{repo}.git",
+            "path": "/workspace/custom",
+            "token_configured": False,
+        },
+    )
+
+    result = runner.invoke(
+        cli,
+        ["repo", "clone", "ChatArch/ChatTea", "custom", "--no-set-token", "--json-output"],
+    )
+
+    assert result.exit_code == 0
+    assert '"repo": "ChatArch/ChatTea"' in result.output
+    assert '"token_configured": false' in result.output
 
 
 def test_chatgh_repo_list_prompts_for_missing_owner(monkeypatch, runner):
