@@ -14,36 +14,44 @@ def runner():
     return CliRunner()
 
 
-def test_project_official_shape_commands_are_registered(runner):
+def test_project_native_item_and_field_groups_are_registered(runner):
     result = runner.invoke(cli, ["project", "--help"])
 
     assert result.exit_code == 0
-    for command in [
-        "close",
-        "copy",
-        "create",
-        "delete",
-        "edit",
+    for command in ["list", "view", "create", "edit", "close", "delete", "copy", "item", "field", "link", "unlink", "mark-template"]:
+        assert command in result.output
+    for flat_command in [
+        "item-list",
+        "item-add",
+        "item-create",
+        "item-edit",
+        "item-archive",
+        "item-delete",
+        "field-list",
         "field-create",
         "field-delete",
-        "field-list",
-        "item-add",
-        "item-archive",
-        "item-create",
-        "item-delete",
-        "item-edit",
-        "item-list",
-        "link",
-        "list",
-        "mark-template",
-        "unlink",
-        "view",
     ]:
+        assert flat_command not in result.output
+
+
+def test_project_item_group_commands_are_registered(runner):
+    result = runner.invoke(cli, ["project", "item", "--help"])
+
+    assert result.exit_code == 0
+    for command in ["list", "add", "create", "edit", "archive", "delete"]:
+        assert command in result.output
+
+
+def test_project_field_group_commands_are_registered(runner):
+    result = runner.invoke(cli, ["project", "field", "--help"])
+
+    assert result.exit_code == 0
+    for command in ["list", "create", "delete"]:
         assert command in result.output
 
 
 def test_project_item_edit_expands_item_field_value_options(runner):
-    result = runner.invoke(cli, ["project", "item-edit", "--help"])
+    result = runner.invoke(cli, ["project", "item", "edit", "--help"])
 
     assert result.exit_code == 0
     for option in [
@@ -106,6 +114,46 @@ def test_project_list_dispatches_to_python_api(monkeypatch, runner):
     assert '"title": "Roadmap"' in result.output
 
 
+def test_project_item_list_dispatches_to_python_api(monkeypatch, runner):
+    captured = {}
+
+    def fake_list_items(owner, number, limit, token):
+        captured.update({"owner": owner, "number": number, "limit": limit, "token": token})
+        return [{"id": "PVTI_1"}]
+
+    monkeypatch.setattr("chatgh.github.project_cli.list_items", fake_list_items)
+
+    result = runner.invoke(cli, ["project", "item", "list", "3", "--owner", "acme", "--limit", "7", "--json-output"])
+
+    assert result.exit_code == 0
+    assert captured == {"owner": "acme", "number": 3, "limit": 7, "token": None}
+    assert '"PVTI_1"' in result.output
+
+
+def test_project_item_add_accepts_url(monkeypatch, runner):
+    captured = {}
+
+    def fake_add_item(owner, number, url, content_id, token):
+        captured.update({"owner": owner, "number": number, "url": url, "content_id": content_id, "token": token})
+        return {"id": "PVTI_url"}
+
+    monkeypatch.setattr("chatgh.github.project_cli.add_item", fake_add_item)
+
+    result = runner.invoke(
+        cli,
+        ["project", "item", "add", "3", "--owner", "acme", "--url", "https://github.com/acme/repo/issues/4", "--json-output"],
+    )
+
+    assert result.exit_code == 0
+    assert captured == {
+        "owner": "acme",
+        "number": 3,
+        "url": "https://github.com/acme/repo/issues/4",
+        "content_id": None,
+        "token": None,
+    }
+
+
 def test_project_item_edit_dispatches_field_value_update(monkeypatch, runner):
     captured = {}
 
@@ -128,7 +176,8 @@ def test_project_item_edit_dispatches_field_value_update(monkeypatch, runner):
         cli,
         [
             "project",
-            "item-edit",
+            "item",
+            "edit",
             "3",
             "--owner",
             "acme",
@@ -188,7 +237,7 @@ def test_project_item_delete_rejects_mismatched_confirmation(monkeypatch, runner
 
     monkeypatch.setattr("chatgh.github.project_cli.delete_item", fake_delete_item)
 
-    result = runner.invoke(cli, ["project", "item-delete", "3", "--owner", "acme", "--id", "PVTI_1", "--confirm", "wrong"])
+    result = runner.invoke(cli, ["project", "item", "delete", "3", "--owner", "acme", "--id", "PVTI_1", "--confirm", "wrong"])
 
     assert result.exit_code != 0
     assert "must match" in result.output
@@ -205,7 +254,7 @@ def test_project_field_delete_rejects_mismatched_confirmation(monkeypatch, runne
 
     monkeypatch.setattr("chatgh.github.project_cli.delete_field", fake_delete_field)
 
-    result = runner.invoke(cli, ["project", "field-delete", "3", "--owner", "acme", "--field-id", "PVTF_1", "--confirm", "wrong"])
+    result = runner.invoke(cli, ["project", "field", "delete", "3", "--owner", "acme", "--field-id", "PVTF_1", "--confirm", "wrong"])
 
     assert result.exit_code != 0
     assert "must match" in result.output
@@ -247,7 +296,8 @@ def test_project_item_edit_resolves_field_name(monkeypatch, runner):
         cli,
         [
             "project",
-            "item-edit",
+            "item",
+            "edit",
             "3",
             "--owner",
             "acme",
@@ -270,7 +320,8 @@ def test_project_item_edit_rejects_clear_with_value(runner):
         cli,
         [
             "project",
-            "item-edit",
+            "item",
+            "edit",
             "3",
             "--owner",
             "acme",
@@ -288,25 +339,17 @@ def test_project_item_edit_rejects_clear_with_value(runner):
     assert "cannot be combined" in result.output
 
 
-def test_project_item_add_accepts_url(monkeypatch, runner):
+def test_project_field_list_dispatches_to_python_api(monkeypatch, runner):
     captured = {}
 
-    def fake_add_item(owner, number, url, content_id, token):
-        captured.update({"owner": owner, "number": number, "url": url, "content_id": content_id, "token": token})
-        return {"id": "PVTI_url"}
+    def fake_list_fields(owner, number, limit, token):
+        captured.update({"owner": owner, "number": number, "limit": limit, "token": token})
+        return [{"id": "PVTF_1", "name": "Status"}]
 
-    monkeypatch.setattr("chatgh.github.project_cli.add_item", fake_add_item)
+    monkeypatch.setattr("chatgh.github.project_cli.list_fields", fake_list_fields)
 
-    result = runner.invoke(
-        cli,
-        ["project", "item-add", "3", "--owner", "acme", "--url", "https://github.com/acme/repo/issues/4", "--json-output"],
-    )
+    result = runner.invoke(cli, ["project", "field", "list", "3", "--owner", "acme", "--limit", "7", "--json-output"])
 
     assert result.exit_code == 0
-    assert captured == {
-        "owner": "acme",
-        "number": 3,
-        "url": "https://github.com/acme/repo/issues/4",
-        "content_id": None,
-        "token": None,
-    }
+    assert captured == {"owner": "acme", "number": 3, "limit": 7, "token": None}
+    assert '"PVTF_1"' in result.output

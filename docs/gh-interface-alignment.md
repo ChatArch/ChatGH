@@ -146,4 +146,4 @@ chatgh repo fork --source Wei-Shaw/claude-relay-service --owner ChatArch --name 
 
 ## GitHub Projects v2
 
-`chatgh project` 按官方 `gh project` 命令形态设计：`list`、`view`、`create`、`edit`、`close`、`delete`、`copy`、`field-list`、`field-create`、`field-delete`、`item-list`、`item-add`、`item-create`、`item-edit`、`item-archive`、`item-delete`、`link`、`unlink`、`mark-template`。运行时仍使用 ChatGH 自有鉴权、JSON 输出、安全门和可 import Python API。只有 item field/字段值编辑是有意展开的区域，因为 Projects v2 字段值有 text/number/date/single-select/iteration 等不同形态。
+`chatgh project` 不按官方 `gh project` 扁平树复刻。官方 `gh project` 只作为能力/语义参考；ChatGH 的 Project CLI 以自己的结构为准：`project list/view/create/edit/close/delete/copy` 管 Project 本体，`project item list/add/create/edit/archive/delete` 管 Project item，`project field list/create/delete` 管字段结构，`link/unlink/mark-template` 暂保留在顶层。ChatGH 不保留 `item-add` / `field-list` 这类 item/field 扁平兼容入口。运行时仍使用 ChatGH 自有鉴权、JSON 输出、安全门和可 import Python API。`project item edit` 是字段值编辑入口，需要展开 text/number/date/single-select/iteration/clear 等不同形态。

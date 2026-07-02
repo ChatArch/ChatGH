@@ -119,6 +119,16 @@ def project_group() -> None:
     """GitHub Projects helpers."""
 
 
+@project_group.group(name="item")
+def project_item_group() -> None:
+    """Manage project items."""
+
+
+@project_group.group(name="field")
+def project_field_group() -> None:
+    """Manage project fields."""
+
+
 @project_group.command(name="list")
 @click.option("--owner", required=True, help="GitHub user or organization owner.")
 @click.option("--limit", default=30, type=click.IntRange(min=1), show_default=True)
@@ -214,7 +224,7 @@ def project_copy(number, owner, target_owner, title, drafts, json_output, token)
     _echo_payload(copy_project(owner, number, target_owner, title, include_draft_issues=drafts, token=token), json_output)
 
 
-@project_group.command(name="field-list")
+@project_field_group.command(name="list")
 @click.argument("number", type=int)
 @click.option("--owner", required=True, help="GitHub user or organization owner.")
 @click.option("--limit", default=50, type=click.IntRange(min=1), show_default=True)
@@ -225,7 +235,7 @@ def project_field_list(number, owner, limit, json_output, token):
     _echo_payload(list_fields(owner, number, limit=limit, token=token), json_output)
 
 
-@project_group.command(name="field-create")
+@project_field_group.command(name="create")
 @click.argument("number", type=int)
 @click.option("--owner", required=True, help="GitHub user or organization owner.")
 @click.option("--name", required=True, help="Field name.")
@@ -238,7 +248,7 @@ def project_field_create(number, owner, name, data_type, options, json_output, t
     _echo_payload(create_field(owner, number, name, data_type, options=list(options) or None, token=token), json_output)
 
 
-@project_group.command(name="field-delete")
+@project_field_group.command(name="delete")
 @click.argument("number", type=int)
 @click.option("--owner", required=True, help="GitHub user or organization owner.")
 @click.option("--field-id", required=True, help="Project field node ID.")
@@ -251,7 +261,7 @@ def project_field_delete(number, owner, field_id, confirm, json_output, token):
     _echo_payload(delete_field(owner, field_id, token), json_output)
 
 
-@project_group.command(name="item-list")
+@project_item_group.command(name="list")
 @click.argument("number", type=int)
 @click.option("--owner", required=True, help="GitHub user or organization owner.")
 @click.option("--limit", default=50, type=click.IntRange(min=1), show_default=True)
@@ -262,7 +272,7 @@ def project_item_list(number, owner, limit, json_output, token):
     _echo_payload(list_items(owner, number, limit=limit, token=token), json_output)
 
 
-@project_group.command(name="item-add")
+@project_item_group.command(name="add")
 @click.argument("number", type=int)
 @click.option("--owner", required=True, help="GitHub user or organization owner.")
 @click.option("--url", default=None, help="Issue or pull request URL.")
@@ -274,7 +284,7 @@ def project_item_add(number, owner, url, content_id, json_output, token):
     _echo_payload(add_item(owner, number, url=url, content_id=content_id, token=token), json_output)
 
 
-@project_group.command(name="item-create")
+@project_item_group.command(name="create")
 @click.argument("number", type=int)
 @click.option("--owner", required=True, help="GitHub user or organization owner.")
 @click.option("--title", required=True, help="Draft issue title.")
@@ -286,7 +296,7 @@ def project_item_create(number, owner, title, body, json_output, token):
     _echo_payload(create_draft_item(owner, number, title, body=_read_text_or_file(body), token=token), json_output)
 
 
-@project_group.command(name="item-edit")
+@project_item_group.command(name="edit")
 @click.argument("number", type=int)
 @click.option("--owner", required=True, help="GitHub user or organization owner.")
 @click.option("--id", "item_id", required=True, help="Project item ID.")
@@ -312,7 +322,7 @@ def project_item_edit(number, owner, item_id, field_id, field_name, text, number
     _echo_payload(update_item_field(owner, number, item_id, field, value, token), json_output)
 
 
-@project_group.command(name="item-archive")
+@project_item_group.command(name="archive")
 @click.argument("number", type=int)
 @click.option("--owner", required=True, help="GitHub user or organization owner.")
 @click.option("--id", "item_id", required=True, help="Project item ID.")
@@ -324,7 +334,7 @@ def project_item_archive(number, owner, item_id, undo, json_output, token):
     _echo_payload(archive_item(owner, number, item_id, undo=undo, token=token), json_output)
 
 
-@project_group.command(name="item-delete")
+@project_item_group.command(name="delete")
 @click.argument("number", type=int)
 @click.option("--owner", required=True, help="GitHub user or organization owner.")
 @click.option("--id", "item_id", required=True, help="Project item ID.")

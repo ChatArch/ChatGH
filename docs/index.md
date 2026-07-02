@@ -95,12 +95,12 @@ chatgh repo edit ChatArch/ChatGH --visibility private --accept-visibility-change
 chatgh project list --owner ChatArch --json-output
 chatgh project view 3 --owner ChatArch --json-output
 chatgh project create --owner ChatArch --title "Roadmap" --json-output
-chatgh project item-add 3 --owner ChatArch --content-id ISSUE_OR_PR_NODE_ID --json-output
-chatgh project item-edit 3 --owner ChatArch --id PROJECT_ITEM_ID --field-id FIELD_ID --text "In progress" --json-output
-chatgh project field-list 3 --owner ChatArch --json-output
+chatgh project item add 3 --owner ChatArch --content-id ISSUE_OR_PR_NODE_ID --json-output
+chatgh project item edit 3 --owner ChatArch --id PROJECT_ITEM_ID --field-id FIELD_ID --text "In progress" --json-output
+chatgh project field list 3 --owner ChatArch --json-output
 ```
 
-`project` 命令名尽量与官方 `gh project` 保持一致，例如 `field-list`、`item-add`、`mark-template`。不同点是：ChatGH 不使用官方 `gh auth`，继续使用 `--token` / repo-local token / ChatEnv `GITHUB_ACCESS_TOKEN`；写操作保留 ChatGH 安全门；每个 CLI 背后有可 import 的 `chatgh.github.projects` Python API。`item-edit` 对 GitHub Projects v2 的字段值类型做了展开参数（`--text`、`--number`、`--date`、`--single-select-option-id`、`--iteration-id`、`--clear`）。
+`project` 命令树不复刻官方 `gh project` 扁平形态。ChatGH 将 Project 本体、`item`、`field` 分开组织：`project item add/edit/list/...` 与 `project field list/create/delete` 是主入口，不保留 `item-add` / `field-list` 兼容别名。ChatGH 不使用官方 `gh auth`，继续使用 `--token` / repo-local token / ChatEnv `GITHUB_ACCESS_TOKEN`；写操作保留 ChatGH 安全门；每个 CLI 背后有可 import 的 `chatgh.github.projects` Python API。`project item edit` 对 GitHub Projects v2 的字段值类型做展开参数（`--text`、`--number`、`--date`、`--single-select-option-id`、`--iteration-id`、`--clear`）。
 
 ### PR lifecycle / review
 
