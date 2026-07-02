@@ -232,15 +232,19 @@ def repo_view(repo_arg, repo_option, json_output, token, interactive):
 @click.argument("repo", required=True, metavar="REPOSITORY")
 @click.argument("directory", required=False, metavar="DIRECTORY")
 @click.option("--ssh", is_flag=True, help="Use SSH clone URL instead of HTTPS.")
+@click.option("--set-token/--no-set-token", default=True, show_default=True, help="Configure repo-local HTTPS token after clone when a token is available.")
 @click.option("--json-output", is_flag=True, help="Output JSON.")
-@click.option("--token", default=None, help="GitHub token (reserved for future authenticated clone helpers).")
-def repo_clone(repo, directory, ssh, json_output, token):
+@click.option("--token", default=None, help="GitHub token.")
+def repo_clone(repo, directory, ssh, set_token, json_output, token):
     """Clone a repository without overwriting an existing directory."""
-    payload = clone_repo(repo, directory, ssh, token)
+    payload = clone_repo(repo, directory, ssh, token, set_token)
     if json_output:
         click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
         return
     click.echo(f"Cloned {payload['repo']} to {payload['path']}")
+    if not ssh:
+        token_status = "configured" if payload.get("token_configured") else "not configured"
+        click.echo(f"Token: {token_status}")
 
 
 @repo_group.command(name="sync")

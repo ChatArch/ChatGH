@@ -216,13 +216,18 @@ def read_github_token_from_git(
     return _read_repo_local_extraheader(credential_path)
 
 
-def _github_https_url(credential: CredentialQuery) -> str:
+def github_https_url(credential: CredentialQuery) -> str:
     path = credential["path"].strip().removeprefix("/").removesuffix(".git")
     return f"https://{credential['host']}/{path}.git"
 
 
 def _extraheader_config_key(credential: CredentialQuery) -> str:
-    return f"http.{_github_https_url(credential)}.extraHeader"
+    return f"http.{github_https_url(credential)}.extraHeader"
+
+
+def github_auth_extraheader(token: str) -> str:
+    raw = f"x-access-token:{token}".encode("utf-8")
+    return "Authorization: Basic " + base64.b64encode(raw).decode("ascii")
 
 
 def _read_repo_local_extraheader(credential: CredentialQuery) -> Optional[str]:
@@ -255,15 +260,17 @@ def _token_from_extraheader(header: str) -> Optional[str]:
     return password
 
 
-def configure_github_https_token(credential: CredentialQuery, token: str) -> None:
+def configure_github_https_token(
+    credential: CredentialQuery, token: str, cwd: Optional[str] = None
+) -> None:
     try:
-        raw = f"x-access-token:{token}".encode("utf-8")
-        header = "Authorization: Basic " + base64.b64encode(raw).decode("ascii")
+        header = github_auth_extraheader(token)
         subprocess.run(
             ["git", "config", "--local", _extraheader_config_key(credential), header],
             check=True,
             capture_output=True,
             text=True,
+            cwd=cwd,
         )
     except subprocess.CalledProcessError as exc:
         stderr = (exc.stderr or "").strip()
