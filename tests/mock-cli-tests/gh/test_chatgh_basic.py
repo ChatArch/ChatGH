@@ -2,7 +2,14 @@ import pytest
 from click.testing import CliRunner
 
 from chatgh.cli import main as cli
-from chatgh.github.requests import _build_repo_payload, _parse_time, post_repo_fork
+from chatgh.github.requests import (
+    _build_repo_payload,
+    _parse_time,
+    get_user_repository_invitations,
+    patch_user_repository_invitation,
+    delete_user_repository_invitation,
+    post_repo_fork,
+)
 
 
 pytestmark = pytest.mark.mock_cli
@@ -19,6 +26,7 @@ def test_chatgh_help_commands(runner):
     assert result.exit_code == 0
     assert "pr" in result.output
     assert "repo" in result.output
+    assert "invitation" in result.output
     assert "pr-legacy" not in result.output
 
 
@@ -124,6 +132,72 @@ def test_chatgh_repo_help_commands(runner):
     assert "list" in result.output
     assert "create" in result.output
     assert "clone" in result.output
+
+
+def test_chatgh_invitation_help_commands(runner):
+    result = runner.invoke(cli, ["invitation", "--help"])
+
+    assert result.exit_code == 0
+    assert "list" in result.output
+    assert "accept" in result.output
+    assert "decline" in result.output
+
+
+def test_chatgh_invitation_list_renders_json(monkeypatch, runner):
+    monkeypatch.setattr(
+        "chatgh.github.cli.list_invitations",
+        lambda limit, token: [
+            {
+                "id": 325100806,
+                "repository": "cubenlp/CubeNLP",
+                "permissions": "admin",
+                "inviter": "RexWzh",
+            }
+        ],
+    )
+
+    result = runner.invoke(cli, ["invitation", "list", "--json-output"])
+
+    assert result.exit_code == 0
+    assert '"repository": "cubenlp/CubeNLP"' in result.output
+    assert '"permissions": "admin"' in result.output
+
+
+def test_chatgh_invitation_list_renders_empty_table(monkeypatch, runner):
+    monkeypatch.setattr("chatgh.github.cli.list_invitations", lambda limit, token: [])
+
+    result = runner.invoke(cli, ["invitation", "list"])
+
+    assert result.exit_code == 0
+    assert "No pending repository invitations." in result.output
+
+
+def test_chatgh_invitation_accept_renders_json(monkeypatch, runner):
+    captured = {}
+
+    def fake_accept(invitation_id, token):
+        captured.update({"invitation_id": invitation_id, "token": token})
+        return {"id": invitation_id, "accepted": True, "status_code": 204}
+
+    monkeypatch.setattr("chatgh.github.cli.accept_invitation", fake_accept)
+
+    result = runner.invoke(cli, ["invitation", "accept", "325100806", "--json-output"])
+
+    assert result.exit_code == 0
+    assert captured == {"invitation_id": 325100806, "token": None}
+    assert '"accepted": true' in result.output
+
+
+def test_chatgh_invitation_decline_renders_human(monkeypatch, runner):
+    monkeypatch.setattr(
+        "chatgh.github.cli.decline_invitation",
+        lambda invitation_id, token: {"id": invitation_id, "declined": True, "status_code": 204},
+    )
+
+    result = runner.invoke(cli, ["invitation", "decline", "325100806"])
+
+    assert result.exit_code == 0
+    assert "Declined repository invitation 325100806." in result.output
 
 
 def test_chatgh_repo_clone_supports_positional_repo_and_directory(monkeypatch, runner):
@@ -662,6 +736,102 @@ def test_chatgh_repo_fork_rejects_invalid_source(runner):
 
     assert result.exit_code != 0
     assert "Repo must be in owner/name form" in result.output
+
+
+def test_get_user_repository_invitations_shapes_payload(monkeypatch):
+    class FakeResponse:
+        status_code = 200
+        ok = True
+        text = ""
+
+        def json(self):
+            return [
+                {
+                    "id": 325100806,
+                    "permissions": "admin",
+                    "created_at": "2026-07-09T09:05:39Z",
+                    "repository": {
+                        "name": "CubeNLP",
+                        "full_name": "cubenlp/CubeNLP",
+                        "private": True,
+                        "html_url": "https://github.com/cubenlp/CubeNLP",
+                        "owner": {"login": "cubenlp"},
+                    },
+                    "inviter": {"login": "RexWzh"},
+                }
+            ]
+
+    calls = []
+
+    def fake_get(url, headers, params, timeout):
+        calls.append((url, params, headers.get("Authorization")))
+        return FakeResponse()
+
+    monkeypatch.setattr("requests.get", fake_get)
+
+    payload = get_user_repository_invitations("token", limit=50)
+
+    assert calls == [
+        (
+            "https://api.github.com/user/repository_invitations",
+            {"per_page": 50},
+            "Bearer token",
+        )
+    ]
+    assert payload == [
+        {
+            "id": 325100806,
+            "repository": "cubenlp/CubeNLP",
+            "repository_name": "CubeNLP",
+            "repository_owner": "cubenlp",
+            "private": True,
+            "permissions": "admin",
+            "inviter": "RexWzh",
+            "created_at": "2026-07-09T09:05:39Z",
+            "html_url": "https://github.com/cubenlp/CubeNLP",
+        }
+    ]
+
+
+def test_repository_invitation_accept_and_decline_use_user_endpoints(monkeypatch):
+    calls = []
+
+    class FakeResponse:
+        status_code = 204
+        ok = True
+        text = ""
+
+        def json(self):
+            return {}
+
+    def fake_patch(url, headers, timeout):
+        calls.append(("patch", url, headers.get("Authorization")))
+        return FakeResponse()
+
+    def fake_delete(url, headers, timeout):
+        calls.append(("delete", url, headers.get("Authorization")))
+        return FakeResponse()
+
+    monkeypatch.setattr("requests.patch", fake_patch)
+    monkeypatch.setattr("requests.delete", fake_delete)
+
+    accepted = patch_user_repository_invitation(325100806, "token")
+    declined = delete_user_repository_invitation(325100807, "token")
+
+    assert accepted == {"id": 325100806, "accepted": True, "status_code": 204}
+    assert declined == {"id": 325100807, "declined": True, "status_code": 204}
+    assert calls == [
+        (
+            "patch",
+            "https://api.github.com/user/repository_invitations/325100806",
+            "Bearer token",
+        ),
+        (
+            "delete",
+            "https://api.github.com/user/repository_invitations/325100807",
+            "Bearer token",
+        ),
+    ]
 
 
 def test_post_repo_fork_reuses_existing_matching_fork(monkeypatch):

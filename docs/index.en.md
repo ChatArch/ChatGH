@@ -54,6 +54,7 @@ When writing a repo-local HTTPS auth header, the path is normalized to `https://
 chatgh --help
 chatgh pr --help
 chatgh repo --help
+chatgh invitation --help
 chatgh project --help
 chatgh run --help
 chatgh repo-perms --help
@@ -66,6 +67,7 @@ Command tree:
 - `chatgh pr status/diff/close/reopen/review/ready/update-branch`: common lifecycle/review commands added in this batch; write commands use ChatGH token resolution and keep secrets out of output.
 - `chatgh repo list/create/fork/protection`: repository list/create/fork/protection commands.
 - `chatgh repo view/clone/sync/edit`: common repository commands added in this batch; `clone/sync` keep local git side effects explicit and conservative.
+- `chatgh invitation list/accept/decline`: view and handle repository invitations for the authenticated GitHub user, aligned with GitHub REST API invitation endpoints.
 - `chatgh project list/view/create/edit/close/delete/copy`, `chatgh project item ...`, `chatgh project field ...`, and `link/unlink/mark-template`: GitHub Projects v2 commands. Official `gh project` is only a capability reference; ChatGH opens native `item` and `field` subtrees and does not keep flat `item-add` / `field-list` compatibility entries. Auth, JSON output, safety gates, and Python APIs follow ChatGH conventions.
 - `chatgh run view/logs`: workflow run and job-log inspection.
 - `chatgh run list/watch/rerun/cancel/download`: Actions run operations added in this batch; `watch` has a timeout and `rerun/cancel` are real remote mutations.
@@ -85,6 +87,17 @@ chatgh repo edit ChatArch/ChatGH --visibility private --accept-visibility-change
 ```
 
 `repo clone` refuses to overwrite a non-empty target directory. `repo sync` defaults to `git pull --ff-only` and refuses to sync a mismatched explicit repository from the wrong checkout. `repo edit` currently supports description, homepage, default branch, and visibility; `--visibility` requires `--accept-visibility-change-consequences`.
+
+### Repository Invitations
+
+```bash
+chatgh invitation list
+chatgh invitation list --json-output
+chatgh invitation accept 325100806 --json-output
+chatgh invitation decline 325100806 --json-output
+```
+
+`invitation` uses the current ChatGH token resolution flow to read repository invitations for the authenticated user. `accept` and `decline` are remote write operations; they operate only on explicit invitation ids and do not guess or batch-handle invitations.
 
 ### GitHub Projects
 

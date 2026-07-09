@@ -19,10 +19,13 @@ from chatgh.github.commands import (
     cancel_run,
     clone_repo,
     create_repo,
+    accept_invitation,
+    decline_invitation,
     download_run_artifacts,
     edit_repo,
     fork_repo,
     inspect_repo_protection,
+    list_invitations,
     list_repo_protections,
     list_repos,
     list_runs,
@@ -135,6 +138,11 @@ def repo_group() -> None:
     """Repository helpers."""
 
 
+@cli.group(name="invitation")
+def invitation_group() -> None:
+    """Repository invitation helpers."""
+
+
 @repo_group.command(name="list")
 @click.option("--owner", required=False, help="GitHub owner or organization.")
 @click.option("--limit", default=50, type=click.IntRange(min=1), show_default=True)
@@ -191,6 +199,76 @@ def _echo_repo_table(items: list[dict]) -> None:
             widths[index] = min(max(widths[index], len(value)), 48)
     header = "  ".join(label.ljust(widths[index]) for index, (label, _) in enumerate(columns))
     click.echo(header)
+    click.echo("  ".join("-" * width for width in widths))
+    for row in rows:
+        clipped = [value[: widths[index]] for index, value in enumerate(row)]
+        click.echo("  ".join(value.ljust(widths[index]) for index, value in enumerate(clipped)))
+
+
+@invitation_group.command(name="list")
+@click.option("--limit", default=100, type=click.IntRange(min=1, max=100), show_default=True)
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token.")
+def invitation_list(limit, json_output, token):
+    """List repository invitations for the authenticated user."""
+    payload = list_invitations(limit, token)
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    _echo_invitation_table(payload)
+
+
+@invitation_group.command(name="accept")
+@click.argument("invitation_id", type=int, metavar="ID")
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token.")
+def invitation_accept(invitation_id, json_output, token):
+    """Accept a repository invitation by id."""
+    payload = accept_invitation(invitation_id, token)
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    click.echo(f"Accepted repository invitation {payload['id']}.")
+
+
+@invitation_group.command(name="decline")
+@click.argument("invitation_id", type=int, metavar="ID")
+@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--token", default=None, help="GitHub token.")
+def invitation_decline(invitation_id, json_output, token):
+    """Decline a repository invitation by id."""
+    payload = decline_invitation(invitation_id, token)
+    if json_output:
+        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    click.echo(f"Declined repository invitation {payload['id']}.")
+
+
+def _echo_invitation_table(items: list[dict]) -> None:
+    if not items:
+        click.echo("No pending repository invitations.")
+        return
+    columns = [
+        ("id", "id"),
+        ("repo", "repository"),
+        ("perm", "permissions"),
+        ("inviter", "inviter"),
+        ("created", "created_at"),
+    ]
+    rows = []
+    for item in items:
+        row = []
+        for _, key in columns:
+            value = item.get(key)
+            if key == "created_at":
+                value = str(value or "")[:10]
+            row.append(str(value if value is not None else ""))
+        rows.append(row)
+    widths = [len(label) for label, _ in columns]
+    for row in rows:
+        for index, value in enumerate(row):
+            widths[index] = min(max(widths[index], len(value)), 48)
+    click.echo("  ".join(label.ljust(widths[index]) for index, (label, _) in enumerate(columns)))
     click.echo("  ".join("-" * width for width in widths))
     for row in rows:
         clipped = [value[: widths[index]] for index, value in enumerate(row)]
