@@ -42,8 +42,11 @@ from chatgh.github.requests import (
     get_repo_protection,
     get_run_list,
     get_run_view,
+    get_user_repository_invitations,
     patch_pr_edit,
     patch_repo_edit,
+    patch_user_repository_invitation,
+    delete_user_repository_invitation,
     post_pr_comment,
     post_pr_create,
     post_pr_merge,
@@ -92,6 +95,27 @@ def list_repo_protections(owner: str, limit: int, token: Optional[str], jobs: in
     worker_count = max(1, min(jobs, len(repo_names)))
     with ThreadPoolExecutor(max_workers=worker_count) as executor:
         return list(executor.map(lambda repo: get_repo_protection(repo, resolved_token), repo_names))
+
+
+def list_invitations(limit: int, token: Optional[str]) -> list[dict]:
+    resolved_token = resolve_token(token)
+    if not resolved_token:
+        raise click.ClickException("Missing token. Pass --token or configure GitHub credentials.")
+    return get_user_repository_invitations(resolved_token, limit)
+
+
+def accept_invitation(invitation_id: int, token: Optional[str]) -> dict:
+    resolved_token = resolve_token(token)
+    if not resolved_token:
+        raise click.ClickException("Missing token. Pass --token or configure GitHub credentials.")
+    return patch_user_repository_invitation(invitation_id, resolved_token)
+
+
+def decline_invitation(invitation_id: int, token: Optional[str]) -> dict:
+    resolved_token = resolve_token(token)
+    if not resolved_token:
+        raise click.ClickException("Missing token. Pass --token or configure GitHub credentials.")
+    return delete_user_repository_invitation(invitation_id, resolved_token)
 
 
 def create_repo(

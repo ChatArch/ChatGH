@@ -54,6 +54,7 @@ chatenv cat -t gh
 chatgh --help
 chatgh pr --help
 chatgh repo --help
+chatgh invitation --help
 chatgh project --help
 chatgh run --help
 chatgh repo-perms --help
@@ -66,6 +67,7 @@ chatgh set-token --help
 - `chatgh pr status/diff/close/reopen/review/ready/update-branch`：本轮补齐的常见 lifecycle/review 命令；写操作复用 ChatGH token resolution，且不会打印 token。
 - `chatgh repo list/create/fork/protection`：已有仓库列表、创建、fork、保护规则检查。
 - `chatgh repo view/clone/sync/edit`：本轮补齐的常见 repo 命令；`clone/sync` 对本地 git 副作用保持显式、保守，不覆盖已有非空目录。
+- `chatgh invitation list/accept/decline`：查看和处理当前账号收到的 GitHub repository invitations；对齐 GitHub REST API 的 authenticated user invitation 能力。
 - `chatgh project list/view/create/edit/close/delete/copy` 与 `chatgh project item ...`、`chatgh project field ...`、`link/unlink/mark-template`：GitHub Projects v2 命令面。官方 `gh project` 只作为能力参考；ChatGH 打开 `item` 和 `field` 子树，不保留 `item-add` / `field-list` 扁平兼容入口。鉴权、JSON 输出、安全门和 Python API 走 ChatGH 自有规范。
 - `chatgh run view/logs`：查看 workflow run 和 job logs。
 - `chatgh run list/watch/rerun/cancel/download`：本轮补齐的 Actions run 运维命令；`watch` 有 timeout，`rerun/cancel` 属于远端 mutation。
@@ -85,6 +87,17 @@ chatgh repo edit ChatArch/ChatGH --visibility private --accept-visibility-change
 ```
 
 `repo clone` 会拒绝覆盖已有非空目录；`repo sync` 默认使用 `git pull --ff-only`。`repo edit` 当前只支持 description、homepage、default-branch 和 visibility 小子集；设置 `--visibility` 时必须显式传 `--accept-visibility-change-consequences`。
+
+### Repository invitations
+
+```bash
+chatgh invitation list
+chatgh invitation list --json-output
+chatgh invitation accept 325100806 --json-output
+chatgh invitation decline 325100806 --json-output
+```
+
+`invitation` 使用当前 ChatGH token resolution 逻辑读取 authenticated user 的 repository invitations。`accept` 和 `decline` 是远端写操作，只按 invitation id 执行，不自动猜测或批量处理邀请。
 
 ### GitHub Projects
 

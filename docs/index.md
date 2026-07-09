@@ -54,6 +54,7 @@ chatenv cat -t gh
 chatgh --help
 chatgh pr --help
 chatgh repo --help
+chatgh invitation --help
 chatgh project --help
 chatgh run --help
 chatgh repo-perms --help
@@ -69,6 +70,7 @@ chatgh set-token --help
 - `chatgh repo create`：创建仓库；默认 private，可用 `--public` 显式创建公开仓库。
 - `chatgh repo fork`：把 source 仓库 fork 到目标 user/org，兼容 `gh` 风格位置参数、`--org`、`--fork-name`，并保留 ChatGH 显式 `--source`、`--owner`、`--name`、`--default-branch-only`、`--if-exists use` 和 JSON 输出。
 - `chatgh repo protection`：查看单个仓库或 owner 下仓库的默认分支保护与 repository rulesets；治理/规则审计不挤进 `repo list` 默认表格。
+- `chatgh invitation list/accept/decline`：查看和处理当前账号收到的 GitHub repository invitations；对齐 GitHub REST API 的 authenticated user invitation 能力。
 - 当前公开 `chatgh pr` 命令面包含 `list/create/view/comment/edit/checks/merge`；写操作复用 ChatGH token resolution，且不会打印 token。
 - `chatgh run view`：查看 workflow run 和 jobs。
 - `chatgh run logs`：查看 job 日志，支持 tail 和落盘。
@@ -88,6 +90,17 @@ chatgh repo edit ChatArch/ChatGH --visibility private --accept-visibility-change
 ```
 
 `repo clone` 会拒绝覆盖已有非空目录；`repo sync` 默认使用 `git pull --ff-only`。`repo edit` 当前只支持 description、homepage、default-branch 和 visibility 小子集；设置 `--visibility` 时必须显式传 `--accept-visibility-change-consequences`。
+
+### Repository invitations
+
+```bash
+chatgh invitation list
+chatgh invitation list --json-output
+chatgh invitation accept 325100806 --json-output
+chatgh invitation decline 325100806 --json-output
+```
+
+`invitation` 使用当前 ChatGH token resolution 逻辑读取 authenticated user 的 repository invitations。`accept` 和 `decline` 是远端写操作，只按 invitation id 执行，不自动猜测或批量处理邀请。
 
 ### GitHub Projects
 

@@ -36,6 +36,78 @@ def get_repo_names(client, owner: str, limit: int) -> list[str]:
     return names[:limit]
 
 
+def get_user_repository_invitations(token: Optional[str], limit: int = 100) -> list[dict]:
+    import requests
+
+    try:
+        response = requests.get(
+            "https://api.github.com/user/repository_invitations",
+            headers=github_api_headers(token),
+            params={"per_page": limit},
+            timeout=30,
+        )
+    except requests.RequestException as exc:
+        raise click.ClickException(f"GitHub API request failed for repository invitations: {exc}") from exc
+    if not response.ok:
+        detail = _response_error_detail(response)
+        raise click.ClickException(
+            f"GitHub API error ({response.status_code}) for repository invitations: {detail}"
+        )
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        raise click.ClickException("GitHub API returned non-JSON response for repository invitations") from exc
+    if not isinstance(payload, list):
+        raise click.ClickException("GitHub API returned an unexpected repository invitations payload")
+    return [_build_repository_invitation_payload(item) for item in payload[:limit]]
+
+
+def patch_user_repository_invitation(invitation_id: int, token: Optional[str]) -> dict:
+    return _mutate_user_repository_invitation("patch", invitation_id, token, "accepted")
+
+
+def delete_user_repository_invitation(invitation_id: int, token: Optional[str]) -> dict:
+    return _mutate_user_repository_invitation("delete", invitation_id, token, "declined")
+
+
+def _mutate_user_repository_invitation(
+    method: str,
+    invitation_id: int,
+    token: Optional[str],
+    result_key: str,
+) -> dict:
+    import requests
+
+    url = f"https://api.github.com/user/repository_invitations/{invitation_id}"
+    request_method = requests.patch if method == "patch" else requests.delete
+    try:
+        response = request_method(url, headers=github_api_headers(token), timeout=30)
+    except requests.RequestException as exc:
+        raise click.ClickException(f"GitHub API request failed for repository invitation {invitation_id}: {exc}") from exc
+    if response.status_code not in {204, 200, 202}:
+        detail = _response_error_detail(response)
+        raise click.ClickException(
+            f"GitHub API error ({response.status_code}) for repository invitation {invitation_id}: {detail}"
+        )
+    return {"id": invitation_id, result_key: True, "status_code": response.status_code}
+
+
+def _build_repository_invitation_payload(payload: dict) -> dict:
+    repository = payload.get("repository") or {}
+    inviter = payload.get("inviter") or {}
+    return {
+        "id": payload.get("id"),
+        "repository": repository.get("full_name"),
+        "repository_name": repository.get("name"),
+        "repository_owner": (repository.get("owner") or {}).get("login"),
+        "private": repository.get("private"),
+        "permissions": payload.get("permissions"),
+        "inviter": inviter.get("login"),
+        "created_at": payload.get("created_at"),
+        "html_url": repository.get("html_url"),
+    }
+
+
 def post_repo_create(
     client,
     owner: str,

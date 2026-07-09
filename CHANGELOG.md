@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 本项目按日期记录更新；正式发版信息也维护在本文件。
 
+## 2026-07-09
+- 准备 `0.2.8` 补丁版本：新增 `chatgh invitation list/accept/decline`，用于查看并处理当前 authenticated user 的 GitHub repository invitations。
+- `invitation` 命令对齐 GitHub REST API 的 `/user/repository_invitations` 能力，继续复用 ChatGH token resolution、JSON 输出和不打印 token 的安全边界；`accept` / `decline` 只按显式 invitation id 执行。
+
 ## 2026-07-03
 - 开始 `chatgh project` GitHub Projects v2 命令面：按 ChatGH 自有结构设计 project command group：Project 本体命令保持顶层，item/field 作为 `project item ...` / `project field ...` 子树打开；不保留官方 `gh project` 的 item/field 扁平兼容入口。新增 Projects Python API、字段值编辑展开参数、JSON 输出和安全门测试。
 - `chatgh project` 继续使用 ChatGH 自有 token resolution / ChatEnv / repo-local credential 规范，不依赖官方 `gh auth`。
