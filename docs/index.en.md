@@ -16,7 +16,7 @@ Default behavior:
 
 - `repo`: explicit `--repo owner/repo` wins; otherwise `chatgh` infers the repository from the current git remote.
 - `token`: explicit `--token` wins, then the repo-local HTTPS auth header in the current repository's `.git/config`, then `GITHUB_ACCESS_TOKEN` from typed env.
-- Output: human-readable by default; commands with `--json-output` emit stable JSON for scripts.
+- Output: human-readable by default; commands with `--json FIELDS` emit official `gh`-style field-projected JSON, while `--json-output` remains available as a full payload JSON dump for scripts.
 
 ### Token Sources
 

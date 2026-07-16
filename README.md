@@ -16,7 +16,7 @@ pip install -e ".[dev]"
 
 - `repo`：优先使用显式 `--repo owner/repo`，未传时从当前 git remote 推断。
 - `token`：优先使用显式 `--token`，其次读取当前仓库 `.git/config` 中 repo-local HTTPS auth header，再回退 typed env 里的 `GITHUB_ACCESS_TOKEN`。
-- 输出：默认是人类可读格式；支持 `--json-output` 的命令会输出稳定 JSON，适合脚本消费。
+- 输出：默认是人类可读格式；支持 `--json FIELDS` 的命令会按字段投影输出官方 `gh` 风格 JSON，`--json-output` 保留为完整 payload JSON dump，适合脚本消费。
 
 ### Token 来源
 

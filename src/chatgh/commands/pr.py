@@ -6,10 +6,10 @@ Heavy GitHub helpers are imported inside command callbacks so that
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import click
+from chatgh.github.render import echo_json_if_requested
 from chatstyle import (
     CommandField,
     CommandSchema,
@@ -95,17 +95,17 @@ def _resolve_body(value: str | None, file_path: Path | None) -> str:
 @click.option("--repo", default=None, help="owner/name (reads CHATGH_DEFAULT_REPO if omitted)")
 @click.option("--state", default="open", type=click.Choice(["open", "closed", "all"]), show_default=True)
 @click.option("--limit", default=20, type=int, show_default=True)
-@click.option("--json-output", is_flag=True)
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None)
-def pr_list(repo: str | None, state: str, limit: int, json_output: bool, token: str | None) -> None:
+def pr_list(repo: str | None, state: str, limit: int, json_fields: str | None, json_output: bool, token: str | None) -> None:
     """List pull requests."""
     from chatgh.github.commands import list_prs
     from chatgh.github.render import echo_pr_list
 
     prs = list_prs(repo, state, limit, token)
 
-    if json_output:
-        click.echo(json.dumps(prs, ensure_ascii=False, indent=2, default=str))
+    if echo_json_if_requested(prs, json_fields, json_output):
         return
 
     if not prs:
@@ -123,7 +123,8 @@ def pr_list(repo: str | None, state: str, limit: int, json_output: bool, token: 
 @click.option("--title", default=None, help="PR title.")
 @click.option("--body", default=None, help="PR body text.")
 @click.option("--body-file", type=click.Path(exists=True, dir_okay=False, path_type=Path), default=None, help="Read PR body from a file.")
-@click.option("--json-output", is_flag=True)
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None)
 @add_interactive_option
 def pr_create(
@@ -133,7 +134,7 @@ def pr_create(
     title: str | None,
     body: str | None,
     body_file: Path | None,
-    json_output: bool,
+    json_fields: str | None, json_output: bool,
     token: str | None,
     interactive: bool | None,
 ) -> None:
@@ -156,8 +157,7 @@ def pr_create(
         token,
     )
 
-    if json_output:
-        click.echo(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
+    if echo_json_if_requested(payload, json_fields, json_output):
         return
 
     echo_pr_view(payload)
@@ -168,10 +168,11 @@ def pr_create(
 @pr_group.command("view")
 @click.argument("number", required=False, type=int)
 @click.option("--repo", default=None)
-@click.option("--json-output", is_flag=True)
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None)
 @add_interactive_option
-def pr_view(repo: str | None, number: int | None, json_output: bool, token: str | None, interactive: bool | None) -> None:
+def pr_view(repo: str | None, number: int | None, json_fields: str | None, json_output: bool, token: str | None, interactive: bool | None) -> None:
     """Show pull request details."""
     from chatgh.github.commands import view_pr
     from chatgh.github.render import echo_pr_view
@@ -184,8 +185,7 @@ def pr_view(repo: str | None, number: int | None, json_output: bool, token: str 
     )
     payload = view_pr(repo, int(inputs["number"]), token)
 
-    if json_output:
-        click.echo(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
+    if echo_json_if_requested(payload, json_fields, json_output):
         return
 
     echo_pr_view(payload)
@@ -198,7 +198,8 @@ def pr_view(repo: str | None, number: int | None, json_output: bool, token: str 
 @click.option("--repo", default=None)
 @click.option("--body", default=None, help="Comment body text.")
 @click.option("--body-file", type=click.Path(exists=True, dir_okay=False, path_type=Path), default=None, help="Read comment body from a file.")
-@click.option("--json-output", is_flag=True)
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None)
 @add_interactive_option
 def pr_comment(
@@ -206,7 +207,7 @@ def pr_comment(
     number: int | None,
     body: str | None,
     body_file: Path | None,
-    json_output: bool,
+    json_fields: str | None, json_output: bool,
     token: str | None,
     interactive: bool | None,
 ) -> None:
@@ -221,8 +222,7 @@ def pr_comment(
     )
     payload = comment_pr(repo, int(inputs["number"]), str(inputs["body"]), token)
 
-    if json_output:
-        click.echo(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
+    if echo_json_if_requested(payload, json_fields, json_output):
         return
 
     click.echo(f"Commented: {payload.get('url')}")
@@ -238,7 +238,8 @@ def pr_comment(
 @click.option("--body-file", type=click.Path(exists=True, dir_okay=False, path_type=Path), default=None, help="Read new PR body from a file.")
 @click.option("--state", type=click.Choice(["open", "closed"]), default=None, help="Set PR state.")
 @click.option("--base", default=None, help="Change base branch.")
-@click.option("--json-output", is_flag=True)
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None)
 @add_interactive_option
 def pr_edit(
@@ -249,7 +250,7 @@ def pr_edit(
     body_file: Path | None,
     state: str | None,
     base: str | None,
-    json_output: bool,
+    json_fields: str | None, json_output: bool,
     token: str | None,
     interactive: bool | None,
 ) -> None:
@@ -273,8 +274,7 @@ def pr_edit(
         token,
     )
 
-    if json_output:
-        click.echo(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
+    if echo_json_if_requested(payload, json_fields, json_output):
         return
 
     echo_pr_view(payload)
@@ -285,10 +285,11 @@ def pr_edit(
 @pr_group.command("checks")
 @click.argument("number", required=False, type=int)
 @click.option("--repo", default=None)
-@click.option("--json-output", is_flag=True)
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None)
 @add_interactive_option
-def pr_checks(repo: str | None, number: int | None, json_output: bool, token: str | None, interactive: bool | None) -> None:
+def pr_checks(repo: str | None, number: int | None, json_fields: str | None, json_output: bool, token: str | None, interactive: bool | None) -> None:
     """Show CI check status for a pull request."""
     from chatgh.github.commands import check_pr
     from chatgh.github.render import echo_pr_checks
@@ -310,8 +311,7 @@ def pr_checks(repo: str | None, number: int | None, json_output: bool, token: st
         token=token,
     )
 
-    if json_output:
-        click.echo(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
+    if echo_json_if_requested(payload, json_fields, json_output):
         return
 
     echo_pr_checks(payload)
@@ -322,13 +322,13 @@ def pr_checks(repo: str | None, number: int | None, json_output: bool, token: st
 
 @pr_group.command("status")
 @click.option("--repo", default=None)
-@click.option("--json-output", is_flag=True)
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None)
-def pr_status(repo: str | None, json_output: bool, token: str | None) -> None:
+def pr_status(repo: str | None, json_fields: str | None, json_output: bool, token: str | None) -> None:
     """Show current repository pull request status."""
     payload = status_prs(repo, token)
-    if json_output:
-        click.echo(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
+    if echo_json_if_requested(payload, json_fields, json_output):
         return
     click.echo(f"Repo: {payload.get('repo')}")
     for item in payload.get("open") or []:
@@ -360,10 +360,11 @@ def pr_diff(repo: str | None, number: int | None, token: str | None, interactive
 @click.option("--repo", default=None)
 @click.option("--comment", default=None, help="Leave a closing comment before closing.")
 @click.option("--delete-branch", is_flag=True, help="Record that branch deletion was requested. Does not delete a branch yet.")
-@click.option("--json-output", is_flag=True)
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None)
 @add_interactive_option
-def pr_close(repo: str | None, number: int | None, comment: str | None, delete_branch: bool, json_output: bool, token: str | None, interactive: bool | None) -> None:
+def pr_close(repo: str | None, number: int | None, comment: str | None, delete_branch: bool, json_fields: str | None, json_output: bool, token: str | None, interactive: bool | None) -> None:
     """Close a pull request."""
     inputs = resolve_command_inputs(
         schema=PR_NUMBER_SCHEMA,
@@ -372,8 +373,7 @@ def pr_close(repo: str | None, number: int | None, comment: str | None, delete_b
         usage="Usage: chatgh pr close NUMBER [--repo TEXT] [--comment TEXT] [-i|-I]",
     )
     payload = close_pr(repo, int(inputs["number"]), comment, delete_branch, token)
-    if json_output:
-        click.echo(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
+    if echo_json_if_requested(payload, json_fields, json_output):
         return
     click.echo(f"Closed PR #{payload.get('number')}")
 
@@ -381,10 +381,11 @@ def pr_close(repo: str | None, number: int | None, comment: str | None, delete_b
 @pr_group.command("reopen")
 @click.argument("number", required=False, type=int)
 @click.option("--repo", default=None)
-@click.option("--json-output", is_flag=True)
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None)
 @add_interactive_option
-def pr_reopen(repo: str | None, number: int | None, json_output: bool, token: str | None, interactive: bool | None) -> None:
+def pr_reopen(repo: str | None, number: int | None, json_fields: str | None, json_output: bool, token: str | None, interactive: bool | None) -> None:
     """Reopen a pull request."""
     inputs = resolve_command_inputs(
         schema=PR_NUMBER_SCHEMA,
@@ -393,8 +394,7 @@ def pr_reopen(repo: str | None, number: int | None, json_output: bool, token: st
         usage="Usage: chatgh pr reopen NUMBER [--repo TEXT] [-i|-I]",
     )
     payload = reopen_pr(repo, int(inputs["number"]), token)
-    if json_output:
-        click.echo(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
+    if echo_json_if_requested(payload, json_fields, json_output):
         return
     click.echo(f"Reopened PR #{payload.get('number')}")
 
@@ -409,10 +409,11 @@ def pr_reopen(repo: str | None, number: int | None, json_output: bool, token: st
 @click.option("--comment", "review_event", flag_value="COMMENT", help="Submit a comment review.")
 @click.option("--body", default=None, help="Review body text.")
 @click.option("--body-file", type=click.Path(exists=True, dir_okay=False, path_type=Path), default=None, help="Read review body from a file.")
-@click.option("--json-output", is_flag=True)
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None)
 @add_interactive_option
-def pr_review(repo: str | None, number: int | None, review_event: str | bool, body: str | None, body_file: Path | None, json_output: bool, token: str | None, interactive: bool | None) -> None:
+def pr_review(repo: str | None, number: int | None, review_event: str | bool, body: str | None, body_file: Path | None, json_fields: str | None, json_output: bool, token: str | None, interactive: bool | None) -> None:
     """Review a pull request."""
     inputs = resolve_command_inputs(
         schema=PR_NUMBER_SCHEMA,
@@ -422,8 +423,7 @@ def pr_review(repo: str | None, number: int | None, review_event: str | bool, bo
     )
     event = review_event if isinstance(review_event, str) else "COMMENT"
     payload = review_pr(repo, int(inputs["number"]), event, _resolve_body(body, body_file), token)
-    if json_output:
-        click.echo(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
+    if echo_json_if_requested(payload, json_fields, json_output):
         return
     click.echo(f"Submitted {event} review for PR #{payload.get('number')}")
 
@@ -431,10 +431,11 @@ def pr_review(repo: str | None, number: int | None, review_event: str | bool, bo
 @pr_group.command("ready")
 @click.argument("number", required=False, type=int)
 @click.option("--repo", default=None)
-@click.option("--json-output", is_flag=True)
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None)
 @add_interactive_option
-def pr_ready(repo: str | None, number: int | None, json_output: bool, token: str | None, interactive: bool | None) -> None:
+def pr_ready(repo: str | None, number: int | None, json_fields: str | None, json_output: bool, token: str | None, interactive: bool | None) -> None:
     """Mark a draft pull request ready for review."""
     inputs = resolve_command_inputs(
         schema=PR_NUMBER_SCHEMA,
@@ -443,8 +444,7 @@ def pr_ready(repo: str | None, number: int | None, json_output: bool, token: str
         usage="Usage: chatgh pr ready NUMBER [--repo TEXT] [-i|-I]",
     )
     payload = ready_pr(repo, int(inputs["number"]), token)
-    if json_output:
-        click.echo(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
+    if echo_json_if_requested(payload, json_fields, json_output):
         return
     click.echo(f"Marked PR #{payload.get('number')} ready for review")
 
@@ -453,10 +453,11 @@ def pr_ready(repo: str | None, number: int | None, json_output: bool, token: str
 @click.argument("number", required=False, type=int)
 @click.option("--repo", default=None)
 @click.option("--expected-head-sha", default=None, help="Only update if the PR head SHA still matches this value.")
-@click.option("--json-output", is_flag=True)
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None)
 @add_interactive_option
-def pr_update_branch(repo: str | None, number: int | None, expected_head_sha: str | None, json_output: bool, token: str | None, interactive: bool | None) -> None:
+def pr_update_branch(repo: str | None, number: int | None, expected_head_sha: str | None, json_fields: str | None, json_output: bool, token: str | None, interactive: bool | None) -> None:
     """Update a pull request branch from its base branch."""
     inputs = resolve_command_inputs(
         schema=PR_NUMBER_SCHEMA,
@@ -465,8 +466,7 @@ def pr_update_branch(repo: str | None, number: int | None, expected_head_sha: st
         usage="Usage: chatgh pr update-branch NUMBER [--repo TEXT] [--expected-head-sha SHA] [-i|-I]",
     )
     payload = update_pr_branch(repo, int(inputs["number"]), expected_head_sha, token)
-    if json_output:
-        click.echo(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
+    if echo_json_if_requested(payload, json_fields, json_output):
         return
     click.echo(f"Update-branch requested for PR #{payload.get('number')}")
 
@@ -480,7 +480,8 @@ def pr_update_branch(repo: str | None, number: int | None, expected_head_sha: st
 @click.option("--message", default=None, help="Merge commit message.")
 @click.option("--message-file", type=click.Path(exists=True, dir_okay=False, path_type=Path), default=None, help="Read merge commit message from a file.")
 @click.option("--check/--no-check", default=True, show_default=True, help="Require green PR checks before merging.")
-@click.option("--json-output", is_flag=True)
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None)
 @add_interactive_option
 def pr_merge(
@@ -491,7 +492,7 @@ def pr_merge(
     message: str | None,
     message_file: Path | None,
     check: bool,
-    json_output: bool,
+    json_fields: str | None, json_output: bool,
     token: str | None,
     interactive: bool | None,
 ) -> None:
@@ -514,8 +515,7 @@ def pr_merge(
         token,
     )
 
-    if json_output:
-        click.echo(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
+    if echo_json_if_requested(payload, json_fields, json_output):
         return
 
     click.echo(f"Merged: {payload.get('url')}")

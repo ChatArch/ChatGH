@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from click.testing import CliRunner
 
@@ -70,29 +72,87 @@ def test_chatgh_pr_list_renders_json(monkeypatch, runner):
     assert '"number": 138' in result.output
 
 
+def _mock_pr_view_payload(number=138):
+    return {
+        "number": number,
+        "title": "Move GitHub helpers",
+        "state": "open",
+        "url": "https://github.com/owner/repo/pull/138",
+        "author": "rex",
+        "created_at": None,
+        "updated_at": None,
+        "merged_at": None,
+        "base": "main",
+        "head": "rex/chatgh",
+        "head_sha": "abc123",
+        "mergeable": True,
+        "mergeable_state": "clean",
+    }
+
+
 def test_chatgh_pr_view_renders_summary(monkeypatch, runner):
     monkeypatch.setattr(
         "chatgh.github.commands.view_pr",
-        lambda repo, number, token: {
-            "number": number,
-            "title": "Move GitHub helpers",
-            "state": "open",
-            "url": "https://github.com/owner/repo/pull/138",
-            "author": "rex",
-            "created_at": None,
-            "updated_at": None,
-            "merged_at": None,
-            "base": "main",
-            "head": "rex/chatgh",
-            "mergeable": True,
-            "mergeable_state": "clean",
-        },
+        lambda repo, number, token: _mock_pr_view_payload(number),
     )
 
     result = runner.invoke(cli, ["pr", "view", "138", "--repo", "owner/repo"])
 
     assert result.exit_code == 0
     assert "#138 [open] Move GitHub helpers" in result.output
+
+
+def test_chatgh_pr_view_supports_official_json_fields(monkeypatch, runner):
+    monkeypatch.setattr(
+        "chatgh.github.commands.view_pr",
+        lambda repo, number, token: _mock_pr_view_payload(number),
+    )
+
+    result = runner.invoke(
+        cli,
+        [
+            "pr",
+            "view",
+            "138",
+            "--repo",
+            "owner/repo",
+            "--json",
+            "url,state,headRefName,baseRefName,mergeStateStatus",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert json.loads(result.output) == {
+        "url": "https://github.com/owner/repo/pull/138",
+        "state": "open",
+        "headRefName": "rex/chatgh",
+        "baseRefName": "main",
+        "mergeStateStatus": "clean",
+    }
+
+
+def test_chatgh_json_rejects_json_output_conflict(monkeypatch, runner):
+    monkeypatch.setattr(
+        "chatgh.github.commands.view_pr",
+        lambda repo, number, token: _mock_pr_view_payload(number),
+    )
+
+    result = runner.invoke(
+        cli,
+        [
+            "pr",
+            "view",
+            "138",
+            "--repo",
+            "owner/repo",
+            "--json",
+            "url",
+            "--json-output",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Use either --json or --json-output" in result.output
 
 
 def test_chatgh_pr_checks_renders_json(monkeypatch, runner):
@@ -365,6 +425,34 @@ def test_chatgh_repo_list_renders_json(monkeypatch, runner):
         "sort": "created",
         "direction": "asc",
     }
+
+
+def test_chatgh_repo_list_supports_json_field_projection(monkeypatch, runner):
+    monkeypatch.setattr(
+        "chatgh.github.cli.list_repos",
+        lambda owner, limit, sort, direction, token: [
+            {
+                "full_name": f"{owner}/ChatBlog",
+                "visibility": "private",
+                "private": True,
+                "html_url": "https://github.com/ChatArch/ChatBlog",
+            }
+        ],
+    )
+
+    result = runner.invoke(
+        cli,
+        ["repo", "list", "--owner", "ChatArch", "--json", "full_name,visibility,htmlUrl"],
+    )
+
+    assert result.exit_code == 0
+    assert json.loads(result.output) == [
+        {
+            "full_name": "ChatArch/ChatBlog",
+            "visibility": "private",
+            "htmlUrl": "https://github.com/ChatArch/ChatBlog",
+        }
+    ]
 
 
 def test_chatgh_repo_list_renders_table(monkeypatch, runner):

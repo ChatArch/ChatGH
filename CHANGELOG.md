@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 本项目按日期记录更新；正式发版信息也维护在本文件。
 
+## 2026-07-16
+- 准备 `0.2.9` 补丁版本：为常用命令新增官方 `gh --json FIELDS` 风格的字段投影 JSON 输出，同时保留 ChatGH 既有 `--json-output` 完整 payload 输出。
+- `--json` 支持常见官方字段别名映射，例如 `headRefName` / `baseRefName` / `mergeStateStatus`，便于复用官方 `gh` 命令片段；同时传 `--json` 与 `--json-output` 会明确报错。
+
 ## 2026-07-09
 - 准备 `0.2.8` 补丁版本：新增 `chatgh invitation list/accept/decline`，用于查看并处理当前 authenticated user 的 GitHub repository invitations。
 - `invitation` 命令对齐 GitHub REST API 的 `/user/repository_invitations` 能力，继续复用 ChatGH token resolution、JSON 输出和不打印 token 的安全边界；`accept` / `decline` 只按显式 invitation id 执行。

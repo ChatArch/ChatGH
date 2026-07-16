@@ -30,14 +30,14 @@ Rules:
 - The CLI layer should only parse parameters, resolve interactive prompts, and select output format.
 - Workflow functions belong in `chatgh.github.commands` or an equivalent service module.
 - GitHub API details belong in `chatgh.github.requests` / `api.py`.
-- Human-readable output and JSON payloads stay separate: Python functions return payloads; CLI chooses table/summary or `--json-output`.
+- Human-readable output and JSON payloads stay separate: Python functions return payloads; CLI chooses table/summary, official-style `--json FIELDS` projection, or `--json-output` full payload output.
 - Every new CLI should have a matching or near-matching Python API, such as `chatgh repo view` -> `view_repo(...)`.
 
 ## CLI Compatibility Strategy
 
 - When official `gh` uses positional arguments, ChatGH should consider compatible positionals.
 - When official short/long options do not conflict, provide aliases such as `-R/--repo`, `--org`, and `--fork-name`.
-- Preserve ChatGH extensions: `--json-output`, `--token`, repo-local auth / ChatEnv token resolution, `--if-exists use`, and PR merge safety gates.
+- Align official `--json FIELDS` while preserving ChatGH extensions: `--json-output`, `--token`, repo-local auth / ChatEnv token resolution, `--if-exists use`, and PR merge safety gates.
 - Be conservative about local git side effects. `clone`, `remote`, and `sync` capabilities must have explicit parameters, clear output, and tests; they must not overwrite existing checkouts/remotes by default.
 
 ## `repo fork` Alignment Example
