@@ -16,7 +16,7 @@ pip install -e ".[dev]"
 
 - `repo`：优先使用显式 `--repo owner/repo`，未传时从当前 git remote 推断。
 - `token`：优先使用显式 `--token`，其次读取当前仓库 `.git/config` 中 repo-local HTTPS auth header，再回退 typed env 里的 `GITHUB_ACCESS_TOKEN`。
-- 输出：默认是人类可读格式；支持 `--json-output` 的命令会输出稳定 JSON，适合脚本消费。
+- 输出：默认是人类可读格式；支持 `--json FIELDS` 的命令会按字段投影输出官方 `gh` 风格 JSON，`--json-output` 保留为完整 payload JSON dump，适合脚本消费。
 
 ### Token 来源
 
@@ -66,7 +66,7 @@ chatgh set-token --help
 - `chatgh pr list`：generated-layer PR 列表。
 - `chatgh pr view NUMBER`：generated-layer PR 详情。
 - `chatgh pr checks NUMBER`：generated-layer PR head commit check runs。
-- `chatgh repo list`：列出 user/org 下的仓库；默认 table，支持 `--json-output`、`--limit`、`--sort updated|created|pushed|name|stars|open-prs|open-issues`、`--direction asc|desc`，字段包含 visibility、stars、open PRs、open issues、created/updated time 等。
+- `chatgh repo list`：列出 user/org 下的仓库；默认 table，支持 `--json FIELDS`、`--json-output`、`--limit`、`--sort updated|created|pushed|name|stars|open-prs|open-issues`、`--direction asc|desc`，字段包含 visibility、stars、open PRs、open issues、created/updated time 等。
 - `chatgh repo create`：创建仓库；默认 private，可用 `--public` 显式创建公开仓库。
 - `chatgh repo fork`：把 source 仓库 fork 到目标 user/org，兼容 `gh` 风格位置参数、`--org`、`--fork-name`，并保留 ChatGH 显式 `--source`、`--owner`、`--name`、`--default-branch-only`、`--if-exists use` 和 JSON 输出。
 - `chatgh repo protection`：查看单个仓库或 owner 下仓库的默认分支保护与 repository rulesets；治理/规则审计不挤进 `repo list` 默认表格。

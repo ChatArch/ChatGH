@@ -30,14 +30,14 @@ src/chatgh/
 - CLI 层只做参数解析、交互补问、输出格式选择。
 - 业务流程函数放在 `chatgh.github.commands` 或更合适的 service module。
 - GitHub API 细节放在 `chatgh.github.requests` / `api.py`。
-- 人类输出与 JSON payload 分离：Python 函数返回 payload，CLI 只决定 table/summary 或 `--json-output`。
+- 人类输出与 JSON payload 分离：Python 函数返回 payload，CLI 只决定 table/summary、官方风格 `--json FIELDS` 字段投影或 `--json-output` 完整 payload。
 - 每个新增 CLI 应有同名或近似 Python API，例如 `chatgh repo view` 对应 `view_repo(...)`。
 
 ## CLI 兼容策略
 
 - 官方有位置参数时，ChatGH 应考虑兼容位置参数。
 - 官方常见短参/长参若无冲突，应提供 alias。例如 `-R/--repo`、`--org`、`--fork-name`。
-- 保留 ChatGH 自有扩展：`--json-output`、`--token`、repo-local auth / ChatEnv token resolution、`--if-exists use`、PR merge safety gate。
+- 对齐官方 `--json FIELDS`，同时保留 ChatGH 自有扩展：`--json-output`、`--token`、repo-local auth / ChatEnv token resolution、`--if-exists use`、PR merge safety gate。
 - 对本地 git 有副作用的行为默认保持克制。`clone`、`remote`、`sync` 等能力必须有明确参数、清晰输出和测试，不能默认覆盖已有 checkout/remote。
 
 ## `repo fork` 对齐示例

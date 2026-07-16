@@ -196,9 +196,10 @@ def _validate_field_data_type(data_type: str) -> str:
     return data_type
 
 
-def _echo_payload(payload, json_output: bool) -> None:
-    if json_output:
-        click.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+def _echo_payload(payload, json_fields: str | None, json_output: bool) -> None:
+    from chatgh.github.render import echo_json_if_requested
+
+    if echo_json_if_requested(payload, json_fields, json_output):
         return
     if isinstance(payload, list):
         for item in payload:
@@ -298,37 +299,40 @@ def project_field_group() -> None:
 @click.option("--owner", required=False, help="GitHub user or organization owner.")
 @click.option("--limit", default=30, type=click.IntRange(min=1), show_default=True)
 @click.option("--closed", is_flag=True, help="Include closed projects.")
-@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def project_list(owner, limit, closed, json_output, token, interactive):
+def project_list(owner, limit, closed, json_fields, json_output, token, interactive):
     """List projects for an owner."""
     inputs = _resolve_inputs(OWNER_SCHEMA, {"owner": owner}, interactive, "Usage: chatgh project list --owner OWNER [-i|-I]")
-    _echo_payload(list_projects(inputs["owner"], limit, closed, token), json_output)
+    _echo_payload(list_projects(inputs["owner"], limit, closed, token), json_fields, json_output)
 
 
 @project_group.command(name="view")
 @click.argument("number", required=False, type=int)
 @click.option("--owner", required=False, help="GitHub user or organization owner.")
-@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def project_view(number, owner, json_output, token, interactive):
+def project_view(number, owner, json_fields, json_output, token, interactive):
     """View a project."""
     inputs = _resolve_inputs(PROJECT_REF_SCHEMA, {"number": number, "owner": owner}, interactive, "Usage: chatgh project view NUMBER --owner OWNER [-i|-I]")
-    _echo_payload(get_project(inputs["owner"], int(inputs["number"]), token), json_output)
+    _echo_payload(get_project(inputs["owner"], int(inputs["number"]), token), json_fields, json_output)
 
 
 @project_group.command(name="create")
 @click.option("--owner", required=False, help="GitHub user or organization owner.")
 @click.option("--title", required=False, help="Project title.")
-@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def project_create(owner, title, json_output, token, interactive):
+def project_create(owner, title, json_fields, json_output, token, interactive):
     """Create a project."""
     inputs = _resolve_inputs(PROJECT_CREATE_SCHEMA, {"owner": owner, "title": title}, interactive, "Usage: chatgh project create --owner OWNER --title TITLE [-i|-I]")
-    _echo_payload(create_project(inputs["owner"], inputs["title"], token), json_output)
+    _echo_payload(create_project(inputs["owner"], inputs["title"], token), json_fields, json_output)
 
 
 @project_group.command(name="edit")
@@ -339,10 +343,11 @@ def project_create(owner, title, json_output, token, interactive):
 @click.option("--readme", default=None, help="Readme text or @file.")
 @click.option("--visibility", type=click.Choice(["public", "private"]), default=None)
 @click.option("--accept-visibility-change-consequences", is_flag=True, help="Confirm project visibility change.")
-@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def project_edit(number, owner, title, description, readme, visibility, accept_visibility_change_consequences, json_output, token, interactive):
+def project_edit(number, owner, title, description, readme, visibility, accept_visibility_change_consequences, json_fields, json_output, token, interactive):
     """Edit a project."""
     inputs = _resolve_inputs(PROJECT_REF_SCHEMA, {"number": number, "owner": owner}, interactive, "Usage: chatgh project edit NUMBER --owner OWNER [-i|-I]")
     if visibility is not None and not accept_visibility_change_consequences:
@@ -357,6 +362,7 @@ def project_edit(number, owner, title, description, readme, visibility, accept_v
             public=(visibility == "public") if visibility else None,
             token=token,
         ),
+        json_fields,
         json_output,
     )
 
@@ -365,28 +371,30 @@ def project_edit(number, owner, title, description, readme, visibility, accept_v
 @click.argument("number", required=False, type=int)
 @click.option("--owner", required=False, help="GitHub user or organization owner.")
 @click.option("--undo", is_flag=True, help="Reopen the project.")
-@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def project_close(number, owner, undo, json_output, token, interactive):
+def project_close(number, owner, undo, json_fields, json_output, token, interactive):
     """Close or reopen a project."""
     inputs = _resolve_inputs(PROJECT_REF_SCHEMA, {"number": number, "owner": owner}, interactive, "Usage: chatgh project close NUMBER --owner OWNER [-i|-I]")
-    _echo_payload(close_project(inputs["owner"], int(inputs["number"]), undo=undo, token=token), json_output)
+    _echo_payload(close_project(inputs["owner"], int(inputs["number"]), undo=undo, token=token), json_fields, json_output)
 
 
 @project_group.command(name="delete")
 @click.argument("number", required=False, type=int)
 @click.option("--owner", required=False, help="GitHub user or organization owner.")
 @click.option("--confirm", default=None, help="Confirm by passing the project number or title.")
-@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def project_delete(number, owner, confirm, json_output, token, interactive):
+def project_delete(number, owner, confirm, json_fields, json_output, token, interactive):
     """Delete a project."""
     inputs = _resolve_inputs(PROJECT_REF_SCHEMA, {"number": number, "owner": owner}, interactive, "Usage: chatgh project delete NUMBER --owner OWNER --confirm NUMBER [-i|-I]")
     project_number = int(inputs["number"])
     _require_confirmation(confirm, str(project_number), "Deleting a project")
-    _echo_payload(delete_project(inputs["owner"], project_number, token), json_output)
+    _echo_payload(delete_project(inputs["owner"], project_number, token), json_fields, json_output)
 
 
 @project_group.command(name="copy")
@@ -395,26 +403,28 @@ def project_delete(number, owner, confirm, json_output, token, interactive):
 @click.option("--target-owner", required=False, help="Target GitHub user or organization owner.")
 @click.option("--title", required=False, help="New project title.")
 @click.option("--drafts/--no-drafts", default=True, show_default=True, help="Include draft issues.")
-@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def project_copy(number, owner, target_owner, title, drafts, json_output, token, interactive):
+def project_copy(number, owner, target_owner, title, drafts, json_fields, json_output, token, interactive):
     """Copy a project."""
     inputs = _resolve_inputs(PROJECT_COPY_SCHEMA, {"number": number, "owner": owner, "target_owner": target_owner, "title": title}, interactive, "Usage: chatgh project copy NUMBER --owner OWNER --target-owner OWNER --title TITLE [-i|-I]")
-    _echo_payload(copy_project(inputs["owner"], int(inputs["number"]), inputs["target_owner"], inputs["title"], include_draft_issues=drafts, token=token), json_output)
+    _echo_payload(copy_project(inputs["owner"], int(inputs["number"]), inputs["target_owner"], inputs["title"], include_draft_issues=drafts, token=token), json_fields, json_output)
 
 
 @project_field_group.command(name="list")
 @click.argument("number", required=False, type=int)
 @click.option("--owner", required=False, help="GitHub user or organization owner.")
 @click.option("--limit", default=50, type=click.IntRange(min=1), show_default=True)
-@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def project_field_list(number, owner, limit, json_output, token, interactive):
+def project_field_list(number, owner, limit, json_fields, json_output, token, interactive):
     """List project fields."""
     inputs = _resolve_inputs(PROJECT_REF_SCHEMA, {"number": number, "owner": owner}, interactive, "Usage: chatgh project field list NUMBER --owner OWNER [-i|-I]")
-    _echo_payload(list_fields(inputs["owner"], int(inputs["number"]), limit=limit, token=token), json_output)
+    _echo_payload(list_fields(inputs["owner"], int(inputs["number"]), limit=limit, token=token), json_fields, json_output)
 
 
 @project_field_group.command(name="create")
@@ -423,14 +433,15 @@ def project_field_list(number, owner, limit, json_output, token, interactive):
 @click.option("--name", required=False, help="Field name.")
 @click.option("--data-type", type=click.Choice(["text", "number", "date", "single_select", "iteration"]), required=False)
 @click.option("--single-select-option", "options", multiple=True, help="Single select option name. Repeatable.")
-@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def project_field_create(number, owner, name, data_type, options, json_output, token, interactive):
+def project_field_create(number, owner, name, data_type, options, json_fields, json_output, token, interactive):
     """Create a project field."""
     inputs = _resolve_inputs(PROJECT_FIELD_CREATE_SCHEMA, {"number": number, "owner": owner, "name": name, "data_type": data_type}, interactive, "Usage: chatgh project field create NUMBER --owner OWNER --name NAME --data-type TYPE [-i|-I]")
     data_type_value = _validate_field_data_type(inputs["data_type"])
-    _echo_payload(create_field(inputs["owner"], int(inputs["number"]), inputs["name"], data_type_value, options=list(options) or None, token=token), json_output)
+    _echo_payload(create_field(inputs["owner"], int(inputs["number"]), inputs["name"], data_type_value, options=list(options) or None, token=token), json_fields, json_output)
 
 
 @project_field_group.command(name="delete")
@@ -438,27 +449,29 @@ def project_field_create(number, owner, name, data_type, options, json_output, t
 @click.option("--owner", required=False, help="GitHub user or organization owner.")
 @click.option("--field-id", required=False, help="Project field node ID.")
 @click.option("--confirm", default=None, help="Confirm by passing the field ID or name.")
-@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def project_field_delete(number, owner, field_id, confirm, json_output, token, interactive):
+def project_field_delete(number, owner, field_id, confirm, json_fields, json_output, token, interactive):
     """Delete a project field."""
     inputs = _resolve_inputs(PROJECT_FIELD_SCHEMA, {"number": number, "owner": owner, "field_id": field_id}, interactive, "Usage: chatgh project field delete NUMBER --owner OWNER --field-id FIELD_ID --confirm FIELD_ID [-i|-I]")
     _require_confirmation(confirm, inputs["field_id"], "Deleting a field")
-    _echo_payload(delete_field(inputs["owner"], inputs["field_id"], token), json_output)
+    _echo_payload(delete_field(inputs["owner"], inputs["field_id"], token), json_fields, json_output)
 
 
 @project_item_group.command(name="list")
 @click.argument("number", required=False, type=int)
 @click.option("--owner", required=False, help="GitHub user or organization owner.")
 @click.option("--limit", default=50, type=click.IntRange(min=1), show_default=True)
-@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def project_item_list(number, owner, limit, json_output, token, interactive):
+def project_item_list(number, owner, limit, json_fields, json_output, token, interactive):
     """List project items."""
     inputs = _resolve_inputs(PROJECT_REF_SCHEMA, {"number": number, "owner": owner}, interactive, "Usage: chatgh project item list NUMBER --owner OWNER [-i|-I]")
-    _echo_payload(list_items(inputs["owner"], int(inputs["number"]), limit=limit, token=token), json_output)
+    _echo_payload(list_items(inputs["owner"], int(inputs["number"]), limit=limit, token=token), json_fields, json_output)
 
 
 @project_item_group.command(name="add")
@@ -466,16 +479,17 @@ def project_item_list(number, owner, limit, json_output, token, interactive):
 @click.option("--owner", required=False, help="GitHub user or organization owner.")
 @click.option("--url", default=None, help="Issue or pull request URL.")
 @click.option("--content-id", default=None, help="Issue or pull request node ID.")
-@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def project_item_add(number, owner, url, content_id, json_output, token, interactive):
+def project_item_add(number, owner, url, content_id, json_fields, json_output, token, interactive):
     """Add an issue or pull request item to a project."""
     inputs = _resolve_inputs(PROJECT_ITEM_ADD_SCHEMA, {"number": number, "owner": owner}, interactive, "Usage: chatgh project item add NUMBER --owner OWNER (--url URL|--content-id ID) [-i|-I]")
     if not url and not content_id:
         extra_inputs = _resolve_optional_input(PROJECT_ITEM_URL_SCHEMA, {"url": url}, interactive, "Usage: chatgh project item add NUMBER --owner OWNER (--url URL|--content-id ID) [-i|-I]")
         url = extra_inputs["url"]
-    _echo_payload(add_item(inputs["owner"], int(inputs["number"]), url=url, content_id=content_id, token=token), json_output)
+    _echo_payload(add_item(inputs["owner"], int(inputs["number"]), url=url, content_id=content_id, token=token), json_fields, json_output)
 
 
 @project_item_group.command(name="create")
@@ -483,13 +497,14 @@ def project_item_add(number, owner, url, content_id, json_output, token, interac
 @click.option("--owner", required=False, help="GitHub user or organization owner.")
 @click.option("--title", required=False, help="Draft issue title.")
 @click.option("--body", default=None, help="Draft body text or @file.")
-@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def project_item_create(number, owner, title, body, json_output, token, interactive):
+def project_item_create(number, owner, title, body, json_fields, json_output, token, interactive):
     """Create a draft issue item."""
     inputs = _resolve_inputs(PROJECT_ITEM_CREATE_SCHEMA, {"number": number, "owner": owner, "title": title}, interactive, "Usage: chatgh project item create NUMBER --owner OWNER --title TITLE [-i|-I]")
-    _echo_payload(create_draft_item(inputs["owner"], int(inputs["number"]), inputs["title"], body=_read_text_or_file(body), token=token), json_output)
+    _echo_payload(create_draft_item(inputs["owner"], int(inputs["number"]), inputs["title"], body=_read_text_or_file(body), token=token), json_fields, json_output)
 
 
 @project_item_group.command(name="edit")
@@ -504,10 +519,11 @@ def project_item_create(number, owner, title, body, json_output, token, interact
 @click.option("--single-select-option-id", default=None, help="Set single select option ID.")
 @click.option("--iteration-id", default=None, help="Set iteration ID.")
 @click.option("--clear", is_flag=True, help="Clear the field value.")
-@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def project_item_edit(number, owner, item_id, field_id, field_name, text, number_value, date, single_select_option_id, iteration_id, clear, json_output, token, interactive):
+def project_item_edit(number, owner, item_id, field_id, field_name, text, number_value, date, single_select_option_id, iteration_id, clear, json_fields, json_output, token, interactive):
     """Edit a project item field value."""
     inputs = _resolve_inputs(PROJECT_ITEM_SCHEMA, {"number": number, "owner": owner, "item_id": item_id}, interactive, "Usage: chatgh project item edit NUMBER --owner OWNER --id ITEM_ID (--field-id ID|--field-name NAME) [-i|-I]")
     owner = inputs["owner"]
@@ -523,10 +539,10 @@ def project_item_edit(number, owner, item_id, field_id, field_name, text, number
     if clear:
         if _has_project_value(text, number_value, date, single_select_option_id, iteration_id):
             raise click.ClickException("--clear cannot be combined with field value options.")
-        _echo_payload(clear_item_field(owner, number, item_id, field, token), json_output)
+        _echo_payload(clear_item_field(owner, number, item_id, field, token), json_fields, json_output)
         return
     value = _project_value(text, number_value, date, single_select_option_id, iteration_id)
-    _echo_payload(update_item_field(owner, number, item_id, field, value, token), json_output)
+    _echo_payload(update_item_field(owner, number, item_id, field, value, token), json_fields, json_output)
 
 
 @project_item_group.command(name="archive")
@@ -534,13 +550,14 @@ def project_item_edit(number, owner, item_id, field_id, field_name, text, number
 @click.option("--owner", required=False, help="GitHub user or organization owner.")
 @click.option("--id", "item_id", required=False, help="Project item ID.")
 @click.option("--undo", is_flag=True, help="Unarchive the item.")
-@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def project_item_archive(number, owner, item_id, undo, json_output, token, interactive):
+def project_item_archive(number, owner, item_id, undo, json_fields, json_output, token, interactive):
     """Archive or unarchive a project item."""
     inputs = _resolve_inputs(PROJECT_ITEM_SCHEMA, {"number": number, "owner": owner, "item_id": item_id}, interactive, "Usage: chatgh project item archive NUMBER --owner OWNER --id ITEM_ID [-i|-I]")
-    _echo_payload(archive_item(inputs["owner"], int(inputs["number"]), inputs["item_id"], undo=undo, token=token), json_output)
+    _echo_payload(archive_item(inputs["owner"], int(inputs["number"]), inputs["item_id"], undo=undo, token=token), json_fields, json_output)
 
 
 @project_item_group.command(name="delete")
@@ -548,14 +565,15 @@ def project_item_archive(number, owner, item_id, undo, json_output, token, inter
 @click.option("--owner", required=False, help="GitHub user or organization owner.")
 @click.option("--id", "item_id", required=False, help="Project item ID.")
 @click.option("--confirm", default=None, help="Confirm by passing the item ID.")
-@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def project_item_delete(number, owner, item_id, confirm, json_output, token, interactive):
+def project_item_delete(number, owner, item_id, confirm, json_fields, json_output, token, interactive):
     """Delete a project item."""
     inputs = _resolve_inputs(PROJECT_ITEM_SCHEMA, {"number": number, "owner": owner, "item_id": item_id}, interactive, "Usage: chatgh project item delete NUMBER --owner OWNER --id ITEM_ID --confirm ITEM_ID [-i|-I]")
     _require_confirmation(confirm, inputs["item_id"], "Deleting an item")
-    _echo_payload(delete_item(inputs["owner"], int(inputs["number"]), inputs["item_id"], token), json_output)
+    _echo_payload(delete_item(inputs["owner"], int(inputs["number"]), inputs["item_id"], token), json_fields, json_output)
 
 
 @project_group.command(name="link")
@@ -563,10 +581,11 @@ def project_item_delete(number, owner, item_id, confirm, json_output, token, int
 @click.option("--owner", required=False, help="GitHub user or organization owner.")
 @click.option("--repo-id", default=None, help="Repository node ID.")
 @click.option("--team-id", default=None, help="Team node ID.")
-@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def project_link(number, owner, repo_id, team_id, json_output, token, interactive):
+def project_link(number, owner, repo_id, team_id, json_fields, json_output, token, interactive):
     """Link a repository or team to a project."""
     inputs = _resolve_inputs(PROJECT_LINK_SCHEMA, {"number": number, "owner": owner}, interactive, "Usage: chatgh project link NUMBER --owner OWNER (--repo-id ID|--team-id ID) [-i|-I]")
     if not repo_id and not team_id:
@@ -575,7 +594,7 @@ def project_link(number, owner, repo_id, team_id, json_output, token, interactiv
     if bool(repo_id) == bool(team_id):
         raise click.ClickException("Pass exactly one of --repo-id or --team-id.")
     payload = link_repository(inputs["owner"], int(inputs["number"]), repo_id, token) if repo_id else link_team(inputs["owner"], int(inputs["number"]), team_id, token)
-    _echo_payload(payload, json_output)
+    _echo_payload(payload, json_fields, json_output)
 
 
 @project_group.command(name="unlink")
@@ -584,10 +603,11 @@ def project_link(number, owner, repo_id, team_id, json_output, token, interactiv
 @click.option("--repo-id", default=None, help="Repository node ID.")
 @click.option("--team-id", default=None, help="Team node ID.")
 @click.option("--confirm", default=None, help="Confirm target ID.")
-@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def project_unlink(number, owner, repo_id, team_id, confirm, json_output, token, interactive):
+def project_unlink(number, owner, repo_id, team_id, confirm, json_fields, json_output, token, interactive):
     """Unlink a repository or team from a project."""
     inputs = _resolve_inputs(PROJECT_LINK_SCHEMA, {"number": number, "owner": owner}, interactive, "Usage: chatgh project unlink NUMBER --owner OWNER (--repo-id ID|--team-id ID) --confirm ID [-i|-I]")
     if not repo_id and not team_id:
@@ -598,17 +618,18 @@ def project_unlink(number, owner, repo_id, team_id, confirm, json_output, token,
     target = repo_id or team_id
     _require_confirmation(confirm, target, "Unlinking changes project visibility/scope")
     payload = unlink_repository(inputs["owner"], int(inputs["number"]), repo_id, token) if repo_id else unlink_team(inputs["owner"], int(inputs["number"]), team_id, token)
-    _echo_payload(payload, json_output)
+    _echo_payload(payload, json_fields, json_output)
 
 
 @project_group.command(name="mark-template")
 @click.argument("number", required=False, type=int)
 @click.option("--owner", required=False, help="GitHub user or organization owner.")
 @click.option("--undo", is_flag=True, help="Unmark as template.")
-@click.option("--json-output", is_flag=True, help="Output JSON.")
+@click.option("--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields.")
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
 @click.option("--token", default=None, help="GitHub token.")
 @add_interactive_option
-def project_mark_template(number, owner, undo, json_output, token, interactive):
+def project_mark_template(number, owner, undo, json_fields, json_output, token, interactive):
     """Mark or unmark a project as a template."""
     inputs = _resolve_inputs(PROJECT_REF_SCHEMA, {"number": number, "owner": owner}, interactive, "Usage: chatgh project mark-template NUMBER --owner OWNER [-i|-I]")
-    _echo_payload(mark_template(inputs["owner"], int(inputs["number"]), undo=undo, token=token), json_output)
+    _echo_payload(mark_template(inputs["owner"], int(inputs["number"]), undo=undo, token=token), json_fields, json_output)

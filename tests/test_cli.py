@@ -19,4 +19,4 @@ def test_chatgh_version_option():
     result = CliRunner().invoke(main, ["--version"])
 
     assert result.exit_code == 0
-    assert "0.2.8" in result.output
+    assert "0.2.9" in result.output

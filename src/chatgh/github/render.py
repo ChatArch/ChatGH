@@ -1,6 +1,105 @@
 from __future__ import annotations
 
+import json
+import re
+from typing import Any
+
 import click
+
+
+JSON_FIELD_ALIASES = {
+    "baseRefName": "base",
+    "createdAt": "created_at",
+    "defaultBranchRef": "default_branch",
+    "headRefName": "head",
+    "headRefOid": "head_sha",
+    "htmlUrl": "html_url",
+    "isArchived": "archived",
+    "isFork": "fork",
+    "isPrivate": "private",
+    "mergeStateStatus": "mergeable_state",
+    "mergedAt": "merged_at",
+    "updatedAt": "updated_at",
+}
+
+
+def echo_json_payload(payload: Any, fields: str | None, *, default=str) -> None:
+    click.echo(json.dumps(project_json_payload(payload, fields), ensure_ascii=False, indent=2, default=default))
+
+
+def echo_json_if_requested(
+    payload: Any,
+    fields: str | None,
+    json_output: bool,
+    *,
+    default=str,
+) -> bool:
+    if fields is not None and json_output:
+        raise click.ClickException("Use either --json or --json-output, not both")
+    if fields is not None:
+        echo_json_payload(payload, fields, default=default)
+        return True
+    if json_output:
+        echo_json_payload(payload, None, default=default)
+        return True
+    return False
+
+
+def project_json_payload(payload: Any, fields: str | None) -> Any:
+    parsed_fields = parse_json_fields(fields)
+    if not parsed_fields:
+        return payload
+    if isinstance(payload, list):
+        return [_project_json_object(item, parsed_fields) for item in payload]
+    return _project_json_object(payload, parsed_fields)
+
+
+def parse_json_fields(fields: str | None) -> list[str]:
+    if fields is None:
+        return []
+    parsed = [field.strip() for field in fields.split(",") if field.strip()]
+    if not parsed:
+        raise click.ClickException("--json requires a comma-separated field list")
+    return parsed
+
+
+def _project_json_object(item: Any, fields: list[str]) -> dict:
+    if not isinstance(item, dict):
+        raise click.ClickException("--json field selection requires object payloads")
+    projected = {}
+    missing = []
+    for field in fields:
+        sentinel = object()
+        value = _lookup_json_field(item, field, sentinel)
+        if value is sentinel:
+            missing.append(field)
+        else:
+            projected[field] = value
+    if missing:
+        available = ", ".join(sorted(item.keys()))
+        raise click.ClickException(
+            f"Unknown JSON field(s): {', '.join(missing)}. Available fields: {available}"
+        )
+    return projected
+
+
+def _lookup_json_field(item: dict, field: str, default: Any) -> Any:
+    candidates = [field]
+    alias = JSON_FIELD_ALIASES.get(field)
+    if alias:
+        candidates.append(alias)
+    snake = _camel_to_snake(field)
+    if snake != field:
+        candidates.append(snake)
+    for candidate in candidates:
+        if candidate in item:
+            return item[candidate]
+    return default
+
+
+def _camel_to_snake(value: str) -> str:
+    value = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", value)
+    return re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", value).lower()
 
 
 def derive_repo_capabilities(permissions: dict) -> dict:
