@@ -1,11 +1,15 @@
 site_name: chatgh 文档
-site_url: https://chatarch.github.io/ChatGH
+site_url: https://arch.gh.wzhecnu.cn/ChatGH/
 repo_url: https://github.com/ChatArch/ChatGH
 theme:
   name: material
   language: zh
 nav:
   - 首页: index.md
+  - 接口树: interface-tree.md
   - 接口对齐规范: gh-interface-alignment.md
+  - 机器人 / Agent 定义: agent-definition.md
+  - Agent Task / Bot 对齐: agent-task-bot-alignment.md
   - English: index.en.md
   - English interface alignment: gh-interface-alignment.en.md
+  - English agent definition: agent-definition.en.md

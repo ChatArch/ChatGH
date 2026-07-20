@@ -93,6 +93,17 @@ chatgh repo fork --source Wei-Shaw/claude-relay-service --owner ChatArch --name 
 - `run cancel`
 - `run download`
 
+### Agent / bot 对齐方向
+
+官方 GitHub CLI 当前没有 `gh bot` 命令组，但源码中已有 preview `gh agent-task`，并注册了 `agent-task`、`agent-tasks`、`agent`、`agents` alias。它的语义是 GitHub/Copilot hosted agent task：在仓库里创建一个 agent job，通常产生 PR 和 agent session，并可通过 `list/view` 查看 session 与日志。官方还提供 preview `gh skill` / `gh skills`，用于从 GitHub 仓库安装和管理 agent skills。
+
+ChatGH 的 agent/bot 方向必须遵守：
+
+- 命名上优先参考官方 `gh agent-task` / `gh skill`，避免凭空发明与 GitHub 心智冲突的顶层 surface。
+- 语义上明确区分 GitHub-hosted Copilot/CAPI agent task 与 ChatGH self-hosted event-to-runner bridge；不能让同一个命令静默混用两种 runtime。
+- 初期只把 GitHub webhook payload normalization、signature verification、thread comment/status 回写、CLI runner invocation 作为 ChatGH-native 设计；不要把官方 Copilot/CAPI 私有实现当默认依赖。
+- 每个 agent/bot 命令都要在 `docs/agent-task-bot-alignment.md` 中有证据来源、命令职责、安全边界和 CLI -> Python API 映射。
+
 
 ## 本轮落地范围（2026-06-25）
 

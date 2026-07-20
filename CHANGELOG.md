@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 本项目按日期记录更新；正式发版信息也维护在本文件。
 
+## 2026-07-19
+- 补充 ChatGH 文档规范：新增 `docs/interface-tree.md`，按 ChatTea 风格记录当前 CLI 树、目标方向、职责、CLI -> Python API 映射和测试契约；同步 `mkdocs.yml` 到共享文档域名 `https://arch.gh.wzhecnu.cn/ChatGH/`。
+- 新增 `docs/agent-definition.md` / `docs/agent-definition.en.md`，定义 ChatGH 机器人/Agent 的身份、manifest、触发 flow、权限、工具、运行时、记忆、审批和审计模型。
+- 新增 `docs/agent-task-bot-alignment.md`，调研官方 `gh agent-task` / `gh skill` / GitHub Apps / webhooks / bot 相关接口，并明确 ChatGH 后续 agent-task/bot surface 需要区分 GitHub-hosted Copilot/CAPI 与 self-hosted event-to-runner bridge；补充官方 `gh` 可完成的常见 bot 创建/评论/PR/status/webhook 操作清单，以及 Julia Registrator / TagBot 作为 repository-native bot 的实证案例。
+
 ## 2026-07-16
 - 准备 `0.2.9` 补丁版本：为常用命令新增官方 `gh --json FIELDS` 风格的字段投影 JSON 输出，同时保留 ChatGH 既有 `--json-output` 完整 payload 输出。
 - `--json` 支持常见官方字段别名映射，例如 `headRefName` / `baseRefName` / `mergeStateStatus`，便于复用官方 `gh` 命令片段；同时传 `--json` 与 `--json-output` 会明确报错。
