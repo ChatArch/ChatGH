@@ -73,7 +73,7 @@ chatgh set-token --help
 
 - `chatgh pr list/create/view/comment/edit/checks/merge`：已有 PR 基础流程；`merge` 默认 `--check`，不能当 dry-run。
 - `chatgh pr status/diff/close/reopen/review/ready/update-branch`：本轮补齐的常见 lifecycle/review 命令；写操作复用 ChatGH token resolution，且不会打印 token。
-- `chatgh repo list/create/fork/protection`：已有仓库列表、创建、fork、保护规则检查。
+- `chatgh repo list/create/fork/transfer/protection`：已有仓库列表、创建、fork、所有权迁移、保护规则检查。
 - `chatgh repo view/clone/sync/edit`：本轮补齐的常见 repo 命令；`clone/sync` 对本地 git 副作用保持显式、保守，不覆盖已有非空目录。
 - `chatgh invitation list/accept/decline`：查看和处理当前账号收到的 GitHub repository invitations；对齐 GitHub REST API 的 authenticated user invitation 能力。
 - `chatgh project list/view/create/edit/close/delete/copy` 与 `chatgh project item ...`、`chatgh project field ...`、`link/unlink/mark-template`：GitHub Projects v2 命令面。官方 `gh project` 只作为能力参考；ChatGH 打开 `item` 和 `field` 子树，不保留 `item-add` / `field-list` 扁平兼容入口。鉴权、JSON 输出、安全门和 Python API 走 ChatGH 自有规范。
@@ -218,6 +218,15 @@ chatgh repo fork --source octocat/Hello-World --owner ChatArch --if-exists use -
 ```
 
 `repo fork` 通过 GitHub Fork API 创建目标仓库；目标仓库名默认沿用 source repo 名。它兼容官方 `gh repo fork [<repository>] --org ... --fork-name ...` 的常见形态，同时保留 ChatGH 的显式 `--source/--owner/--name` 和 `--json-output/--if-exists use` 自动化扩展。目标为 organization 时会传递 GitHub API 的 `organization` 字段；目标为 user account 时，`--owner` 必须匹配当前认证用户。`--if-exists use` 只会复用已存在且匹配 source 的 fork，避免把同名非匹配仓库误当成功结果。
+
+### 迁移仓库所有权
+
+```bash
+chatgh repo transfer ChatArch/ExampleRepo --owner OmniCAS --dry-run --json-output
+chatgh repo transfer ChatArch/ExampleRepo --owner OmniCAS --accept-transfer-consequences --json-output
+```
+
+`repo transfer` 调用 GitHub Repository Transfer API，把仓库所有权转移到目标 user/org；这不同于 `repo fork`，会保留 issue、PR、stars、settings 等仓库身份，并由 GitHub 处理 redirect。命令默认建议先 `--dry-run` 检查 source 权限和目标同名仓库是否已存在；真正执行必须显式传 `--accept-transfer-consequences`，因为 transfer 会影响 access、webhooks、secrets、GitHub Pages 和自动化。转移到 organization 时可重复传 `--team-id` 让 GitHub 在转移后给指定 team 授权。
 
 ### 查看仓库保护规则
 

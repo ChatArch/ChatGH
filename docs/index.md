@@ -77,6 +77,7 @@ chatgh set-token --help
 - `chatgh repo list`：列出 user/org 下的仓库；默认 table，支持 `--json FIELDS`、`--json-output`、`--limit`、`--sort updated|created|pushed|name|stars|open-prs|open-issues`、`--direction asc|desc`，字段包含 visibility、stars、open PRs、open issues、created/updated time 等。
 - `chatgh repo create`：创建仓库；默认 private，可用 `--public` 显式创建公开仓库。
 - `chatgh repo fork`：把 source 仓库 fork 到目标 user/org，兼容 `gh` 风格位置参数、`--org`、`--fork-name`，并保留 ChatGH 显式 `--source`、`--owner`、`--name`、`--default-branch-only`、`--if-exists use` 和 JSON 输出。
+- `chatgh repo transfer`：把仓库所有权迁移到目标 user/org，支持 `--dry-run` 和必须显式确认的 `--accept-transfer-consequences`。
 - `chatgh repo protection`：查看单个仓库或 owner 下仓库的默认分支保护与 repository rulesets；治理/规则审计不挤进 `repo list` 默认表格。
 - `chatgh invitation list/accept/decline`：查看和处理当前账号收到的 GitHub repository invitations；对齐 GitHub REST API 的 authenticated user invitation 能力。
 - 当前公开 `chatgh pr` 命令面包含 `list/create/view/comment/edit/checks/merge`；写操作复用 ChatGH token resolution，且不会打印 token。
@@ -221,6 +222,15 @@ chatgh repo fork --source octocat/Hello-World --owner ChatArch --if-exists use -
 ```
 
 `repo fork` 通过 GitHub Fork API 创建目标仓库；目标仓库名默认沿用 source repo 名。它兼容官方 `gh repo fork [<repository>] --org ... --fork-name ...` 的常见形态，同时保留 ChatGH 的显式 `--source/--owner/--name` 和 `--json-output/--if-exists use` 自动化扩展。目标为 organization 时会传递 GitHub API 的 `organization` 字段；目标为 user account 时，`--owner` 必须匹配当前认证用户。`--if-exists use` 只会复用已存在且匹配 source 的 fork，避免把同名非匹配仓库误当成功结果。
+
+### 迁移仓库所有权
+
+```bash
+chatgh repo transfer ChatArch/ExampleRepo --owner OmniCAS --dry-run --json-output
+chatgh repo transfer ChatArch/ExampleRepo --owner OmniCAS --accept-transfer-consequences --json-output
+```
+
+`repo transfer` 调用 GitHub Repository Transfer API，把仓库所有权转移到目标 user/org；这不同于 `repo fork`，会保留 issue、PR、stars、settings 等仓库身份，并由 GitHub 处理 redirect。命令默认建议先 `--dry-run` 检查 source 权限和目标同名仓库是否已存在；真正执行必须显式传 `--accept-transfer-consequences`，因为 transfer 会影响 access、webhooks、secrets、GitHub Pages 和自动化。转移到 organization 时可重复传 `--team-id` 让 GitHub 在转移后给指定 team 授权。
 
 ### 查看仓库保护规则
 

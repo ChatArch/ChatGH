@@ -35,6 +35,7 @@ from chatgh.github.requests import (
     get_pr_list,
     get_pr_diff_text,
     get_pr_view,
+    get_repo_optional_payload,
     get_repo_list,
     get_repo_view_payload,
     get_repo_names,
@@ -56,6 +57,7 @@ from chatgh.github.requests import (
     post_run_action,
     post_repo_create,
     post_repo_fork,
+    post_repo_transfer,
 )
 
 
@@ -163,6 +165,58 @@ def fork_repo(
     except ValueError as exc:
         raise click.ClickException(str(exc)) from exc
 
+
+def transfer_repo(
+    repo: str,
+    owner: str,
+    team_ids: list[int],
+    dry_run: bool,
+    accept_transfer_consequences: bool,
+    token: Optional[str],
+) -> dict:
+    if not dry_run and not accept_transfer_consequences:
+        raise click.ClickException(
+            "Transferring a repository changes its owner and can affect access, "
+            "webhooks, secrets, "
+            "GitHub Pages, and automation. Pass --accept-transfer-consequences to confirm this remote mutation."
+        )
+    resolved_repo = resolve_repo(repo)
+    source_owner, source_name = split_repo(resolved_repo)
+    target_owner = (owner or "").strip()
+    if not target_owner or "/" in target_owner:
+        raise click.ClickException("Target owner must be a GitHub user or organization login.")
+    if source_owner.lower() == target_owner.lower():
+        raise click.ClickException("Target owner is the same as the source owner.")
+
+    credential_path = credential_path_from_repo(resolved_repo)
+    resolved_token = resolve_token(token, credential_path=credential_path)
+    if not resolved_token:
+        raise click.ClickException("Missing token. Pass --token or configure a repo-scoped GitHub credential.")
+
+    source_payload = get_repo_permissions(resolved_repo, resolved_token)
+    target = f"{target_owner}/{source_name}"
+    existing_target = get_repo_optional_payload(target, resolved_token)
+    if existing_target is not None:
+        raise click.ClickException(f"Target repository already exists: {target}")
+
+    plan = {
+        "dry_run": dry_run,
+        "source": resolved_repo,
+        "target": target,
+        "new_owner": target_owner,
+        "team_ids": team_ids,
+        "source_private": source_payload.get("private"),
+        "source_visibility": source_payload.get("visibility") or ("private" if source_payload.get("private") else "public"),
+        "source_permissions": source_payload.get("permissions") or {},
+        "transfer_ready": True,
+    }
+    if dry_run:
+        return plan
+
+    payload = post_repo_transfer(resolved_repo, target_owner, team_ids, resolved_token)
+    payload.update(plan)
+    payload["dry_run"] = False
+    return payload
 
 
 def view_repo(repo: Optional[str], token: Optional[str]) -> dict:

@@ -193,6 +193,66 @@ def post_repo_fork(
     return payload
 
 
+def post_repo_transfer(
+    repo: str,
+    new_owner: str,
+    team_ids: list[int],
+    token: Optional[str],
+) -> dict:
+    import requests
+
+    owner, name = split_repo(repo)
+    payload: dict[str, object] = {"new_owner": new_owner}
+    if team_ids:
+        payload["team_ids"] = team_ids
+    url = f"https://api.github.com/repos/{owner}/{name}/transfer"
+    try:
+        response = requests.post(
+            url,
+            headers=github_api_headers(token),
+            json=payload,
+            timeout=30,
+        )
+    except requests.RequestException as exc:
+        raise click.ClickException(f"GitHub API request failed for repository transfer: {exc}") from exc
+    if response.status_code not in {200, 201, 202}:
+        detail = _response_error_detail(response)
+        raise click.ClickException(
+            f"GitHub API error ({response.status_code}) for repository transfer {repo}: {detail}"
+        )
+
+    repo_payload: dict = {}
+    if (response.text or "").strip():
+        try:
+            decoded = response.json()
+        except ValueError as exc:
+            raise click.ClickException(f"GitHub API returned non-JSON response for repository transfer {repo}") from exc
+        if isinstance(decoded, dict):
+            repo_payload = decoded
+    result = _build_repo_payload_from_json(repo_payload) if repo_payload else {}
+    response_full_name = result.get("full_name")
+    target = f"{new_owner}/{name}"
+    result.update(
+        {
+            "transferred": True,
+            "source": repo,
+            "target": target,
+            "new_owner": new_owner,
+            "team_ids": team_ids,
+            "status_code": response.status_code,
+            "response_full_name": response_full_name,
+            "full_name": target,
+            "html_url": f"https://github.com/{target}",
+        }
+    )
+    return result
+
+
+def get_repo_optional_payload(repo: str, token: Optional[str]) -> Optional[dict]:
+    payload = _get_repo_json_optional(repo, token)
+    return _build_repo_payload_from_json(payload) if payload is not None else None
+
+
 def _get_repo_json_optional(repo: str, token: Optional[str]) -> Optional[dict]:
     import requests
 
