@@ -1,15 +1,59 @@
-site_name: chatgh 文档
+site_name: ChatGH 文档
 site_url: https://arch.gh.wzhecnu.cn/ChatGH/
 repo_url: https://github.com/ChatArch/ChatGH
+repo_name: ChatArch/ChatGH
+edit_uri: edit/master/docs/
+docs_dir: docs/
 theme:
   name: material
   language: zh
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.action.edit
+plugins:
+  - search
+  - i18n:
+      docs_structure: suffix
+      fallback_to_default: true
+      reconfigure_material: true
+      reconfigure_search: true
+      languages:
+        - locale: zh
+          default: true
+          name: 中文
+          build: true
+          site_name: ChatGH 文档
+        - locale: en
+          name: English
+          build: true
+          site_name: ChatGH Documentation
+          nav_translations:
+            首页: Home
+            接口: Interface
+            接口树: Interface Tree
+            接口对齐规范: Interface Alignment
+            Agent / Bot: Agent / Bot
+            机器人 / Agent 定义: Agent Definition
+            Agent Task / Bot 对齐: Agent Task / Bot Alignment
+extra:
+  alternate:
+    - name: 中文
+      link: /ChatGH/
+      lang: zh
+    - name: English
+      link: /ChatGH/en/
+      lang: en
 nav:
   - 首页: index.md
-  - 接口树: interface-tree.md
-  - 接口对齐规范: gh-interface-alignment.md
-  - 机器人 / Agent 定义: agent-definition.md
-  - Agent Task / Bot 对齐: agent-task-bot-alignment.md
-  - English: index.en.md
-  - English interface alignment: gh-interface-alignment.en.md
-  - English agent definition: agent-definition.en.md
+  - 接口:
+      - 接口树: interface-tree.md
+      - 接口对齐规范: gh-interface-alignment.md
+  - Agent / Bot:
+      - 机器人 / Agent 定义: agent-definition.md
+      - Agent Task / Bot 对齐: agent-task-bot-alignment.md
