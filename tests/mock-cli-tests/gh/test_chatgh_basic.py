@@ -4,6 +4,7 @@ import pytest
 from click.testing import CliRunner
 
 from chatgh.cli import main as cli
+from chatgh.github.commands import transfer_repo
 from chatgh.github.requests import (
     _build_repo_payload,
     _parse_time,
@@ -11,6 +12,7 @@ from chatgh.github.requests import (
     patch_user_repository_invitation,
     delete_user_repository_invitation,
     post_repo_fork,
+    post_repo_transfer,
 )
 
 
@@ -824,6 +826,150 @@ def test_chatgh_repo_fork_rejects_invalid_source(runner):
 
     assert result.exit_code != 0
     assert "Repo must be in owner/name form" in result.output
+
+
+def test_chatgh_repo_transfer_dry_run_accepts_gh_like_positional_and_aliases(monkeypatch, runner):
+    captured = {}
+
+    def fake_transfer(repo, owner, team_ids, dry_run, accept_transfer_consequences, token):
+        captured.update(
+            {
+                "repo": repo,
+                "owner": owner,
+                "team_ids": team_ids,
+                "dry_run": dry_run,
+                "accept_transfer_consequences": accept_transfer_consequences,
+                "token": token,
+            }
+        )
+        return {
+            "dry_run": True,
+            "source": repo,
+            "target": f"{owner}/SageTutorial",
+            "new_owner": owner,
+            "team_ids": team_ids,
+            "transfer_ready": True,
+        }
+
+    monkeypatch.setattr("chatgh.github.cli.transfer_repo", fake_transfer)
+
+    result = runner.invoke(
+        cli,
+        [
+            "repo",
+            "transfer",
+            "ChatArch/SageTutorial",
+            "--org",
+            "OmniCAS",
+            "--team-id",
+            "123",
+            "--dry-run",
+            "--json-output",
+        ],
+    )
+
+    assert result.exit_code == 0
+    assert '"target": "OmniCAS/SageTutorial"' in result.output
+    assert captured == {
+        "repo": "ChatArch/SageTutorial",
+        "owner": "OmniCAS",
+        "team_ids": [123],
+        "dry_run": True,
+        "accept_transfer_consequences": False,
+        "token": None,
+    }
+
+def test_chatgh_repo_transfer_rejects_conflicting_repo_forms(runner):
+    result = runner.invoke(
+        cli,
+        [
+            "repo",
+            "transfer",
+            "ChatArch/SageTutorial",
+            "--repo",
+            "ChatArch/Other",
+            "--owner",
+            "OmniCAS",
+            "-I",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Use either REPOSITORY or --repo, not both" in result.output
+
+def test_chatgh_repo_transfer_rejects_conflicting_owner_aliases(runner):
+    result = runner.invoke(
+        cli,
+        [
+            "repo",
+            "transfer",
+            "ChatArch/SageTutorial",
+            "--owner",
+            "OmniCAS",
+            "--org",
+            "OtherOrg",
+            "-I",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Use either --owner or --org, not both" in result.output
+
+def test_transfer_repo_requires_explicit_ack_for_remote_mutation():
+    with pytest.raises(Exception, match="accept-transfer-consequences"):
+        transfer_repo(
+            "ChatArch/SageTutorial",
+            "OmniCAS",
+            team_ids=[],
+            dry_run=False,
+            accept_transfer_consequences=False,
+            token=None,
+        )
+
+def test_post_repo_transfer_posts_new_owner_and_team_ids(monkeypatch):
+    calls = []
+
+    class FakeResponse:
+        status_code = 202
+        ok = True
+        text = '{"name":"SageTutorial","full_name":"ChatArch/SageTutorial","private":false,"visibility":"public","html_url":"https://github.com/ChatArch/SageTutorial"}'
+
+        def json(self):
+            return {
+                "name": "SageTutorial",
+                "full_name": "ChatArch/SageTutorial",
+                "private": False,
+                "visibility": "public",
+                "html_url": "https://github.com/ChatArch/SageTutorial",
+            }
+
+    def fake_post(url, headers, json, timeout):
+        calls.append((url, headers.get("Authorization"), json, timeout))
+        return FakeResponse()
+
+    monkeypatch.setattr("requests.post", fake_post)
+
+    payload = post_repo_transfer(
+        "ChatArch/SageTutorial",
+        "OmniCAS",
+        [123],
+        "token",
+    )
+
+    assert calls == [
+        (
+            "https://api.github.com/repos/ChatArch/SageTutorial/transfer",
+            "Bearer token",
+            {"new_owner": "OmniCAS", "team_ids": [123]},
+            30,
+        )
+    ]
+    assert payload["transferred"] is True
+    assert payload["source"] == "ChatArch/SageTutorial"
+    assert payload["target"] == "OmniCAS/SageTutorial"
+    assert payload["full_name"] == "OmniCAS/SageTutorial"
+    assert payload["response_full_name"] == "ChatArch/SageTutorial"
+
 
 
 def test_get_user_repository_invitations_shapes_payload(monkeypatch):

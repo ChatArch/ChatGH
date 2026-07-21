@@ -72,7 +72,7 @@ Command tree:
 
 - `chatgh pr list/create/view/comment/edit/checks/merge`: existing PR workflow commands; `merge` defaults to `--check` and must not be used as a dry-run.
 - `chatgh pr status/diff/close/reopen/review/ready/update-branch`: common lifecycle/review commands added in this batch; write commands use ChatGH token resolution and keep secrets out of output.
-- `chatgh repo list/create/fork/protection`: repository list/create/fork/protection commands.
+- `chatgh repo list/create/fork/transfer/protection`: repository list/create/fork/ownership-transfer/protection commands.
 - `chatgh repo view/clone/sync/edit`: common repository commands added in this batch; `clone/sync` keep local git side effects explicit and conservative.
 - `chatgh project list/view/create/edit/close/delete/copy`, `chatgh project item ...`, `chatgh project field ...`, and `link/unlink/mark-template`: GitHub Projects v2 commands. Official `gh project` is only a capability reference; ChatGH opens native `item` and `field` subtrees and does not keep flat `item-add` / `field-list` compatibility entries. Auth, JSON output, safety gates, and Python APIs follow ChatGH conventions.
 - `chatgh run view/logs`: workflow run and job-log inspection.
@@ -205,6 +205,15 @@ chatgh repo fork --source octocat/Hello-World --owner ChatArch --if-exists use -
 ```
 
 `repo fork` uses the GitHub Fork API. The target repository name defaults to the source repository name. It accepts the common official `gh repo fork [<repository>] --org ... --fork-name ...` shape while preserving ChatGH's explicit `--source/--owner/--name` and `--json-output/--if-exists use` automation extensions. Organization targets send GitHub's `organization` field; user-account targets require `--owner` to match the authenticated user. `--if-exists use` only reuses an existing fork when it matches the requested source, avoiding false success on an unrelated same-name repository.
+
+### Transfer Repository Ownership
+
+```bash
+chatgh repo transfer ChatArch/ExampleRepo --owner OmniCAS --dry-run --json-output
+chatgh repo transfer ChatArch/ExampleRepo --owner OmniCAS --accept-transfer-consequences --json-output
+```
+
+`repo transfer` uses the GitHub Repository Transfer API to move repository ownership to a target user/org. Unlike `repo fork`, it preserves repository identity such as issues, PRs, stars, and settings while GitHub handles redirects. Prefer `--dry-run` first to verify source permissions and that the target same-name repository does not already exist. The real transfer requires `--accept-transfer-consequences` because it can affect access, webhooks, secrets, GitHub Pages, and automation. For organization transfers, repeat `--team-id` to grant target teams access after transfer.
 
 ### Inspect Repository Protection
 

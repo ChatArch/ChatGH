@@ -31,6 +31,7 @@ from chatgh.github.commands import (
     rerun_run,
     set_token,
     sync_repo,
+    transfer_repo,
     view_job_logs,
     view_repo,
     view_run,
@@ -71,6 +72,14 @@ REPO_FORK_SCHEMA = CommandSchema(
     name="repo-fork",
     fields=(
         CommandField("source", prompt="source repository (owner/name)", required=True),
+        CommandField("owner", prompt="target GitHub owner or organization", required=True),
+    ),
+)
+
+REPO_TRANSFER_SCHEMA = CommandSchema(
+    name="repo-transfer",
+    fields=(
+        CommandField("repo", prompt="source repository (owner/name)", required=True),
         CommandField("owner", prompt="target GitHub owner or organization", required=True),
     ),
 )
@@ -558,6 +567,76 @@ def repo_fork(source_arg, source, owner, org, name, fork_name, default_branch_on
     if payload.get("html_url"):
         click.echo(payload["html_url"])
 
+
+@repo_group.command(name="transfer")
+@click.argument("repo_arg", required=False, metavar="REPOSITORY")
+@click.option(
+    "-R", "--repo", "repo_option", default=None, help="Source repository in owner/name form."
+)
+@click.option("--owner", required=False, help="Target GitHub owner or organization.")
+@click.option("--org", "org", required=False, help="Target GitHub organization. Alias for --owner.")
+@click.option(
+    "--team-id",
+    "team_ids",
+    multiple=True,
+    type=int,
+    help="Target organization team id to grant access. Repeatable.",
+)
+@click.option(
+    "--dry-run", is_flag=True, help="Validate and print the transfer plan without transferring."
+)
+@click.option(
+    "--accept-transfer-consequences",
+    is_flag=True,
+    help="Required unless --dry-run; acknowledges repository ownership transfer consequences.",
+)
+@click.option(
+    "--json", "json_fields", metavar="FIELDS", default=None, help="Output JSON with specified fields."
+)
+@click.option("--json-output", is_flag=True, help="Output full JSON payload.")
+@click.option("--token", default=None, help="GitHub token.")
+@add_interactive_option
+def repo_transfer(
+    repo_arg,
+    repo_option,
+    owner,
+    org,
+    team_ids,
+    dry_run,
+    accept_transfer_consequences,
+    json_fields,
+    json_output,
+    token,
+    interactive,
+):
+    """Transfer a repository to another GitHub owner or organization."""
+    repo = _resolve_alias_value(repo_arg, repo_option, "REPOSITORY", "--repo")
+    resolved_owner = _resolve_alias_value(owner, org, "--owner", "--org")
+    inputs = resolve_command_inputs(
+        schema=REPO_TRANSFER_SCHEMA,
+        provided={"repo": repo, "owner": resolved_owner},
+        interactive=interactive,
+        usage=(
+            "Usage: chatgh repo transfer [OWNER/REPO] --owner TEXT [--dry-run] "
+            "[--accept-transfer-consequences] [-i|-I]"
+        ),
+        prompt_runtime_override=TEXT_PROMPT_RUNTIME,
+        interactive_resolver_override=resolve_cli_interactive_mode,
+    )
+    payload = transfer_repo(
+        inputs["repo"],
+        inputs["owner"],
+        list(team_ids),
+        dry_run,
+        accept_transfer_consequences,
+        token,
+    )
+    if echo_json_if_requested(payload, json_fields, json_output):
+        return
+    prefix = "dry-run" if payload.get("dry_run") else "transferred"
+    click.echo(f"{prefix}: {payload['source']} -> {payload['target']}")
+    if payload.get("html_url"):
+        click.echo(payload["html_url"])
 
 
 @run_group.command(name="list")

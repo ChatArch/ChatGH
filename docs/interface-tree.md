@@ -25,6 +25,7 @@ chatgh
 │   ├── list
 │   ├── create
 │   ├── fork
+│   ├── transfer
 │   ├── protection
 │   ├── view
 │   ├── clone
@@ -91,6 +92,7 @@ Confirmed target domains:
 - `status`
 - `webhook`
 - `app`
+- `pages`
 - `agent-task` / `agent` / `agents`
 - `skill` / `skills`
 
@@ -104,11 +106,12 @@ ChatGH-specific custom commands stay:
 
 - `set-token`: store a GitHub token for the current repository in repo-local git config, optionally saving it to ChatEnv.
 - `repo-perms`: resolve the current token, read repository permissions, and derive ChatGH capabilities.
-- `repo list/view/create/edit/fork/clone/sync/protection`: cover repository inventory, mutation, local checkout, fork creation, and governance inspection.
+- `repo list/view/create/edit/fork/transfer/clone/sync/protection`: cover repository inventory, mutation, ownership transfer, local checkout, fork creation, and governance inspection.
 - `pr list/create/view/comment/edit/checks/merge/status/diff/close/reopen/review/ready/update-branch`: cover PR lifecycle, review, merge gating, and CI inspection.
 - `project ...`: cover GitHub Projects v2 through ChatGH's Project/item/field command tree, not the official `gh project` flat aliases.
 - `run list/view/logs/watch/rerun/cancel/download`: cover GitHub Actions workflow run operations and job logs.
 - `invitation list/accept/decline`: cover authenticated user repository invitations.
+- Future `repo pages` / `pages`: inspect and configure GitHub Pages source (`branch`/`path`) and build mode. Current docs deploys only rely on repository workflow files plus the repository's existing Pages setting.
 - Future `webhook`: create/list/test/delete repository or organization webhooks, plus verify/normalize webhook payloads.
 - Future `app`: manage GitHub App installation token flows and app installation inventory.
 - Future `agent-task`: align naming with official `gh agent-task`, while keeping ChatGH implementation provider-neutral unless explicitly integrating GitHub Copilot/CAPI.
@@ -124,6 +127,7 @@ chatgh repo-perms             -> chatgh.github.commands.get_repo_permissions / d
 chatgh repo list              -> chatgh.github.commands.list_repos
 chatgh repo create            -> chatgh.github.commands.create_repo
 chatgh repo fork              -> chatgh.github.commands.fork_repo
+chatgh repo transfer          -> chatgh.github.commands.transfer_repo
 chatgh repo protection        -> chatgh.github.commands.inspect_repo_protection / list_repo_protections
 chatgh repo view              -> chatgh.github.commands.view_repo
 chatgh repo clone             -> chatgh.github.commands.clone_repo

@@ -65,9 +65,11 @@ Mapping:
 
 - `repo view [REPO] [-R/--repo REPO] [--json-output]`
 - `repo fork [REPO] --org/--owner ... --fork-name/--name ...`
+- `repo transfer [REPO] --owner/--org ... --dry-run`, with explicit consequence acknowledgement for real transfers
 - `repo clone REPO [DIR]`, without destructive checkout/remote behavior by default
 - `repo sync [REPO]`, after clarifying API/git boundaries
 - Small `repo edit` subset: description/homepage/default-branch/visibility
+- Future `repo pages view/configure`: inspect/configure GitHub Pages source branch/path separately from docs workflow file edits
 
 ### Phase 2: PR lifecycle
 
@@ -107,6 +109,7 @@ Following this design, the current `repo fork` PR now also lands the remaining c
 | `chatgh repo sync [REPOSITORY]` | `sync_repo(repo, branch, remote, ff_only, token)` | Implemented | Explicit `git fetch` + `git pull --ff-only`; defaults to current checkout/current branch. |
 | `chatgh repo edit [REPOSITORY]` | `edit_repo(repo, description, homepage, default_branch, visibility, accept_visibility_change_consequences, token)` | Implemented | Small safe subset: description/homepage/default-branch/visibility; visibility changes require explicit consequence acknowledgement. |
 | `chatgh repo fork ...` | `fork_repo(...)` | Implemented | Supports gh-like positional repository, `--org`, `--fork-name`, and ChatGH `--if-exists use`. |
+| `chatgh repo transfer ...` | `transfer_repo(repo, owner, team_ids, dry_run, accept_transfer_consequences, token)` | Implemented | Uses GitHub Repository Transfer API; supports `--dry-run` and requires explicit consequence acknowledgement before remote mutation. |
 
 ### PR
 

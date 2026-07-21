@@ -65,9 +65,11 @@ chatgh repo fork --source Wei-Shaw/claude-relay-service --owner ChatArch --name 
 
 - `repo view [REPO] [-R/--repo REPO] [--json-output]`
 - `repo fork [REPO] --org/--owner ... --fork-name/--name ...`
+- `repo transfer [REPO] --owner/--org ... --dry-run`，真实迁移必须显式确认后果
 - `repo clone REPO [DIR]`，默认不破坏已有 checkout/remote
 - `repo sync [REPO]`，先明确 API/git 边界
 - `repo edit` 小子集：description/homepage/default-branch/visibility
+- 后续 `repo pages view/configure`：读取/设置 GitHub Pages source branch/path，与 docs workflow 文件修改分开处理
 
 ### Phase 2：PR lifecycle
 
@@ -118,6 +120,7 @@ ChatGH 的 agent/bot 方向必须遵守：
 | `chatgh repo sync [REPOSITORY]` | `sync_repo(repo, branch, remote, ff_only, token)` | 已实现 | 显式 `git fetch` + `git pull --ff-only`，默认当前 checkout/current branch。 |
 | `chatgh repo edit [REPOSITORY]` | `edit_repo(repo, description, homepage, default_branch, visibility, accept_visibility_change_consequences, token)` | 已实现 | 小子集：description/homepage/default-branch/visibility；visibility 必须显式确认后果。 |
 | `chatgh repo fork ...` | `fork_repo(...)` | 已实现 | 已支持 gh-like 位置参数、`--org`、`--fork-name` 和 ChatGH `--if-exists use`。 |
+| `chatgh repo transfer ...` | `transfer_repo(repo, owner, team_ids, dry_run, accept_transfer_consequences, token)` | 已实现 | 调 GitHub Repository Transfer API；支持 `--dry-run`，真实远端迁移必须显式确认后果。 |
 
 ### PR
 
