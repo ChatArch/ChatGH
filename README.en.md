@@ -53,9 +53,10 @@ When writing a repo-local HTTPS auth header, the path is normalized to `https://
 Docs navigation:
 
 - Docs site: `https://arch.gh.wzhecnu.cn/ChatGH/`, maintained in `mkdocs.yml` as `site_url`.
-- `docs/interface-tree.md`: current CLI tree, target direction, responsibilities, and CLI -> Python API mapping, aligned with ChatTea's interface-tree style.
+- Docs language: use `mkdocs-static-i18n` suffix mode. Chinese is the default site; English mirror files use the `.en.md` suffix and are generated under `/en/`. Do not split Chinese and English into separate nav trees.
+- `docs/interface-tree.md`: current CLI tree, target direction, responsibilities, and CLI -> Python API mapping, aligned with the ChatTea / ChatZulip interface-tree style.
 - `docs/gh-interface-alignment.md`: official `gh` alignment rules, layering, and test requirements.
-- `docs/agent-definition.md` / `docs/agent-definition.en.md`: ChatGH agent/robot definition, manifest, flow, permissions, and runtime boundaries.
+- `docs/agent-definition.md`: ChatGH agent/robot definition, manifest, flow, permissions, and runtime boundaries.
 - `docs/agent-task-bot-alignment.md`: research on official `gh agent-task`, `gh skill`, GitHub Apps, webhooks, bot patterns, and ChatGH's agent-task/bot direction.
 
 ```bash

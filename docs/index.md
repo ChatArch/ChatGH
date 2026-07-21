@@ -53,9 +53,10 @@ chatenv cat -t gh
 文档导航：
 
 - 文档站点：`https://arch.gh.wzhecnu.cn/ChatGH/`，在 `mkdocs.yml` 的 `site_url` 中维护。
-- `docs/interface-tree.md`：当前 CLI 树、目标方向、职责和 CLI -> Python API 映射，按 ChatTea 的 interface-tree 风格维护。
+- 文档语言：使用 `mkdocs-static-i18n` 的 suffix 模式；中文是默认站点，英文镜像文件使用 `.en.md` 后缀并生成到 `/en/`，不要在 `nav` 里把中英文拆成两套入口。
+- `docs/interface-tree.md`：当前 CLI 树、目标方向、职责和 CLI -> Python API 映射，按 ChatTea / ChatZulip 的 interface-tree 风格维护。
 - `docs/gh-interface-alignment.md`：官方 `gh` 对齐原则、分层和测试要求。
-- `docs/agent-definition.md` / `docs/agent-definition.en.md`：ChatGH 机器人/Agent 的定义、manifest、flow、权限和运行时边界。
+- `docs/agent-definition.md`：ChatGH 机器人/Agent 定义、manifest、flow、权限和 runtime 边界。
 - `docs/agent-task-bot-alignment.md`：官方 `gh agent-task` / `gh skill` / GitHub Apps / webhooks / bot 探索，以及 ChatGH 的 agent-task/bot 方向。
 
 ```bash
