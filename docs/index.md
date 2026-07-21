@@ -50,6 +50,14 @@ chatenv cat -t gh
 
 ## CLI 入口
 
+文档导航：
+
+- 文档站点：`https://arch.gh.wzhecnu.cn/ChatGH/`，在 `mkdocs.yml` 的 `site_url` 中维护。
+- `docs/interface-tree.md`：当前 CLI 树、目标方向、职责和 CLI -> Python API 映射，按 ChatTea 的 interface-tree 风格维护。
+- `docs/gh-interface-alignment.md`：官方 `gh` 对齐原则、分层和测试要求。
+- `docs/agent-definition.md` / `docs/agent-definition.en.md`：ChatGH 机器人/Agent 的定义、manifest、flow、权限和运行时边界。
+- `docs/agent-task-bot-alignment.md`：官方 `gh agent-task` / `gh skill` / GitHub Apps / webhooks / bot 探索，以及 ChatGH 的 agent-task/bot 方向。
+
 ```bash
 chatgh --help
 chatgh pr --help
@@ -299,7 +307,7 @@ checks = client.get_pr_checks("octocat/Hello-World", 1)
 
 ## 开发参考
 
-扩展 `chatgh` 时应先看项目内接口规范：`docs/gh-interface-alignment.md`。常见 GitHub 能力要先参考官方 GitHub CLI `gh` 的命令形态和帮助文本；如果官方已有能力，优先兼容其命名、位置参数和常见 alias，再结合 ChatGH 的鉴权、JSON、安全门和 Python API 落地；如果官方没有，才设计 ChatGH-native surface。官方 `gh` 只作接口参考，不作为运行依赖、CI/ops fallback 或真实操作路径。
+扩展 `chatgh` 时应先看项目内接口规范：`docs/interface-tree.md`、`docs/gh-interface-alignment.md`、`docs/agent-definition.md` 和 `docs/agent-task-bot-alignment.md`。常见 GitHub 能力要先参考官方 GitHub CLI `gh` 的命令形态和帮助文本；如果官方已有能力，优先兼容其命名、位置参数和常见 alias，再结合 ChatGH 的鉴权、JSON、安全门和 Python API 落地；如果官方没有，才设计 ChatGH-native surface。官方 `gh` 只作接口参考，不作为运行依赖、CI/ops fallback 或真实操作路径。Agent/bot 相关能力还必须明确区分 GitHub-hosted Copilot/CAPI agent task 与 ChatGH self-hosted event-to-runner bridge。
 
 扩展时也要查官方 API 文档：
 
