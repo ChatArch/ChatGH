@@ -1,14 +1,12 @@
-# Changelog
-
-All notable changes to this project will be documented in this file.
+# 更新日志
 
 本项目按日期记录更新；正式发版信息也维护在本文件。
 
 ## 2026-07-19
 - 新增 `chatgh repo transfer`：封装 GitHub Repository Transfer API，把仓库所有权迁移到目标 user/org；支持 `--dry-run` 先检查 source 权限与目标同名仓库，真正执行必须显式传 `--accept-transfer-consequences`，并支持转移到组织时重复传 `--team-id`；同步校对 CLI 树和官方 `gh` 对齐文档，并记录 GitHub Pages source 配置仍是未来 `repo pages` 能力缺口。
-- 补充 ChatGH 文档规范：新增 `docs/interface-tree.md`，按 ChatTea 风格记录当前 CLI 树、目标方向、职责、CLI -> Python API 映射和测试契约；同步 `mkdocs.yml` 与 package metadata 到共享文档域名 `https://arch.gh.wzhecnu.cn/ChatGH/`，并让 Preview Docs workflow 从 `site_url` 生成 `/dev/` 预览链接。
-- 新增 `docs/agent-definition.md` / `docs/agent-definition.en.md`，定义 ChatGH 机器人/Agent 的身份、manifest、触发 flow、权限、工具、运行时、记忆、审批和审计模型。
-- 新增 `docs/agent-task-bot-alignment.md`，调研官方 `gh agent-task` / `gh skill` / GitHub Apps / webhooks / bot 相关接口，并明确 ChatGH 后续 agent-task/bot surface 需要区分 GitHub-hosted Copilot/CAPI 与 self-hosted event-to-runner bridge；补充官方 `gh` 可完成的常见 bot 创建/评论/PR/status/webhook 操作清单，以及 Julia Registrator / TagBot 作为 repository-native bot 的实证案例。
+- 补充 ChatGH 文档规范：新增 `docs/interface-tree.md`，按 ChatTea 风格记录当前 CLI 树、目标方向、职责、CLI -> Python API 映射和测试契约；同步 `mkdocs.yml` 与 package metadata 到共享文档域名 `https://arch.gh.wzhecnu.cn/ChatGH/`，启用 `mkdocs-static-i18n` suffix 模式生成语言切换，并让 Preview Docs workflow 对齐 ChatTea 的 `https://arch.gh.wzhecnu.cn/<Repo>/dev/` 预览链接。
+- 新增 `docs/agent-definition.md` / `docs/agent-definition.en.md`，定义 ChatGH 机器人的身份、manifest、触发流程、权限、工具、运行时、记忆、审批和审计模型。
+- 新增 `docs/agent-task-bot-alignment.md`，调研官方 `gh agent-task`、`gh skill`、GitHub Apps、webhook 和机器人相关接口，并明确 ChatGH 后续代理任务和机器人命令面需要区分 GitHub 托管 Copilot / CAPI 与自托管事件到运行器桥接；补充官方 `gh` 可完成的常见机器人创建、评论、PR、status 和 webhook 操作清单，以及 Julia Registrator / TagBot 作为仓库原生机器人的实证案例。
 
 ## 2026-07-16
 - 准备 `0.2.9` 补丁版本：为常用命令新增官方 `gh --json FIELDS` 风格的字段投影 JSON 输出，同时保留 ChatGH 既有 `--json-output` 完整 payload 输出。
@@ -55,10 +53,10 @@ All notable changes to this project will be documented in this file.
 - 发版记录约定收口为只维护 `CHANGELOG.md`，不再要求额外发版记录文件。
 
 ## 2026-05-14
-- Migrated GitHub PR, CI checks, Actions run/job logs, repository permission, and token configuration helpers into `chatgh`.
-- Added `chatgh pr`, `chatgh run`, `chatgh repo-perms`, and `chatgh set-token` CLI entry points.
-- Added `chatgh.github` Python API modules and `GitHubClient` wrapper.
-- Added mock CLI and code tests for command registration, interactive missing-parameter handling, JSON/output rendering, token/credential parsing, PR checks polling, merge blockers, and client wrapper behavior.
-- Replaced the template `hello` command as the primary CLI surface with GitHub commands.
-- Documented `chatgh` as the recommended entry point; `chattool gh` compatibility is handled in ChatTool as a thin wrapper.
-- Initial ChatArch package scaffold.
+- 将 GitHub PR、CI 检查、Actions 运行和作业日志、仓库权限、令牌配置辅助能力迁移到 `chatgh`。
+- 新增 `chatgh pr`、`chatgh run`、`chatgh repo-perms` 和 `chatgh set-token` CLI 入口。
+- 新增 `chatgh.github` Python API 模块和 `GitHubClient` 封装。
+- 新增 mock CLI 与代码测试，覆盖命令注册、交互式缺参补问、JSON / 人类可读输出、令牌和凭据解析、PR checks 轮询、合并阻断信息和 client wrapper 行为。
+- 将模板 `hello` 命令替换为以 GitHub 命令为主的公开命令面。
+- 文档明确推荐使用 `chatgh`；`chattool gh` 兼容由 ChatTool 侧薄封装处理。
+- 初始化 ChatArch package scaffold。

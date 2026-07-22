@@ -53,10 +53,11 @@ When writing a repo-local HTTPS auth header, the path is normalized to `https://
 Docs navigation:
 
 - Docs site: `https://arch.gh.wzhecnu.cn/ChatGH/`, maintained in `mkdocs.yml` as `site_url`.
-- `docs/interface-tree.md`: current CLI tree, target direction, responsibilities, and CLI -> Python API mapping, aligned with ChatTea's interface-tree style.
+- Docs language: use `mkdocs-static-i18n` suffix mode. Chinese is the default site; English mirror files use the `.en.md` suffix and are generated under `/en/`. Do not split Chinese and English into separate nav trees.
+- `docs/interface-tree.en.md`: current CLI tree, target direction, responsibilities, and CLI -> Python API mapping, aligned with the ChatTea / ChatZulip interface-tree style.
 - `docs/gh-interface-alignment.md`: official `gh` alignment rules, layering, and test requirements.
-- `docs/agent-definition.md` / `docs/agent-definition.en.md`: ChatGH agent/robot definition, manifest, flow, permissions, and runtime boundaries.
-- `docs/agent-task-bot-alignment.md`: research on official `gh agent-task`, `gh skill`, GitHub Apps, webhooks, bot patterns, and ChatGH's agent-task/bot direction.
+- `docs/agent-definition.en.md`: ChatGH agent/robot definition, manifest, flow, permissions, and runtime boundaries.
+- `docs/agent-task-bot-alignment.en.md`: research on official `gh agent-task`, `gh skill`, GitHub Apps, webhooks, bot patterns, and ChatGH's agent-task/bot direction.
 
 ```bash
 chatgh --help
@@ -300,7 +301,7 @@ The long-term `chattool gh` implementation has moved to `chatgh`. ChatTool may k
 
 ## Development Reference
 
-When extending `chatgh`, start from the project interface guides: `docs/interface-tree.md`, `docs/gh-interface-alignment.en.md`, `docs/agent-definition.en.md`, and `docs/agent-task-bot-alignment.md`. For common GitHub capabilities, first inspect the official GitHub CLI `gh` command shape and help text. If `gh` already has the capability, prefer compatible names, positional arguments, and common aliases, then implement it through ChatGH's own auth, JSON, safety gates, and Python API. If `gh` does not have it, design a ChatGH-native surface. Official `gh` is reference-only; it is not a runtime dependency, CI/ops fallback, or real operation path. Agent/bot work must clearly distinguish GitHub-hosted Copilot/CAPI agent tasks from ChatGH self-hosted event-to-runner bridges.
+When extending `chatgh`, start from the project interface guides: `docs/interface-tree.en.md`, `docs/gh-interface-alignment.en.md`, `docs/agent-definition.en.md`, and `docs/agent-task-bot-alignment.en.md`. For common GitHub capabilities, first inspect the official GitHub CLI `gh` command shape and help text. If `gh` already has the capability, prefer compatible names, positional arguments, and common aliases, then implement it through ChatGH's own auth, JSON, safety gates, and Python API. If `gh` does not have it, design a ChatGH-native surface. Official `gh` is reference-only; it is not a runtime dependency, CI/ops fallback, or real operation path. Agent/bot work must clearly distinguish GitHub-hosted Copilot/CAPI agent tasks from ChatGH self-hosted event-to-runner bridges.
 
 Also consult official API documentation:
 

@@ -306,7 +306,7 @@ chatgh agent run logs
 chatgh agent approve
 ```
 
-## Minimal MVP
+## Minimal Usable Capability
 
 ```text
 GitHub issue_comment webhook
@@ -316,7 +316,7 @@ GitHub issue_comment webhook
   -> issue comment final response
 ```
 
-Required first pieces:
+The minimal usable loop requires:
 
 - webhook signature verification.
 - event normalization.
@@ -325,7 +325,7 @@ Required first pieces:
 - local runner contract.
 - audit log.
 
-Not required in the first version:
+Outside the minimal loop:
 
 - full GitHub App UI.
 - marketplace.

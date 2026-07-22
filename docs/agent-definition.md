@@ -1,4 +1,4 @@
-# ChatGH 机器人 / Agent 定义
+# ChatGH 机器人定义
 
 本文定义 ChatGH 里“机器人”的产品语义、配置边界、运行流程和 GitHub 接口映射。目标是让后续 `chatgh agent ...` / `chatgh agent-task ...` 设计有一个稳定词汇表，而不是把 GitHub App、bot user、GitHub Actions、Copilot agent task、本地 CLI agent 混成一个概念。
 
@@ -16,37 +16,37 @@ ChatGH 机器人是一个安装在 GitHub 组织、仓库或线程中的可审�
 
 | 术语 | ChatGH 语义 | 例子 |
 |---|---|---|
-| Agent / 机器人 | 可被安装、触发、授权、审计的工作成员 | `@chatgh-reviewer`、`release-manager` |
-| Bot identity | GitHub 上显示的执行身份 | GitHub App `chatgh[bot]`、普通 bot user |
-| Agent task | 一次被分配的工作单元 | “修复 issue #123 的 failing test” |
-| Run / Session | 一次实际执行过程 | runner 日志、tool calls、cost、状态 |
-| Trigger | 触发任务的事件或命令 | `@chatgh-agent fix this`、`workflow_dispatch` |
-| Skill | 可复用能力包 | code review skill、release notes skill |
-| Tool | 可调用外部能力 | GitHub API、shell、browser、MCP server |
-| Policy | 权限和安全规则 | 只读、可评论、可开 PR、merge 前需人工确认 |
-| Artifact | 交付物 | PR、comment、release、patch、summary、log |
+| 机器人 | 可安装、可触发、可授权、可审计的工作成员 | `@chatgh-reviewer`、`release-manager` |
+| 机器人身份 | GitHub 上显示的执行身份 | GitHub App `chatgh[bot]`、普通机器人用户 |
+| 代理任务 | 一次被分配的工作单元 | “修复 issue #123 的失败测试” |
+| 运行 / 会话 | 一次实际执行过程 | 运行器日志、工具调用、成本、状态 |
+| 触发器 | 触发任务的事件或命令 | `@chatgh-agent fix this`、`workflow_dispatch` |
+| 技能 | 可复用能力包 | 代码评审技能、发布说明技能 |
+| 工具 | 可调用的外部能力 | GitHub API、shell、browser、MCP server |
+| 策略 | 权限与安全策略 | 只读、可评论、可开 PR、合并前审批 |
+| 产物 | 交付物 | PR、评论、release、patch、summary、log |
 
-## 为什么不用单一“Bot”概念
+## 为什么不用单一“机器人”概念
 
 GitHub 生态里“bot”经常指不同层：
 
-1. 普通 bot user：一个 GitHub 用户 + PAT。
+1. 普通机器人用户：一个 GitHub 用户 + PAT。
 2. GitHub App：安装在 org/repo 上，有 webhook、权限和 `xxx[bot]` 身份。
-3. GitHub Actions bot：`github-actions[bot]` 在 workflow 中执行。
-4. GitHub-hosted Copilot agent：官方 `gh agent-task` 背后的 hosted coding agent。
-5. 自托管 CLI agent：Codex、Hermes、OpenHands、Claude Code 等本地或自托管 runner。
+3. GitHub Actions 机器人：`github-actions[bot]` 在 workflow 中执行。
+4. GitHub 托管 Copilot 代理：官方 `gh agent-task` 背后的托管编码代理。
+5. 自托管 CLI 代理：Codex、Hermes、OpenHands、Claude Code 等本地或自托管运行器。
 
 ChatGH 文档里应使用更精确的词：
 
 - “GitHub App” 指安装和 webhook/installation token 模型。
-- “bot user” 指普通 GitHub 用户 + PAT。
+- “bot user” 指普通 GitHub 用户和个人访问令牌。
 - “agent task” 指任务对象。
-- “runner” 指真正执行任务的进程或服务。
+- “运行器” 指真正执行任务的进程或服务。
 - “agent” 指面向用户的机器人工作成员。
 
-## 最小 Agent Manifest
+## 最小机器人配置清单
 
-ChatGH 后续可以支持 `.chatgh/agents/<name>.yaml` 作为自托管 agent 定义。这个文件不同于官方 `.github/agents/<name>.md`：后者是 GitHub-hosted Copilot agent 的 custom agent 入口；前者是 ChatGH self-hosted event-to-runner bridge 的配置草案。
+ChatGH 后续可以支持 `.chatgh/agents/<name>.yaml` 作为自托管机器人定义。这个文件不同于官方 `.github/agents/<name>.md`：后者是 GitHub 托管 Copilot 代理的自定义代理入口；前者是 ChatGH 自托管事件到运行器桥接的配置草案。
 
 ```yaml
 apiVersion: chatgh.chatarch.org/v1alpha1
@@ -264,7 +264,7 @@ mcp.github.search
 - 删除、归档、改 visibility。
 - 读取或写入 secrets。
 
-## Agent 生命周期
+## 机器人生命周期
 
 ```text
 draft
@@ -286,15 +286,15 @@ draft
 - `enabled`: 可以响应事件。
 - `triggered`: 收到 webhook 或命令。
 - `authorized`: 通过 actor、repo、policy 检查。
-- `queued`: 已创建任务，等待 runner。
-- `running`: runner 正在执行。
+- `queued`: 已创建任务，等待运行器。
+- `running`: 运行器正在执行。
 - `waiting_approval`: 等人类批准高风险动作。
 - `completed`: 已交付结果。
 - `failed`: 执行失败，已写回错误或日志。
 - `cancelled`: 人类或系统取消。
 - `archived`: 历史任务归档。
 
-## GitHub 原生 Flow
+## GitHub 原生流程
 
 ### 1. 安装
 
@@ -320,39 +320,39 @@ User comments: @chatgh-reviewer review this PR
 ### 3. 授权
 
 ```text
-Check actor permission
-Check repo allowlist
-Check thread type
-Check command allowlist
-Check tool policy
-Create audit record
+检查 actor 权限
+检查仓库 allowlist
+检查线程类型
+检查命令 allowlist
+检查工具策略
+创建审计记录
 ```
 
 ### 4. 执行
 
 ```text
-Build task context
-Resolve installation token or bot token
-Prepare checkout/sandbox
-Invoke runner
-Stream progress as comments/status/checks
+构建任务上下文
+解析 installation token 或 bot token
+准备 checkout / sandbox
+调用运行器
+用评论、status 或 check 流式回传进度
 ```
 
 ### 5. 交付
 
 ```text
-Post final comment
-Create/update PR if needed
-Set commit status or check run
-Attach artifacts/logs
-Record final audit event
+发布最终评论
+按需创建或更新 PR
+设置 commit status 或 check run
+附加产物和日志
+记录最终审计事件
 ```
 
 ## 三种典型机器人
 
-### 代码 Review Agent
+### 代码评审机器人
 
-职责：读 PR diff 和 CI，发 review comment。
+职责：读 PR diff 和 CI，发评审评论。
 
 默认权限：
 
@@ -372,7 +372,7 @@ release
 repo settings
 ```
 
-### 修复 Issue Agent
+### 问题修复机器人
 
 职责：根据 issue 创建分支、修复、测试、开 PR。
 
@@ -387,7 +387,7 @@ statuses: write
 
 高风险点：push、修改 workflow、触发外部服务。
 
-### Registry / Release Agent
+### 注册与发布机器人
 
 职责：类似 Julia Registrator / TagBot。
 
@@ -403,9 +403,9 @@ Flow：
 
 这类 agent 证明 GitHub issue/commit comment 本身就可以成为任务入口，不需要先做新 UI。
 
-## 与官方 GitHub Agent 的关系
+## 与官方 GitHub 代理的关系
 
-官方 `gh agent-task` 是 GitHub-hosted Copilot agent task。它使用 GitHub/Copilot 后端，支持：
+官方 `gh agent-task` 是 GitHub 托管 Copilot 代理任务。它使用 GitHub/Copilot 后端，支持：
 
 ```bash
 gh agent-task create "fix the failing tests" --repo OWNER/REPO --base main
@@ -415,8 +415,8 @@ gh agent-task view SESSION_ID
 
 ChatGH 自托管 agent 不是这个东西。ChatGH 应对齐命名和用户心智，但在帮助文案和文档中明确区分：
 
-- GitHub-hosted: `gh agent-task` / Copilot / CAPI。
-- ChatGH self-hosted: webhook event -> local/remote runner -> GitHub write-back。
+- GitHub 托管: `gh agent-task` / Copilot / CAPI。
+- ChatGH 自托管：webhook 事件 -> 本地或远端运行器 -> 写回 GitHub。
 
 ## ChatGH 命令方向
 
@@ -444,38 +444,38 @@ chatgh agent run logs
 chatgh agent approve
 ```
 
-## 最小 MVP
+## 最小可用能力
 
 ```text
 GitHub issue_comment webhook
   -> chatgh agent event normalize
   -> permission check
-  -> local runner command
-  -> issue comment final response
+  -> 本地运行器命令
+  -> issue 评论最终回复
 ```
 
-这个 MVP 只需要：
+最小可用闭环需要：
 
 - webhook secret verification。
 - event normalization。
-- mention/slash command parser。
-- comment write-back。
-- local runner contract。
-- audit log。
+- mention / slash command 解析器。
+- comment 写回。
+- 本地运行器契约。
+- 审计日志。
 
-不需要一开始实现：
+不属于最小闭环：
 
-- full GitHub App UI。
+- 完整 GitHub App UI。
 - marketplace。
-- multi-agent scheduling。
-- hosted Copilot CAPI。
-- cross-provider Gitea support。
+- 多机器人调度。
+- 托管 Copilot CAPI。
+- 跨提供方 Gitea 支持。
 
 ## 设计原则
 
 - 显式触发优先，不默认 ambient monitoring。
 - 默认只读，写权限逐步打开。
 - 每个 agent 都有 owner 和 scope。
-- 每个 run 都有 actor、trigger、repo、commit、tool calls 和 final artifact。
+- 每次运行都记录 actor、trigger、repo、commit、工具调用和最终产物。
 - 所有危险动作必须可解释、可审批、可撤销或可追踪。
-- 文档和命令要同时说明“GitHub-hosted”和“self-hosted”的区别。
+- 文档和命令要同时说明“GitHub 托管”和“自托管”的区别。

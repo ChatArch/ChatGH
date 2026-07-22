@@ -1,8 +1,8 @@
-# ChatGH Interface Tree
+# ChatGH 接口树
 
-ChatGH follows a GitHub-familiar resource model for GitHub APIs, while keeping ChatGH-specific credential, JSON, safety, and Python API contracts. The current package is GitHub-only; Gitea/Forgejo exploration belongs in ChatTea or a future provider-neutral layer unless a ChatGH command has an explicit GitHub-compatible purpose.
+ChatGH 按 GitHub 用户熟悉的资源模型组织接口，同时保留 ChatGH 自己的凭据解析、JSON 输出、安全门和 Python API 契约。当前包只面向 GitHub；Gitea / Forgejo 的探索应放在 ChatTea 或未来的跨平台抽象层，除非某个 ChatGH 命令明确是 GitHub 兼容能力。
 
-## Current CLI Surface
+## 当前命令面
 
 ```text
 chatgh
@@ -69,16 +69,16 @@ chatgh
 └── set-token
 ```
 
-## Target CLI Direction
+## 目标命令方向
 
-Future API work should grow only when it is backed by one of these evidence sources:
+后续新增接口必须先有证据来源，不能只因为名字看起来合理就加占位命令。可接受的证据来源包括：
 
-1. An official `gh` command shape or help page.
-2. A GitHub REST or GraphQL endpoint.
-3. A GitHub App/webhook model documented by GitHub.
-4. An explicitly designed ChatGH local capability, such as credential setup, webhook payload normalization, or a runner bridge.
+1. 官方 `gh` 命令形态或帮助页。
+2. GitHub REST 或 GraphQL 接口。
+3. GitHub 官方文档里的 GitHub App 或 webhook 模型。
+4. 明确设计过的 ChatGH 本地能力，例如凭据配置、webhook 载荷标准化或运行器桥接。
 
-Confirmed target domains:
+已确认可发展的资源域：
 
 - `repo`
 - `issue`
@@ -96,30 +96,30 @@ Confirmed target domains:
 - `agent-task` / `agent` / `agents`
 - `skill` / `skills`
 
-ChatGH-specific custom commands stay:
+保留 ChatGH 自有命令：
 
-- `set-token`: configure repo-local HTTPS auth header and optionally ChatEnv `GITHUB_ACCESS_TOKEN`.
-- `repo-perms`: inspect token permissions and derived ChatGH capabilities.
-- `agent event ...`: future local event-to-runner bridge, if implemented; this should not pretend to be GitHub Copilot's hosted agent runtime.
+- `set-token`：为当前仓库配置仓库本地 HTTPS 授权头，并可选写入 ChatEnv 的 `GITHUB_ACCESS_TOKEN`。
+- `repo-perms`：检查当前令牌权限，并推导 ChatGH 能力。
+- `agent event ...`：未来的本地事件到运行器桥接；如果实现，不能伪装成 GitHub Copilot 的托管代理运行时。
 
-## Responsibilities
+## 职责边界
 
-- `set-token`: store a GitHub token for the current repository in repo-local git config, optionally saving it to ChatEnv.
-- `repo-perms`: resolve the current token, read repository permissions, and derive ChatGH capabilities.
-- `repo list/view/create/edit/fork/transfer/clone/sync/protection`: cover repository inventory, mutation, ownership transfer, local checkout, fork creation, and governance inspection.
-- `pr list/create/view/comment/edit/checks/merge/status/diff/close/reopen/review/ready/update-branch`: cover PR lifecycle, review, merge gating, and CI inspection.
-- `project ...`: cover GitHub Projects v2 through ChatGH's Project/item/field command tree, not the official `gh project` flat aliases.
-- `run list/view/logs/watch/rerun/cancel/download`: cover GitHub Actions workflow run operations and job logs.
-- `invitation list/accept/decline`: cover authenticated user repository invitations.
-- Future `repo pages` / `pages`: inspect and configure GitHub Pages source (`branch`/`path`) and build mode. Current docs deploys only rely on repository workflow files plus the repository's existing Pages setting.
-- Future `webhook`: create/list/test/delete repository or organization webhooks, plus verify/normalize webhook payloads.
-- Future `app`: manage GitHub App installation token flows and app installation inventory.
-- Future `agent-task`: align naming with official `gh agent-task`, while keeping ChatGH implementation provider-neutral unless explicitly integrating GitHub Copilot/CAPI.
-- Future `skill`: align with official `gh skill` and Agent Skills conventions when ChatGH needs to inspect or install repository-published agent skills.
+- `set-token`：把 GitHub 令牌保存到当前仓库的本地 git 配置，并可选保存到 ChatEnv。
+- `repo-perms`：解析当前令牌、读取仓库权限，并推导 ChatGH 能力。
+- `repo list/view/create/edit/fork/transfer/clone/sync/protection`：覆盖仓库清单、仓库变更、所有权迁移、本地检出、fork 创建和治理检查。
+- `pr list/create/view/comment/edit/checks/merge/status/diff/close/reopen/review/ready/update-branch`：覆盖 PR 生命周期、评审、合并门禁和 CI 检查。
+- `project ...`：通过 ChatGH 的 Project / item / field 命令树覆盖 GitHub Projects v2，不沿用官方 `gh project` 的扁平别名。
+- `run list/view/logs/watch/rerun/cancel/download`：覆盖 GitHub Actions 工作流运行、作业日志和产物。
+- `invitation list/accept/decline`：覆盖认证用户收到的仓库邀请。
+- 未来 `repo pages` / `pages`：检查和配置 GitHub Pages 的 source 分支、路径和构建模式。当前文档部署只依赖仓库工作流文件和仓库已有 Pages 设置。
+- 未来 `webhook`：创建、列出、测试、删除仓库或组织 webhook，并验证或标准化 webhook 载荷。
+- 未来 `app`：管理 GitHub App 安装令牌流程和安装清单。
+- 未来 `agent-task`：命名上对齐官方 `gh agent-task`，但除非明确接入 GitHub Copilot / CAPI，否则 ChatGH 实现应保持运行器中立。
+- 未来 `skill`：当 ChatGH 需要检查或安装仓库发布的代理技能时，对齐官方 `gh skill` 和 Agent Skills 约定。
 
-## CLI To Python Function Mapping
+## 命令到 Python 函数映射
 
-Every public CLI command should have an importable Python function or method behind it. Integrations, gateway services, MCP tools, and future agent runtimes should call Python APIs directly instead of shelling out when possible.
+每个公开 CLI 命令背后都应有可导入的 Python 函数或方法。集成服务、网关、MCP 工具和未来代理运行时，在可行时应直接调用 Python API，而不是再 shell 调用 CLI。
 
 ```text
 chatgh set-token              -> chatgh.github.commands.configure_github_https_token / save_github_token_to_env
@@ -160,31 +160,31 @@ chatgh invitation decline     -> chatgh.github.commands.decline_invitation
 chatgh project ...            -> chatgh.github.projects + chatgh.github.project_cli thin wrappers
 ```
 
-## Agent And Bot Direction
+## 机器人方向
 
-See `docs/agent-definition.md` for the ChatGH robot/Agent product definition, manifest shape, lifecycle, GitHub-native flow, permissions, runtime, and bilingual configuration examples. See `docs/agent-task-bot-alignment.md` for the evidence-bound design around official `gh agent-task`, GitHub Copilot agent tasks, `gh skill`, GitHub Apps, webhooks, and self-hosted CLI agent runners.
+ChatGH 机器人的产品定义、manifest 形态、生命周期、GitHub 原生流程、权限、运行时和双语配置示例见 `docs/agent-definition.md`。官方 `gh agent-task`、GitHub Copilot 代理任务、`gh skill`、GitHub Apps、webhook 和自托管 CLI 代理运行器的证据边界见 `docs/agent-task-bot-alignment.md`。
 
-Short version:
+简要结论：
 
-- Official `gh` does not expose `gh bot`.
-- Official `gh` does expose preview `gh agent-task` with aliases `agent-task`, `agent-tasks`, `agent`, and `agents`.
-- Official `gh agent-task` is currently a GitHub Copilot/CAPI workflow, not a generic self-hosted bot runtime.
-- ChatGH should use the official naming as precedent, but its first bot bridge should normalize GitHub webhook events into local CLI agent tasks.
+- 官方 `gh` 没有公开 `gh bot` 命令。
+- 官方 `gh` 有预览版 `gh agent-task`，别名包括 `agent-task`、`agent-tasks`、`agent` 和 `agents`。
+- 官方 `gh agent-task` 当前是 GitHub Copilot / CAPI 工作流，不是通用自托管机器人运行时。
+- ChatGH 应参考官方命名，但第一版机器人桥接应把 GitHub webhook 事件标准化为本地 CLI 代理任务。
 
-## Non-Goals
+## 非目标
 
-- Do not add placeholder commands only because official `gh` or GitHub Docs mention a domain.
-- Do not make official `gh` a runtime dependency or fallback.
-- Do not put token, webhook secret, or GitHub App private key material in examples, logs, or JSON fixtures.
-- Do not implement GitHub Copilot/CAPI behavior unless the command explicitly says it is using GitHub-hosted agent tasks.
-- Do not make repository, project, issue, PR, or run IDs ChatEnv fields; they are request parameters.
+- 不因为官方 `gh` 或 GitHub 文档提到某个领域就添加占位命令。
+- 不把官方 `gh` 作为运行时依赖或 fallback。
+- 不在示例、日志或 JSON fixture 中放置令牌、webhook secret 或 GitHub App private key。
+- 不实现 GitHub Copilot / CAPI 行为，除非命令明确说明它在调用 GitHub 托管代理任务。
+- 不把 repository、project、issue、PR 或 run ID 做成 ChatEnv 字段；这些都应是请求参数。
 
-## Test And CI Contract
+## 测试与 CI 契约
 
-Each implemented domain should have these gates:
+每个已实现资源域都应有这些门禁：
 
-1. Unit tests for API path, method, payload, token resolution, and error handling.
-2. Direct Python function tests for non-trivial command behavior.
-3. CLI smoke tests for help, success, JSON output, and expected failures.
-4. Safety tests for remote mutations and destructive operations.
-5. `python -m pytest -q`, `python -m build`, `mkdocs build --strict`, and `git diff --check` before PR readiness.
+1. API 路径、方法、载荷、令牌解析和错误处理的单元测试。
+2. 覆盖非平凡命令行为的直接 Python 函数测试。
+3. 覆盖帮助、成功路径、JSON 输出和预期失败的 CLI 冒烟测试。
+4. 远端变更和危险操作的安全门测试。
+5. PR 就绪前运行 `python -m pytest -q`、`python -m build`、`mkdocs build --strict` 和 `git diff --check`。

@@ -59,22 +59,37 @@ Mapping:
 - `--fork-name` -> `name`
 - `--json-output` and `--if-exists use` are ChatGH automation extensions
 
-## Batch Migration Priorities
+## Interface Scope
 
-### Phase 1: repository commands
+### Current Repository Commands
 
-- `repo view [REPO] [-R/--repo REPO] [--json-output]`
-- `repo fork [REPO] --org/--owner ... --fork-name/--name ...`
-- `repo transfer [REPO] --owner/--org ... --dry-run`, with explicit consequence acknowledgement for real transfers
-- `repo clone REPO [DIR]`, without destructive checkout/remote behavior by default
-- `repo sync [REPO]`, after clarifying API/git boundaries
-- Small `repo edit` subset: description/homepage/default-branch/visibility
-- Future `repo pages view/configure`: inspect/configure GitHub Pages source branch/path separately from docs workflow file edits
+ChatGH currently provides these repository capabilities:
 
-### Phase 2: PR lifecycle
+- `repo list [--owner OWNER] [--json FIELDS] [--json-output]`: list repositories for a user or organization.
+- `repo create`: create a repository; private is the default and public requires explicit `--public`.
+- `repo view [REPOSITORY] [-R/--repo REPOSITORY]`: read repository metadata.
+- `repo clone REPOSITORY [DIRECTORY]`: safely clone a repository and refuse non-empty target directories.
+- `repo sync [REPOSITORY]`: explicitly run `git fetch` and `git pull --ff-only`.
+- `repo edit [REPOSITORY]`: edit the small description/homepage/default-branch/visibility subset; visibility changes require explicit acknowledgement.
+- `repo fork [REPOSITORY] --org/--owner ... --fork-name/--name ...`: create a fork and support `--if-exists use` for idempotent reuse of matching forks.
+- `repo transfer [REPOSITORY] --owner/--org ...`: transfer repository ownership; real transfers require explicit consequence acknowledgement.
+- `repo protection`: inspect default branch protection, classic branch protection, and readable repository rulesets.
 
-Currently available: `create/list/view/comment/edit/checks/merge`. Next priorities:
+Planned repository capabilities:
 
+- `repo pages` / `pages`: inspect and configure GitHub Pages source branch, path, and build mode. This should stay separate from docs workflow file edits.
+
+### Current PR Commands
+
+ChatGH currently provides these PR capabilities:
+
+- `pr list`
+- `pr create`
+- `pr view`
+- `pr comment`
+- `pr edit`
+- `pr checks`
+- `pr merge`
 - `pr status`
 - `pr diff`
 - `pr close`
@@ -85,55 +100,86 @@ Currently available: `create/list/view/comment/edit/checks/merge`. Next prioriti
 
 `pr merge` must keep safety gates; merge commands are real remote mutations and must never be used as dry-runs.
 
-### Phase 3: Actions runs
+### Current Actions Run Commands
 
-Currently available: `run view` / `run logs`. Next priorities:
+ChatGH currently provides these Actions run capabilities:
 
 - `run list`
+- `run view`
+- `run logs`
 - `run watch`, with mandatory timeout
 - `run rerun`
 - `run cancel`
 - `run download`
 
+### Agent And Bot Alignment Direction
 
-## Implemented Scope In This PR (2026-06-25)
+Official GitHub CLI does not currently have a `gh bot` command group, but the source contains preview `gh agent-task` with aliases `agent-task`, `agent-tasks`, `agent`, and `agents`. Its semantics are GitHub / Copilot hosted agent tasks: create an agent task in a repository, usually produce a PR and an agent session, and inspect sessions and logs through `list/view`. Official CLI also has preview `gh skill` / `gh skills` for installing and managing agent skills from GitHub repositories.
 
-Following this design, the current `repo fork` PR now also lands the remaining common interfaces with the same CLI + Python API layering:
+ChatGH's agent and bot direction must follow these rules:
 
-### Repo
+- Prefer official `gh agent-task` / `gh skill` naming where it matches GitHub user expectations.
+- Clearly distinguish GitHub-hosted Copilot/CAPI agent tasks from ChatGH's self-hosted event-to-runner bridge; one command must not silently mix both runtimes.
+- Agent commands should center on GitHub webhook payload normalization, signature verification, thread comment/status write-back, and CLI runner invocation.
+- Every agent command needs evidence, responsibility, safety boundaries, and CLI-to-Python API mapping in `docs/agent-task-bot-alignment.en.md`.
 
-| Command | Python API | Status | Notes |
-|---|---|---|---|
-| `chatgh repo view [REPOSITORY] [-R/--repo REPOSITORY]` | `view_repo(repo, token)` | Implemented | Reads the repository payload; supports JSON output. |
-| `chatgh repo clone REPOSITORY [DIRECTORY]` | `clone_repo(repo, directory, ssh, token)` | Implemented | Safe clone; refuses to overwrite a non-empty target directory and does not change workspace remotes by default. |
-| `chatgh repo sync [REPOSITORY]` | `sync_repo(repo, branch, remote, ff_only, token)` | Implemented | Explicit `git fetch` + `git pull --ff-only`; defaults to current checkout/current branch. |
-| `chatgh repo edit [REPOSITORY]` | `edit_repo(repo, description, homepage, default_branch, visibility, accept_visibility_change_consequences, token)` | Implemented | Small safe subset: description/homepage/default-branch/visibility; visibility changes require explicit consequence acknowledgement. |
-| `chatgh repo fork ...` | `fork_repo(...)` | Implemented | Supports gh-like positional repository, `--org`, `--fork-name`, and ChatGH `--if-exists use`. |
-| `chatgh repo transfer ...` | `transfer_repo(repo, owner, team_ids, dry_run, accept_transfer_consequences, token)` | Implemented | Uses GitHub Repository Transfer API; supports `--dry-run` and requires explicit consequence acknowledgement before remote mutation. |
+### Out Of Current Scope
+
+These commands are not part of the current public surface unless they first receive dedicated safety design:
+
+- `repo delete`
+- `repo archive`
+- `repo rename`
+- `pr checkout`
+- any command that overwrites local checkouts, remotes, or dirty worktrees by default
+- agent commands that silently call GitHub Copilot/CAPI
+
+## Current CLI To Python API Mapping
+
+### Repository
+
+| Command | Python API | Notes |
+|---|---|---|
+| `chatgh repo list` | `list_repos(owner, limit, sort, direction, token)` | Lists user or organization repositories; supports field projection and full JSON. |
+| `chatgh repo create ...` | `create_repo(...)` | Creates a repository; public repositories require an explicit option. |
+| `chatgh repo view [REPOSITORY] [-R/--repo REPOSITORY]` | `view_repo(repo, token)` | Reads the repository payload; supports JSON output. |
+| `chatgh repo clone REPOSITORY [DIRECTORY]` | `clone_repo(repo, directory, ssh, token)` | Safe clone; refuses to overwrite a non-empty target directory and does not change workspace remotes by default. |
+| `chatgh repo sync [REPOSITORY]` | `sync_repo(repo, branch, remote, ff_only, token)` | Explicit `git fetch` + `git pull --ff-only`; defaults to current checkout/current branch. |
+| `chatgh repo edit [REPOSITORY]` | `edit_repo(repo, description, homepage, default_branch, visibility, accept_visibility_change_consequences, token)` | Small safe subset: description/homepage/default-branch/visibility; visibility changes require explicit consequence acknowledgement. |
+| `chatgh repo fork ...` | `fork_repo(...)` | Supports gh-like positional repository, `--org`, `--fork-name`, and ChatGH `--if-exists use`. |
+| `chatgh repo transfer ...` | `transfer_repo(repo, owner, team_ids, dry_run, accept_transfer_consequences, token)` | Uses GitHub Repository Transfer API; supports `--dry-run` and requires explicit consequence acknowledgement before remote mutation. |
+| `chatgh repo protection ...` | `inspect_repo_protection(...)` / `list_repo_protections(...)` | Inspects branch protection and repository rulesets. |
 
 ### PR
 
-| Command | Python API | Status | Notes |
-|---|---|---|---|
-| `chatgh pr status` | `status_prs(repo, token)` | Implemented | Current implementation summarizes open PRs; authored/review-requested can be expanded later. |
-| `chatgh pr diff NUMBER` | `diff_pr(repo, number, token)` | Implemented | Emits GitHub diff text for review workflows. |
-| `chatgh pr close NUMBER` | `close_pr(repo, number, comment, delete_branch, token)` | Implemented | Closes a remote PR; `--delete-branch` currently records the request but does not delete branches by default. |
-| `chatgh pr reopen NUMBER` | `reopen_pr(repo, number, token)` | Implemented | Reopens a PR. |
-| `chatgh pr review NUMBER` | `review_pr(repo, number, event, body, token)` | Implemented | Supports `--approve`, `--request-changes`, `--comment`, and body/body-file. |
-| `chatgh pr ready NUMBER` | `ready_pr(repo, number, token)` | Implemented | Draft -> ready_for_review. |
-| `chatgh pr update-branch NUMBER` | `update_pr_branch(repo, number, expected_head_sha, token)` | Implemented | Calls GitHub's update-branch API. |
+| Command | Python API | Notes |
+|---|---|---|
+| `chatgh pr list` | `list_prs(repo, state, limit, token)` | Lists PRs. |
+| `chatgh pr create ...` | `create_pr(...)` | Creates a PR; supports body/body-file and JSON output. |
+| `chatgh pr view NUMBER` | `view_pr(repo, number, token)` | Shows PR metadata, branches, mergeability, and timestamps. |
+| `chatgh pr comment NUMBER` | `comment_pr(repo, number, body, token)` | Posts a comment. |
+| `chatgh pr edit NUMBER` | `edit_pr(repo, number, title, body, token)` | Edits title or body. |
+| `chatgh pr checks NUMBER` | `check_pr(repo, number, token)` | Summarizes combined status, check runs, and workflow runs. |
+| `chatgh pr merge NUMBER` | `merge_pr(repo, number, method, check, token)` | Can run safety checks before merge. |
+| `chatgh pr status` | `status_prs(repo, token)` | Summarizes open PRs. |
+| `chatgh pr diff NUMBER` | `diff_pr(repo, number, token)` | Emits GitHub diff text for review workflows. |
+| `chatgh pr close NUMBER` | `close_pr(repo, number, comment, delete_branch, token)` | Closes a remote PR; `--delete-branch` records the request but does not delete branches by default. |
+| `chatgh pr reopen NUMBER` | `reopen_pr(repo, number, token)` | Reopens a PR. |
+| `chatgh pr review NUMBER` | `review_pr(repo, number, event, body, token)` | Supports `--approve`, `--request-changes`, `--comment`, and body/body-file. |
+| `chatgh pr ready NUMBER` | `ready_pr(repo, number, token)` | Draft -> ready_for_review. |
+| `chatgh pr update-branch NUMBER` | `update_pr_branch(repo, number, expected_head_sha, token)` | Calls GitHub's update-branch API. |
 
-### Actions run
+### Actions Run
 
-| Command | Python API | Status | Notes |
-|---|---|---|---|
-| `chatgh run list` | `list_runs(repo, branch, status, event, limit, token)` | Implemented | Supports branch/status/event/limit and JSON output. |
-| `chatgh run watch RUN_ID` | `watch_run(repo, run_id, interval, timeout, token)` | Implemented | Requires timeout to avoid hanging agent runs. |
-| `chatgh run rerun RUN_ID` | `rerun_run(repo, run_id, token)` | Implemented | Remote mutation; outputs run id/status. |
-| `chatgh run cancel RUN_ID` | `cancel_run(repo, run_id, token)` | Implemented | Remote mutation; outputs run id/status. |
-| `chatgh run download RUN_ID` | `download_run_artifacts(repo, run_id, name, output_dir, token)` | Implemented | Downloads and extracts artifacts; output location is explicit through `--dir`/current directory. |
-
-This PR still excludes high-risk commands such as `repo delete/archive/rename` and `pr checkout`; those need separate safety gates and user confirmation before implementation.
+| Command | Python API | Notes |
+|---|---|---|
+| `chatgh run list` | `list_runs(repo, branch, status, event, limit, token)` | Supports branch/status/event/limit and JSON output. |
+| `chatgh run view RUN_ID` | `view_run(repo, run_id, token)` | Shows a workflow run and its jobs. |
+| `chatgh run logs` | `run_logs(repo, job_id, tail, output, token)` | Shows job logs; supports tailing and writing to disk. |
+| `chatgh run watch RUN_ID` | `watch_run(repo, run_id, interval, timeout, token)` | Requires timeout to avoid hanging agent runs. |
+| `chatgh run rerun RUN_ID` | `rerun_run(repo, run_id, token)` | Remote mutation; outputs run id/status. |
+| `chatgh run cancel RUN_ID` | `cancel_run(repo, run_id, token)` | Remote mutation; outputs run id/status. |
+| `chatgh run download RUN_ID` | `download_run_artifacts(repo, run_id, name, output_dir, token)` | Downloads and extracts artifacts; output location is explicit through `--dir`/current directory. |
 
 ## Testing Requirements
 
