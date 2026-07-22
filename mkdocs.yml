@@ -38,9 +38,9 @@ plugins:
             接口: Interface
             接口树: Interface Tree
             接口对齐规范: Interface Alignment
-            Agent / Bot: Agent / Bot
-            机器人 / Agent 定义: Agent Definition
-            Agent Task / Bot 对齐: Agent Task / Bot Alignment
+            机器人: Agents
+            机器人定义: Agent Definition
+            代理任务与机器人对齐: Agent Task And Bot Alignment
 extra:
   alternate:
     - name: 中文
@@ -54,6 +54,6 @@ nav:
   - 接口:
       - 接口树: interface-tree.md
       - 接口对齐规范: gh-interface-alignment.md
-  - Agent / Bot:
-      - 机器人 / Agent 定义: agent-definition.md
-      - Agent Task / Bot 对齐: agent-task-bot-alignment.md
+  - 机器人:
+      - 机器人定义: agent-definition.md
+      - 代理任务与机器人对齐: agent-task-bot-alignment.md

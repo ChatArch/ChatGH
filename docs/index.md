@@ -1,6 +1,6 @@
 # chatgh 文档
 
-`chatgh` 是 ChatArch 的 GitHub CLI 与 Python API 包，承载从 `chattool gh` 迁移出的 PR、CI、Actions run/job logs、仓库权限和 token 配置能力。新脚本和文档应直接使用 `chatgh`；`chattool gh` 只作为 ChatTool 侧兼容入口。
+`chatgh` 是 ChatArch 的 GitHub CLI 与 Python API 包，承载从 `chattool gh` 迁移出的 PR、CI、Actions 运行与作业日志、仓库权限和令牌配置能力。新脚本和文档应直接使用 `chatgh`；`chattool gh` 只作为 ChatTool 侧兼容入口。
 
 ## 安装
 
@@ -15,27 +15,27 @@ pip install -e ".[dev]"
 默认行为：
 
 - `repo`：优先使用显式 `--repo owner/repo`，未传时从当前 git remote 推断。
-- `token`：优先使用显式 `--token`，其次读取当前仓库 `.git/config` 中 repo-local HTTPS auth header，再回退 typed env 里的 `GITHUB_ACCESS_TOKEN`。
-- 输出：默认是人类可读格式；支持 `--json FIELDS` 的命令会按字段投影输出官方 `gh` 风格 JSON，`--json-output` 保留为完整 payload JSON dump，适合脚本消费。
+- `token`：优先使用显式 `--token`，其次读取当前仓库 `.git/config` 中仓库本地 HTTPS 授权头，再回退类型化环境配置里的 `GITHUB_ACCESS_TOKEN`。
+- 输出：默认是人类可读格式；支持 `--json FIELDS` 的命令会按字段投影输出官方 `gh` 风格 JSON，`--json-output` 保留为完整载荷 JSON，适合脚本消费。
 
-### Token 来源
+### 令牌来源
 
-Token 解析顺序稳定为：
+令牌解析顺序稳定为：
 
 1. 显式 `--token`。
-2. 当前仓库 `.git/config` 中的 repo-local HTTPS auth header，路径为规范化后的 `https://github.com/owner/repo.git`。
-3. typed env 中的 `GITHUB_ACCESS_TOKEN`。
+2. 当前仓库 `.git/config` 中的仓库本地 HTTPS 授权头，路径为规范化后的 `https://github.com/owner/repo.git`。
+3. 类型化环境配置中的 `GITHUB_ACCESS_TOKEN`。
 
-可以用 `chatenv` 查看或配置 typed env：
+可以用 `chatenv` 查看或配置类型化环境配置：
 
 ```bash
 chatenv init -t gh
 chatenv cat -t gh
 ```
 
-安装 `chatgh` 后，它会通过 `chatenv.configs` entry point 注册 `GitHubConfig`，所以 `chatenv list` 会出现 `[GitHub]` 分组，`-t gh` / `-t github` 可以解析到同一份 GitHub typed env。
+安装 `chatgh` 后，它会通过 `chatenv.configs` 入口点注册 `GitHubConfig`，所以 `chatenv list` 会出现 `[GitHub]` 分组，`-t gh` / `-t github` 可以解析到同一份 GitHub 类型化环境配置。
 
-`ghp_xxx` / `github_pat_xxx` 都是 GitHub Personal Access Token。通常 clone/fetch/push 至少需要 contents 读写权限；PR 评论、合并和 Actions 读取按仓库策略补充对应权限。
+`ghp_xxx` / `github_pat_xxx` 都是 GitHub 个人访问令牌。通常 clone/fetch/push 至少需要 contents 读写权限；PR 评论、合并和 Actions 读取按仓库策略补充对应权限。
 
 ### 仓库推断
 
@@ -46,18 +46,18 @@ chatenv cat -t gh
 - `git@github.com:octocat/Hello-World.git`
 - `ssh://git@github.com/octocat/Hello-World.git`
 
-写入 repo-local HTTPS auth header 时，path 会规范化为 `https://github.com/octocat/Hello-World.git`。
+写入仓库本地 HTTPS 授权头时，路径会规范化为 `https://github.com/octocat/Hello-World.git`。
 
-## CLI 入口
+## 命令入口
 
 文档导航：
 
 - 文档站点：`https://arch.gh.wzhecnu.cn/ChatGH/`，在 `mkdocs.yml` 的 `site_url` 中维护。
-- 文档语言：使用 `mkdocs-static-i18n` 的 suffix 模式；中文是默认站点，英文镜像文件使用 `.en.md` 后缀并生成到 `/en/`，不要在 `nav` 里把中英文拆成两套入口。
-- `docs/interface-tree.md`：当前 CLI 树、目标方向、职责和 CLI -> Python API 映射，按 ChatTea / ChatZulip 的 interface-tree 风格维护。
+- 文档语言：使用 `mkdocs-static-i18n` 的后缀模式；中文是默认站点，英文镜像文件使用 `.en.md` 后缀并生成到 `/en/`，不要在 `nav` 里把中英文拆成两套入口。
+- `docs/interface-tree.md`：当前 CLI 树、目标方向、职责和 CLI -> Python API 映射，按 ChatTea / ChatZulip 的接口树风格维护。
 - `docs/gh-interface-alignment.md`：官方 `gh` 对齐原则、分层和测试要求。
-- `docs/agent-definition.md`：ChatGH 机器人/Agent 定义、manifest、flow、权限和 runtime 边界。
-- `docs/agent-task-bot-alignment.md`：官方 `gh agent-task` / `gh skill` / GitHub Apps / webhooks / bot 探索，以及 ChatGH 的 agent-task/bot 方向。
+- `docs/agent-definition.md`：ChatGH 机器人定义、manifest、流程、权限和运行时边界。
+- `docs/agent-task-bot-alignment.md`：官方 `gh agent-task`、`gh skill`、GitHub Apps、webhook 和机器人探索，以及 ChatGH 的代理任务与机器人方向。
 
 ```bash
 chatgh --help
@@ -72,24 +72,24 @@ chatgh set-token --help
 
 命令树：
 
-- `chatgh pr list`：generated-layer PR 列表。
-- `chatgh pr view NUMBER`：generated-layer PR 详情。
-- `chatgh pr checks NUMBER`：generated-layer PR head commit check runs。
-- `chatgh repo list`：列出 user/org 下的仓库；默认 table，支持 `--json FIELDS`、`--json-output`、`--limit`、`--sort updated|created|pushed|name|stars|open-prs|open-issues`、`--direction asc|desc`，字段包含 visibility、stars、open PRs、open issues、created/updated time 等。
-- `chatgh repo create`：创建仓库；默认 private，可用 `--public` 显式创建公开仓库。
+- `chatgh pr list`：生成层 PR 列表。
+- `chatgh pr view NUMBER`：生成层 PR 详情。
+- `chatgh pr checks NUMBER`：生成层 PR head commit 的 check run。
+- `chatgh repo list`：列出 user/org 下的仓库；默认表格，支持 `--json FIELDS`、`--json-output`、`--limit`、`--sort updated|created|pushed|name|stars|open-prs|open-issues`、`--direction asc|desc`，字段包含 visibility、stars、open PRs、open issues、创建和更新时间等。
+- `chatgh repo create`：创建仓库；默认私有，可用 `--public` 显式创建公开仓库。
 - `chatgh repo fork`：把 source 仓库 fork 到目标 user/org，兼容 `gh` 风格位置参数、`--org`、`--fork-name`，并保留 ChatGH 显式 `--source`、`--owner`、`--name`、`--default-branch-only`、`--if-exists use` 和 JSON 输出。
 - `chatgh repo transfer`：把仓库所有权迁移到目标 user/org，支持 `--dry-run` 和必须显式确认的 `--accept-transfer-consequences`。
-- `chatgh repo protection`：查看单个仓库或 owner 下仓库的默认分支保护与 repository rulesets；治理/规则审计不挤进 `repo list` 默认表格。
-- `chatgh invitation list/accept/decline`：查看和处理当前账号收到的 GitHub repository invitations；对齐 GitHub REST API 的 authenticated user invitation 能力。
-- 当前公开 `chatgh pr` 命令面包含 `list/create/view/comment/edit/checks/merge`；写操作复用 ChatGH token resolution，且不会打印 token。
-- `chatgh run view`：查看 workflow run 和 jobs。
-- `chatgh run logs`：查看 job 日志，支持 tail 和落盘。
-- `chatgh repo-perms`：查看 token 权限和派生 capabilities。
-- `chatgh set-token`：为当前 GitHub 仓库配置 repo 级 HTTPS token。
+- `chatgh repo protection`：查看单个仓库或 owner 下仓库的默认分支保护与仓库规则集；治理/规则审计不挤进 `repo list` 默认表格。
+- `chatgh invitation list/accept/decline`：查看和处理当前账号收到的 GitHub 仓库邀请；对齐 GitHub REST API 的认证用户邀请能力。
+- 当前公开 `chatgh pr` 命令面包含 `list/create/view/comment/edit/checks/merge`；写操作复用 ChatGH 令牌解析，且不会打印 token。
+- `chatgh run view`：查看 workflow run 和 job。
+- `chatgh run logs`：查看 job 日志，支持尾部输出和落盘。
+- `chatgh repo-perms`：查看令牌权限和派生能力。
+- `chatgh set-token`：为当前 GitHub 仓库配置仓库级 HTTPS 令牌。
 
 ## 常用流程
 
-### Repo view / clone / sync / edit
+### 查看、克隆、同步和编辑仓库
 
 ```bash
 chatgh repo view ChatArch/ChatGH --json-output
@@ -101,7 +101,7 @@ chatgh repo edit ChatArch/ChatGH --visibility private --accept-visibility-change
 
 `repo clone` 会拒绝覆盖已有非空目录；`repo sync` 默认使用 `git pull --ff-only`。`repo edit` 当前只支持 description、homepage、default-branch 和 visibility 小子集；设置 `--visibility` 时必须显式传 `--accept-visibility-change-consequences`。
 
-### Repository invitations
+### 仓库邀请
 
 ```bash
 chatgh invitation list
@@ -110,9 +110,9 @@ chatgh invitation accept 325100806 --json-output
 chatgh invitation decline 325100806 --json-output
 ```
 
-`invitation` 使用当前 ChatGH token resolution 逻辑读取 authenticated user 的 repository invitations。`accept` 和 `decline` 是远端写操作，只按 invitation id 执行，不自动猜测或批量处理邀请。
+`invitation` 使用当前 ChatGH 令牌解析逻辑读取认证用户收到的仓库邀请。`accept` 和 `decline` 是远端写操作，只按邀请 ID 执行，不自动猜测或批量处理邀请。
 
-### GitHub Projects
+### GitHub 项目
 
 ```bash
 chatgh project list --owner ChatArch --json-output
@@ -125,7 +125,7 @@ chatgh project field list 3 --owner ChatArch --json-output
 
 `project` 命令树不复刻官方 `gh project` 扁平形态。ChatGH 将 Project 本体、`item`、`field` 分开组织：`project item add/edit/list/...` 与 `project field list/create/delete` 是主入口，不保留 `item-add` / `field-list` 兼容别名。ChatGH 不使用官方 `gh auth`，继续使用 `--token` / repo-local token / ChatEnv `GITHUB_ACCESS_TOKEN`；写操作保留 ChatGH 安全门；每个 CLI 背后有可 import 的 `chatgh.github.projects` Python API。`project` 所有可恢复缺参路径遵守 ChatStyle：默认可自动补问，`CHATARCH_AUTO_PROMPT=off` 可让机器调用缺参时报错，`-i` 强制交互，`-I` 禁止交互。`project item edit` 对 GitHub Projects v2 的字段值类型做展开参数（`--text`、`--number`、`--date`、`--single-select-option-id`、`--iteration-id`、`--clear`）。
 
-### PR lifecycle / review
+### PR 生命周期和评审
 
 ```bash
 chatgh pr status --repo ChatArch/ChatGH --json-output
@@ -146,7 +146,7 @@ chatgh pr create --repo octocat/Hello-World --base main --head rex/feature --tit
 chatgh pr create --repo octocat/Hello-World --base main --head rex/feature --title "Add feature" --body "Short body" --json-output
 ```
 
-`pr create` 会使用当前 ChatGH token resolution 逻辑，不会打印 token。缺少 `base/head/title` 时，可在交互终端自动补问；非交互可用 `-I` 明确失败。
+`pr create` 会使用当前 ChatGH 令牌解析逻辑，不会打印 token。缺少 `base/head/title` 时，可在交互终端自动补问；非交互可用 `-I` 明确失败。
 
 ### 查看 PR
 
@@ -161,7 +161,7 @@ chatgh pr view 123 --repo octocat/Hello-World --json-output
 - PR number、title、state、author、URL。
 - base/head branch。
 - `mergeable` 和 `mergeable_state`。
-- created/updated/merged timestamps。
+- 创建、更新和合并时间戳。
 
 ### 查看 CI
 
@@ -173,14 +173,14 @@ chatgh pr checks 123 --repo octocat/Hello-World --json-output
 `pr checks` 按 PR head commit 汇总三层信息：
 
 - combined status
-- check runs
-- workflow runs
+- check run
+- workflow run
 
 当前公开 CLI 不提供 `--wait` / `--interval` / `--timeout` 参数；需要等待终态时，在外层流程中轮询 `chatgh pr checks`。
 
-如果 GitHub token 无权读取 check-runs API，命令会把 check-runs 错误放进 payload，同时仍尽量展示 combined status 和 workflow runs。
+如果 GitHub 令牌无权读取 check-runs API，命令会把 check-runs 错误放进载荷，同时仍尽量展示 combined status 和 workflow run。
 
-### 查看 Actions run 和 job logs
+### 查看 Actions 运行和作业日志
 
 ```bash
 chatgh run list --repo octocat/Hello-World --limit 20
@@ -207,22 +207,22 @@ chatgh pr edit 123 --repo octocat/Hello-World --title "New title" --body-file pr
 chatgh pr merge 123 --repo octocat/Hello-World --method squash --check
 ```
 
-`pr merge` 默认使用 `--method squash` 和 `--check`，会在合并前读取 PR checks 并拒绝非绿色状态。合并仍然是高风险远程 mutation，实际执行前应先确认 PR 状态和用户授权。
+`pr merge` 默认使用 `--method squash` 和 `--check`，会在合并前读取 PR checks 并拒绝非绿色状态。合并仍然是高风险远端变更，实际执行前应先确认 PR 状态和用户授权。
 
-### Fork 仓库
+### 创建 fork
 
 ```bash
-# gh-like 形态
+# 类官方 gh 形态
 chatgh repo fork octocat/Hello-World --org ChatArch
 chatgh repo fork octocat/Hello-World --org ChatArch --fork-name hello-world-copy --default-branch-only
 
-# ChatGH 显式/自动化形态
+# ChatGH 显式和自动化形态
 chatgh repo fork --source octocat/Hello-World --owner ChatArch
 chatgh repo fork --source octocat/Hello-World --owner ChatArch --name hello-world-copy --default-branch-only
 chatgh repo fork --source octocat/Hello-World --owner ChatArch --if-exists use --json-output
 ```
 
-`repo fork` 通过 GitHub Fork API 创建目标仓库；目标仓库名默认沿用 source repo 名。它兼容官方 `gh repo fork [<repository>] --org ... --fork-name ...` 的常见形态，同时保留 ChatGH 的显式 `--source/--owner/--name` 和 `--json-output/--if-exists use` 自动化扩展。目标为 organization 时会传递 GitHub API 的 `organization` 字段；目标为 user account 时，`--owner` 必须匹配当前认证用户。`--if-exists use` 只会复用已存在且匹配 source 的 fork，避免把同名非匹配仓库误当成功结果。
+`repo fork` 通过 GitHub Fork API 创建目标仓库；目标仓库名默认沿用源仓库名。它兼容官方 `gh repo fork [<repository>] --org ... --fork-name ...` 的常见形态，同时保留 ChatGH 的显式 `--source/--owner/--name` 和 `--json-output/--if-exists use` 自动化扩展。目标为组织时会传递 GitHub API 的 `organization` 字段；目标为用户账号时，`--owner` 必须匹配当前认证用户。`--if-exists use` 只会复用已存在且匹配源仓库的 fork，避免把同名非匹配仓库误当成功结果。
 
 ### 迁移仓库所有权
 
@@ -231,7 +231,7 @@ chatgh repo transfer ChatArch/ExampleRepo --owner OmniCAS --dry-run --json-outpu
 chatgh repo transfer ChatArch/ExampleRepo --owner OmniCAS --accept-transfer-consequences --json-output
 ```
 
-`repo transfer` 调用 GitHub Repository Transfer API，把仓库所有权转移到目标 user/org；这不同于 `repo fork`，会保留 issue、PR、stars、settings 等仓库身份，并由 GitHub 处理 redirect。命令默认建议先 `--dry-run` 检查 source 权限和目标同名仓库是否已存在；真正执行必须显式传 `--accept-transfer-consequences`，因为 transfer 会影响 access、webhooks、secrets、GitHub Pages 和自动化。转移到 organization 时可重复传 `--team-id` 让 GitHub 在转移后给指定 team 授权。
+`repo transfer` 调用 GitHub Repository Transfer API，把仓库所有权转移到目标 user/org；这不同于 `repo fork`，会保留 issue、PR、stars、settings 等仓库身份，并由 GitHub 处理 redirect。命令默认建议先 `--dry-run` 检查 source 权限和目标同名仓库是否已存在；真正执行必须显式传 `--accept-transfer-consequences`，因为 transfer 会影响访问权限、webhook、secrets、GitHub Pages 和自动化。转移到组织时可重复传 `--team-id` 让 GitHub 在转移后给指定 team 授权。
 
 ### 查看仓库保护规则
 
@@ -244,7 +244,7 @@ chatgh repo protection --owner octocat --limit 50 --jobs 8 --json-output
 
 `repo protection` 会展示默认分支、是否 protected、classic branch protection 细节（例如是否要求 PR、review 数量、是否允许 force push / deletion），以及 GitHub 可读取时的 repository ruleset 摘要。部分 private 仓库可能因为 GitHub plan/visibility 限制读取 rulesets 返回错误；命令会在 JSON 里保留该错误，同时尽量展示 branch protection 状态。owner inventory 模式会先列仓库，再用 `--jobs` 并发检查每个仓库，输出顺序保持稳定。
 
-### 配置和检查 token
+### 配置和检查令牌
 
 ```bash
 chatgh repo-perms --repo octocat/Hello-World --json-output
@@ -256,9 +256,9 @@ chatgh set-token --token "$GITHUB_ACCESS_TOKEN" --save-env
 
 `repo-perms` 会展示：
 
-- token 来源和 mask 后的 token。
+- 令牌来源和脱敏后的令牌。
 - GitHub 返回的 `permissions`。
-- 派生 capabilities：`can_read_pr`、`can_comment_pr`、`can_merge_pr`、`can_view_checks`、`can_view_actions`。
+- 派生能力：`can_read_pr`、`can_comment_pr`、`can_merge_pr`、`can_view_checks`、`can_view_actions`。
 
 `set-token` 只在当前目录能识别 GitHub remote 时生效。默认只写入当前仓库自己的 `.git/config`：
 
@@ -267,7 +267,7 @@ chatgh set-token --token "$GITHUB_ACCESS_TOKEN" --save-env
     extraHeader = Authorization: Basic <base64(x-access-token:TOKEN)>
 ```
 
-不要把 token 写进 remote URL，也不要把 raw `extraHeader` 输出到日志。传 `--save-env` 时会同步写入 typed env 的 `GITHUB_ACCESS_TOKEN`。
+不要把 token 写进 remote URL，也不要把原始 `extraHeader` 输出到日志。传 `--save-env` 时会同步写入类型化环境配置的 `GITHUB_ACCESS_TOKEN`。
 
 ## 交互模式
 
@@ -278,11 +278,11 @@ chatgh set-token --token "$GITHUB_ACCESS_TOKEN" --save-env
 - `-i/--interactive`：强制进入补问流程，即使 `CHATARCH_AUTO_PROMPT=off` 也会尝试交互。
 - `-I/--no-interactive`：完全禁用补问，缺参时直接报错。
 
-token 类输入使用 password prompt，不会明文回显。
+令牌类输入使用密码式补问，不会明文回显。
 
 ## 推荐的 PR/CI 工作流
 
-在创建 PR、汇报“CI 是否通过”或准备 merge 前，先同步最新 base：
+在创建 PR、汇报“CI 是否通过”或准备合并前，先同步最新 base：
 
 ```bash
 git fetch origin main
@@ -307,27 +307,27 @@ checks = client.get_pr_checks("octocat/Hello-World", 1)
 
 底层模块也可按需导入：
 
-- `chatgh.github.api`：token、仓库解析、git credential 和 REST 请求基础能力。
+- `chatgh.github.api`：令牌、仓库解析、git credential 和 REST 请求基础能力。
 - `chatgh.github.commands`：CLI 使用的业务流程函数。
-- `chatgh.github.requests`：PR/checks/actions payload 构造。
-- `chatgh.github.render`：人类可读输出、merge blocker 和 tail helper。
+- `chatgh.github.requests`：PR/checks/actions 载荷构造。
+- `chatgh.github.render`：人类可读输出、合并阻断信息和尾部日志辅助函数。
 
 ## 与 ChatTool 的关系
 
-`chattool gh` 的长期实现已迁移到 `chatgh`。ChatTool 可以保留薄 wrapper 兼容旧命令，但不应继续维护一份 forked GitHub 实现。ChatTool 内涉及 GitHub token/remote 的辅助逻辑也应导入 `chatgh.github.api`。
+`chattool gh` 的长期实现已迁移到 `chatgh`。ChatTool 可以保留薄封装兼容旧命令，但不应继续维护一份分叉的 GitHub 实现。ChatTool 内涉及 GitHub 令牌 / remote 的辅助逻辑也应导入 `chatgh.github.api`。
 
 ## 开发参考
 
-扩展 `chatgh` 时应先看项目内接口规范：`docs/interface-tree.md`、`docs/gh-interface-alignment.md`、`docs/agent-definition.md` 和 `docs/agent-task-bot-alignment.md`。常见 GitHub 能力要先参考官方 GitHub CLI `gh` 的命令形态和帮助文本；如果官方已有能力，优先兼容其命名、位置参数和常见 alias，再结合 ChatGH 的鉴权、JSON、安全门和 Python API 落地；如果官方没有，才设计 ChatGH-native surface。官方 `gh` 只作接口参考，不作为运行依赖、CI/ops fallback 或真实操作路径。Agent/bot 相关能力还必须明确区分 GitHub-hosted Copilot/CAPI agent task 与 ChatGH self-hosted event-to-runner bridge。
+扩展 `chatgh` 时应先看项目内接口规范：`docs/interface-tree.md`、`docs/gh-interface-alignment.md`、`docs/agent-definition.md` 和 `docs/agent-task-bot-alignment.md`。常见 GitHub 能力要先参考官方 GitHub CLI `gh` 的命令形态和帮助文本；如果官方已有能力，优先兼容其命名、位置参数和常见 alias，再结合 ChatGH 的鉴权、JSON、安全门和 Python API 落地；如果官方没有，才设计 ChatGH 原生命令面。官方 `gh` 只作接口参考，不作为运行依赖、CI/ops fallback 或真实操作路径。Agent/bot 相关能力还必须明确区分 GitHub 托管 Copilot / CAPI 代理任务与 ChatGH 自托管事件到运行器桥接。
 
 扩展时也要查官方 API 文档：
 
-- GitHub REST API: https://docs.github.com/en/rest
-- Pull requests API: https://docs.github.com/en/rest/pulls/pulls
-- Check runs API: https://docs.github.com/en/rest/checks/runs
-- Workflow runs API: https://docs.github.com/en/rest/actions/workflow-runs
-- Workflow jobs API: https://docs.github.com/en/rest/actions/workflow-jobs
-- Commit statuses API: https://docs.github.com/en/rest/commits/statuses
+- GitHub REST 接口总览：https://docs.github.com/en/rest
+- Pull requests 接口：https://docs.github.com/en/rest/pulls/pulls
+- Check runs 接口：https://docs.github.com/en/rest/checks/runs
+- Workflow runs 接口：https://docs.github.com/en/rest/actions/workflow-runs
+- Workflow jobs 接口：https://docs.github.com/en/rest/actions/workflow-jobs
+- Commit statuses 接口：https://docs.github.com/en/rest/commits/statuses
 - PyGithub: https://pygithub.readthedocs.io/
 
 本地验证：
@@ -338,4 +338,4 @@ python -m build
 mkdocs build --strict
 ```
 
-默认测试使用 mock/fake payload 和临时目录，不调用真实 GitHub API，也不会污染真实 git credential 或 env 配置。
+默认测试使用 mock/fake 载荷和临时目录，不调用真实 GitHub API，也不会污染真实 git credential 或环境配置。
