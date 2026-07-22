@@ -400,65 +400,42 @@ TagBot 使用另一种互补模式：
 
 这个模式可以复用 GitHub 原生日志、secrets 和权限，但可能比 webhook 网关更慢、交互性更弱。
 
-## 建议的 ChatGH 命令方向
+## ChatGH 机器人命令规划
 
-ChatGH 应保留和官方兼容的命名，同时清楚地区分 GitHub 托管代理任务和自托管代理任务。
+ChatGH 应保留和官方兼容的命名，同时清楚地区分 GitHub 托管代理任务和自托管代理任务。规划中的机器人能力按职责组织，而不是按实现阶段组织。
 
-### 第零阶段：文档和 API 证据
+### 设计约束
 
-不发布公开占位命令。
+- 不发布没有运行语义的公开占位命令。
+- 官方 `gh agent-task`、`gh skill`、GitHub Apps、webhook 和 REST 证据是命名与职责边界的主要依据。
+- `docs/interface-tree.md` 和本文档共同维护机器人命令方向。
+- 别名可以包含 `agent-task` 和 `bot`，但真正实现前应先明确自托管命名空间。
 
-- 记录官方 `gh agent-task`、`gh skill`、GitHub Apps、webhook 和 REST 证据。
-- 让 `docs/interface-tree.md` 和本文档作为命令方向来源。
+### 自托管事件标准化
 
-### 第一阶段：自托管事件标准化
-
-建议命令面：
-
-```bash
-chatgh agent event verify \
-  --provider github \
-  --payload-file payload.json \
-  --signature "$X_HUB_SIGNATURE_256" \
-  --secret-env CHATGH_WEBHOOK_SECRET
-
-chatgh agent event normalize \
-  --provider github \
-  --event issue_comment \
-  --payload-file payload.json \
-  --json-output
-
-chatgh agent event handle \
-  --provider github \
-  --event issue_comment \
-  --payload-file payload.json \
-  --runner-command 'codex --json' \
-  --json-output
-```
-
-别名可包含 `agent-task` 和 `bot`，但真正实现前应先明确自托管命名空间。
-
-### 第二阶段：任务评论和状态
-
-建议命令面：
+该能力负责验证 GitHub webhook、标准化事件载荷，并把事件交给本地或自托管运行器。
 
 ```bash
-chatgh agent task comment \
-  --provider github \
-  --repo OWNER/REPO \
-  --issue 123 \
-  --body-file result.md
+chatgh agent event verify   --provider github   --payload-file payload.json   --signature "$X_HUB_SIGNATURE_256"   --secret-env CHATGH_WEBHOOK_SECRET
 
-chatgh agent status create \
-  --repo OWNER/REPO \
-  --sha SHA \
-  --state pending \
-  --description "Agent running"
+chatgh agent event normalize   --provider github   --event issue_comment   --payload-file payload.json   --json-output
+
+chatgh agent event handle   --provider github   --event issue_comment   --payload-file payload.json   --runner-command 'codex --json'   --json-output
 ```
 
-### 第三阶段：Webhook 管理
+### 任务评论和状态
 
-建议命令面：
+该能力负责把机器人执行进度和最终结果写回 GitHub 线程或提交状态。
+
+```bash
+chatgh agent task comment   --provider github   --repo OWNER/REPO   --issue 123   --body-file result.md
+
+chatgh agent status create   --repo OWNER/REPO   --sha SHA   --state pending   --description "Agent running"
+```
+
+### Webhook 管理
+
+该能力负责仓库或组织 webhook 的查看、创建、测试和删除。接收 HTTP 请求、签名验证、delivery ID 去重仍属于机器人运行时职责。
 
 ```bash
 chatgh agent webhook list --repo OWNER/REPO
@@ -467,22 +444,18 @@ chatgh agent webhook test --repo OWNER/REPO --id 123
 chatgh agent webhook delete --repo OWNER/REPO --id 123 --confirm
 ```
 
-### 第四阶段：GitHub App 鉴权
+### GitHub App 鉴权
 
-建议命令面：
+该能力负责 GitHub App installation token 流程。`app` 应和 `agent` 分开，因为 GitHub App 鉴权是 GitHub 专属能力，不应泄漏进跨提供方任务处理。
 
 ```bash
 chatgh app installations list --app-id APP_ID --private-key-file key.pem
 chatgh app token --installation-id ID --app-id APP_ID --private-key-file key.pem --json-output
 ```
 
-`app` 应和 `agent` 分开，因为 GitHub App 鉴权是 GitHub 专属能力，不应泄漏进跨提供方任务处理。
+### GitHub 托管代理任务互操作
 
-### 第五阶段：GitHub 托管代理任务互操作
-
-只有在明确要调用 GitHub Copilot / CAPI 或 GitHub Agent Tasks REST 接口时才实现。
-
-可能形态：
+该能力只在明确调用 GitHub Copilot / CAPI 或 GitHub Agent Tasks REST 接口时提供。命令帮助文本必须明说它使用 GitHub 托管代理任务。
 
 ```bash
 chatgh agent-task create "fix the failing tests" --repo OWNER/REPO --base main --custom-agent my-agent
@@ -498,7 +471,7 @@ chatgh agent-task view SESSION_ID --repo OWNER/REPO --json-output
 
 ## 标准化事件结构
 
-未来事件处理应先把 GitHub webhook 载荷标准化成稳定结构，再调用任何运行器。
+事件处理应先把 GitHub webhook 载荷标准化成稳定结构，再调用任何运行器。
 
 ```json
 {
@@ -561,4 +534,4 @@ Gitea 没有 GitHub 完全相同的托管 Copilot agent-task 模型。对 Gitea 
 
 - ChatGH 应保持 GitHub-first，以对齐官方 `gh`。
 - ChatTea 应负责 Gitea 原生命令和本地 Gitea 生命周期。
-- 未来的跨提供方层可以在 GitHub 和 Gitea 之间共享事件结构和运行器契约。
+- 跨提供方层可以在 GitHub 和 Gitea 之间共享事件结构和运行器契约。

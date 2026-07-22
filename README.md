@@ -73,13 +73,13 @@ chatgh set-token --help
 命令树：
 
 - `chatgh pr list/create/view/comment/edit/checks/merge`：已有 PR 基础流程；`merge` 默认 `--check`，不能当 dry-run。
-- `chatgh pr status/diff/close/reopen/review/ready/update-branch`：本轮补齐的常见 lifecycle/review 命令；写操作复用 ChatGH 令牌解析，且不会打印 token。
+- `chatgh pr status/diff/close/reopen/review/ready/update-branch`：常见 PR 生命周期和评审命令；写操作复用 ChatGH 令牌解析，且不会打印 token。
 - `chatgh repo list/create/fork/transfer/protection`：已有仓库列表、创建、fork、所有权迁移、保护规则检查。
-- `chatgh repo view/clone/sync/edit`：本轮补齐的常见 repo 命令；`clone/sync` 对本地 git 副作用保持显式、保守，不覆盖已有非空目录。
+- `chatgh repo view/clone/sync/edit`：常见 repo 命令；`clone/sync` 对本地 git 副作用保持显式、保守，不覆盖已有非空目录。
 - `chatgh invitation list/accept/decline`：查看和处理当前账号收到的 GitHub 仓库邀请；对齐 GitHub REST API 的认证用户邀请能力。
 - `chatgh project list/view/create/edit/close/delete/copy` 与 `chatgh project item ...`、`chatgh project field ...`、`link/unlink/mark-template`：GitHub Projects v2 命令面。官方 `gh project` 只作为能力参考；ChatGH 打开 `item` 和 `field` 子树，不保留 `item-add` / `field-list` 扁平兼容入口。鉴权、JSON 输出、安全门和 Python API 走 ChatGH 自有规范。
 - `chatgh run view/logs`：查看 workflow run 和 job logs。
-- `chatgh run list/watch/rerun/cancel/download`：本轮补齐的 Actions run 运维命令；`watch` 有 timeout，`rerun/cancel` 属于远端 mutation。
+- `chatgh run list/watch/rerun/cancel/download`：Actions run 运维命令；`watch` 有 timeout，`rerun/cancel` 属于远端 mutation。
 - `chatgh repo-perms`：查看令牌权限和派生能力。
 - `chatgh set-token`：为当前 GitHub 仓库配置仓库级 HTTPS 令牌。
 

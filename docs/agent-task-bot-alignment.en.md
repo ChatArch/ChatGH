@@ -400,65 +400,42 @@ For safer repo-bound automation:
 
 This mode can use GitHub's native logs/secrets/permissions, but it may be slower and less interactive than a webhook gateway.
 
-## Proposed ChatGH Command Direction
+## ChatGH Agent Command Plan
 
-ChatGH should reserve official-compatible naming while clearly separating GitHub-hosted agent tasks from self-hosted agent tasks.
+ChatGH should reserve official-compatible naming while clearly separating GitHub-hosted agent tasks from self-hosted agent tasks. Planned bot capabilities are organized by responsibility, not by implementation order.
 
-### Phase 0: Documentation And API Evidence
+### Design Constraints
 
-No public placeholder commands.
+- Do not publish public placeholder commands that have no runtime semantics.
+- Official `gh agent-task`, `gh skill`, GitHub Apps, webhooks, and REST evidence define the main naming and responsibility boundaries.
+- `docs/interface-tree.en.md` and this document jointly maintain the agent command direction.
+- Aliases may include `agent-task` and `bot`, but the canonical self-hosted namespace should be chosen deliberately before implementation.
 
-- Document official `gh agent-task`, `gh skill`, GitHub Apps, webhooks, and REST evidence.
-- Keep `docs/interface-tree.en.md` and this document as the source of command direction.
+### Self-Hosted Event Normalization
 
-### Phase 1: Self-Hosted Event Normalization
-
-Suggested command surface:
-
-```bash
-chatgh agent event verify \
-  --provider github \
-  --payload-file payload.json \
-  --signature "$X_HUB_SIGNATURE_256" \
-  --secret-env CHATGH_WEBHOOK_SECRET
-
-chatgh agent event normalize \
-  --provider github \
-  --event issue_comment \
-  --payload-file payload.json \
-  --json-output
-
-chatgh agent event handle \
-  --provider github \
-  --event issue_comment \
-  --payload-file payload.json \
-  --runner-command 'codex --json' \
-  --json-output
-```
-
-Aliases may include `agent-task` and `bot`, but the canonical self-hosted namespace should be chosen deliberately before implementation.
-
-### Phase 2: Task Comments And Statuses
-
-Suggested command surface:
+This capability verifies GitHub webhooks, normalizes event payloads, and passes events to a local or self-hosted runner.
 
 ```bash
-chatgh agent task comment \
-  --provider github \
-  --repo OWNER/REPO \
-  --issue 123 \
-  --body-file result.md
+chatgh agent event verify   --provider github   --payload-file payload.json   --signature "$X_HUB_SIGNATURE_256"   --secret-env CHATGH_WEBHOOK_SECRET
 
-chatgh agent status create \
-  --repo OWNER/REPO \
-  --sha SHA \
-  --state pending \
-  --description "Agent running"
+chatgh agent event normalize   --provider github   --event issue_comment   --payload-file payload.json   --json-output
+
+chatgh agent event handle   --provider github   --event issue_comment   --payload-file payload.json   --runner-command 'codex --json'   --json-output
 ```
 
-### Phase 3: Webhook Management
+### Task Comments And Statuses
 
-Suggested command surface:
+This capability writes agent progress and final results back to GitHub threads or commit statuses.
+
+```bash
+chatgh agent task comment   --provider github   --repo OWNER/REPO   --issue 123   --body-file result.md
+
+chatgh agent status create   --repo OWNER/REPO   --sha SHA   --state pending   --description "Agent running"
+```
+
+### Webhook Management
+
+This capability views, creates, tests, and deletes repository or organization webhooks. Receiving HTTP requests, verifying signatures, and deduplicating delivery IDs remain runtime responsibilities.
 
 ```bash
 chatgh agent webhook list --repo OWNER/REPO
@@ -467,22 +444,18 @@ chatgh agent webhook test --repo OWNER/REPO --id 123
 chatgh agent webhook delete --repo OWNER/REPO --id 123 --confirm
 ```
 
-### Phase 4: GitHub App Auth
+### GitHub App Auth
 
-Suggested command surface:
+This capability handles GitHub App installation-token flows. Keep `app` separate from `agent` because GitHub App auth is GitHub-specific and should not leak into provider-neutral task handling.
 
 ```bash
 chatgh app installations list --app-id APP_ID --private-key-file key.pem
 chatgh app token --installation-id ID --app-id APP_ID --private-key-file key.pem --json-output
 ```
 
-Keep `app` separate from `agent` because GitHub App auth is GitHub-specific and should not leak into provider-neutral task handling.
+### GitHub-Hosted Agent Task Interop
 
-### Phase 5: GitHub-Hosted Agent Task Interop
-
-Only implement if we explicitly want to call GitHub Copilot/CAPI or GitHub Agent Tasks REST endpoints.
-
-Possible shape:
+This capability exists only when explicitly calling GitHub Copilot/CAPI or GitHub Agent Tasks REST endpoints. Command help text must say that it uses GitHub-hosted agent tasks.
 
 ```bash
 chatgh agent-task create "fix the failing tests" --repo OWNER/REPO --base main --custom-agent my-agent
@@ -498,7 +471,7 @@ Rules:
 
 ## Normalized Event Schema
 
-Future event handling should normalize GitHub webhook payloads into a stable schema before calling any runner.
+Event handling should normalize GitHub webhook payloads into a stable schema before calling any runner.
 
 ```json
 {
@@ -561,4 +534,4 @@ Therefore:
 
 - ChatGH should stay GitHub-first for official `gh` alignment.
 - ChatTea should own Gitea-native routes and local Gitea lifecycle.
-- A future provider-neutral layer may share event schemas and runner contracts across GitHub and Gitea.
+- A provider-neutral layer may share event schemas and runner contracts across GitHub and Gitea.

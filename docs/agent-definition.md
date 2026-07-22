@@ -444,7 +444,7 @@ chatgh agent run logs
 chatgh agent approve
 ```
 
-## 最小可用版本
+## 最小可用能力
 
 ```text
 GitHub issue_comment webhook
@@ -454,7 +454,7 @@ GitHub issue_comment webhook
   -> issue 评论最终回复
 ```
 
-这个 MVP 只需要：
+最小可用闭环需要：
 
 - webhook secret verification。
 - event normalization。
@@ -463,13 +463,13 @@ GitHub issue_comment webhook
 - 本地运行器契约。
 - 审计日志。
 
-不需要一开始实现：
+不属于最小闭环：
 
-- full GitHub App UI。
+- 完整 GitHub App UI。
 - marketplace。
-- multi-agent scheduling。
-- hosted Copilot CAPI。
-- cross-provider Gitea support。
+- 多机器人调度。
+- 托管 Copilot CAPI。
+- 跨提供方 Gitea 支持。
 
 ## 设计原则
 
