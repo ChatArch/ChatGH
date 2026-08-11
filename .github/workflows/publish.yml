@@ -8,12 +8,13 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -52,6 +53,11 @@ jobs:
             echo "Tag ${GITHUB_REF_NAME} does not match package version ${RELEASE_TAG}."
             exit 1
           fi
+      - name: Check release commit is on default branch
+        if: github.event_name == 'push'
+        run: |
+          git fetch --no-tags origin master:refs/remotes/origin/master
+          git merge-base --is-ancestor "${GITHUB_SHA}" "origin/master"
       - name: Check PyPI version
         id: pypi
         env:
@@ -88,6 +94,6 @@ jobs:
           python -m pip install --upgrade pip build twine
           python -m build
           python -m twine check dist/*
-      - name: Publish to PyPI
+      - name: Publish to PyPI (OIDC)
         if: steps.pypi.outputs.exists == 'false'
         uses: pypa/gh-action-pypi-publish@release/v1

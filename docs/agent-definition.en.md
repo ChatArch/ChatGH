@@ -268,7 +268,7 @@ This proves that GitHub issue or commit comments can be task entry points withou
 Official `gh agent-task` is a GitHub-hosted Copilot agent task client:
 
 ```bash
-gh agent-task create "fix the failing tests" --repo OWNER/REPO --base main
+gh agent-task create "fix the failing tests" --repo octocat/Hello-World --base main
 gh agent-task list
 gh agent-task view SESSION_ID
 ```
