@@ -4,18 +4,29 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
-  build-and-publish:
+  publish:
     runs-on: ubuntu-latest
+    environment: pypi
     steps:
       - uses: actions/checkout@v4
-
-      - name: Verify tag matches package version
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Resolve package version
+        id: meta
         run: |
-          tag_name="${GITHUB_REF_NAME#v}"
-          package_version="$(python3 - <<'PY'
+          python - <<'PY'
           import ast
+          import os
           from pathlib import Path
 
           module = ast.parse(Path("src/chatgh/__init__.py").read_text(encoding="utf-8"))
@@ -23,61 +34,60 @@ jobs:
               if not isinstance(stmt, ast.Assign):
                   continue
               if any(isinstance(target, ast.Name) and target.id == "__version__" for target in stmt.targets):
-                  print(ast.literal_eval(stmt.value))
+                  version = ast.literal_eval(stmt.value)
                   break
           else:
               raise SystemExit("__version__ not found in src/chatgh/__init__.py")
-          PY
-          )"
 
-          if [[ "$tag_name" != "$package_version" ]]; then
-            echo "Tag $GITHUB_REF_NAME does not match package version $package_version"
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              print(f"version={version}", file=output)
+              print(f"tag=v{version}", file=output)
+          PY
+      - name: Check tag matches package version
+        if: github.event_name == 'push'
+        env:
+          RELEASE_TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          if [ "${GITHUB_REF_NAME}" != "${RELEASE_TAG}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match package version ${RELEASE_TAG}."
             exit 1
           fi
-          echo "PACKAGE_VERSION=$package_version" >> "$GITHUB_ENV"
-
-      - name: Fail if version already exists on PyPI
+      - name: Check PyPI version
+        id: pypi
+        env:
+          PACKAGE_NAME: "chatgh"
+          PACKAGE_VERSION: ${{ steps.meta.outputs.version }}
         run: |
-          python3 - <<'PY'
+          python - <<'PY'
           import os
-          import sys
           import urllib.error
+          import urllib.parse
           import urllib.request
 
-          package = "chatgh"
+          package = os.environ["PACKAGE_NAME"]
           version = os.environ["PACKAGE_VERSION"]
-          url = f"https://pypi.org/pypi/{package}/{version}/json"
-
+          url = f"https://pypi.org/pypi/{urllib.parse.quote(package)}/{urllib.parse.quote(version)}/json"
+          exists = "false"
           try:
-              urllib.request.urlopen(url)
+              urllib.request.urlopen(url, timeout=10)
           except urllib.error.HTTPError as exc:
-              if exc.code == 404:
-                  print(f"{package} {version} is not yet on PyPI; continuing.")
-                  sys.exit(0)
-              raise
+              if exc.code != 404:
+                  raise
           else:
-              print(
-                  f"{package} {version} is already on PyPI. "
-                  "Bump src/chatgh/__init__.py and merge that change before pushing a release tag."
-              )
-              sys.exit(1)
+              exists = "true"
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              print(f"exists={exists}", file=output)
           PY
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Install dependencies
+      - name: Stop when version is already on PyPI
+        if: steps.pypi.outputs.exists == 'true'
+        run: echo "chatgh ${{ steps.meta.outputs.version }} is already on PyPI; skipping publish."
+      - name: Build distribution
+        if: steps.pypi.outputs.exists == 'false'
         run: |
-          python -m pip install --upgrade pip
-          pip install .[dev]
-
-      - name: Build and publish to PyPI
-        env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        run: |
+          python -m pip install --upgrade pip build twine
           python -m build
-          twine check dist/*
-          twine upload dist/*
+          python -m twine check dist/*
+      - name: Publish to PyPI
+        if: steps.pypi.outputs.exists == 'false'
+        uses: pypa/gh-action-pypi-publish@release/v1

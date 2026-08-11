@@ -61,6 +61,7 @@ chatenv cat -t gh
 
 ```bash
 chatgh --help
+chatgh --tree
 chatgh pr --help
 chatgh repo --help
 chatgh invitation --help
@@ -70,8 +71,9 @@ chatgh repo-perms --help
 chatgh set-token --help
 ```
 
-命令树：
+命令树（`chatgh --tree` 可从已注册 Click 命令实时生成完整树）：
 
+- `chatgh --tree`：输出当前注册命令树、参数/选项签名和一行用途说明，用作验收/readback。
 - `chatgh pr list/create/view/comment/edit/checks/merge`：已有 PR 基础流程；`merge` 默认 `--check`，不能当 dry-run。
 - `chatgh pr status/diff/close/reopen/review/ready/update-branch`：常见 PR 生命周期和评审命令；写操作复用 ChatGH 令牌解析，且不会打印 token。
 - `chatgh repo list/create/fork/transfer/protection`：已有仓库列表、创建、fork、所有权迁移、保护规则检查。
