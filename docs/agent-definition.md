@@ -408,7 +408,7 @@ Flow：
 官方 `gh agent-task` 是 GitHub 托管 Copilot 代理任务。它使用 GitHub/Copilot 后端，支持：
 
 ```bash
-gh agent-task create "fix the failing tests" --repo OWNER/REPO --base main
+gh agent-task create "fix the failing tests" --repo octocat/Hello-World --base main
 gh agent-task list
 gh agent-task view SESSION_ID
 ```

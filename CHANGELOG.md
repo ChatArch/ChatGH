@@ -2,9 +2,13 @@
 
 本项目按日期记录更新；正式发版信息也维护在本文件。
 
+## 2026-08-12
+- 准备 `0.2.11` 补丁版本：补齐 MkDocs Material emoji renderer baseline、当前 docs dependency window、CI Python 3.10/3.11/3.12 matrix + installed `chatgh --version` / `chatgh --tree` smoke，以及 PyPI Trusted Publishing default-branch ancestry guard。
+- 将 package Homepage 对齐到 ChatArch docs custom domain，并清理公开文档中的泛用仓库占位符与 scaffold wording。
+
 ## 2026-08-11
 - 准备 `0.2.10` 补丁版本：新增顶层 `chatgh --tree`，从 Click 注册命令树生成当前命令面，包含 `--help`、`--version`、`--tree`、顶层资源组、嵌套子命令、参数/选项签名与一行用途说明。
-- 为 `--tree` 增加 CLI 合约测试，锁住代表性命令面（`pr checks`、`repo transfer`、`project item edit`、`project field list`、`run logs`、`invitation accept`）并确保没有模板 `hello` 泄漏。
+- 为 `--tree` 增加 CLI 合约测试，锁住代表性命令面（`pr checks`、`repo transfer`、`project item edit`、`project field list`、`run logs`、`invitation accept`）并确保没有脚手架示例命令泄漏。
 - 将发布 workflow 从 Twine secret 上传迁移为 PyPI Trusted Publisher / GitHub OIDC，并收紧 MkDocs docs extras 上界，保持严格构建稳定。
 
 ## 2026-07-19
@@ -62,6 +66,6 @@
 - 新增 `chatgh pr`、`chatgh run`、`chatgh repo-perms` 和 `chatgh set-token` CLI 入口。
 - 新增 `chatgh.github` Python API 模块和 `GitHubClient` 封装。
 - 新增 mock CLI 与代码测试，覆盖命令注册、交互式缺参补问、JSON / 人类可读输出、令牌和凭据解析、PR checks 轮询、合并阻断信息和 client wrapper 行为。
-- 将模板 `hello` 命令替换为以 GitHub 命令为主的公开命令面。
+- 将模板示例命令替换为以 GitHub 命令为主的公开命令面。
 - 文档明确推荐使用 `chatgh`；`chattool gh` 兼容由 ChatTool 侧薄封装处理。
 - 初始化 ChatArch package scaffold。
