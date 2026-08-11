@@ -2,6 +2,11 @@
 
 本项目按日期记录更新；正式发版信息也维护在本文件。
 
+## 2026-08-11
+- 准备 `0.2.10` 补丁版本：新增顶层 `chatgh --tree`，从 Click 注册命令树生成当前命令面，包含 `--help`、`--version`、`--tree`、顶层资源组、嵌套子命令、参数/选项签名与一行用途说明。
+- 为 `--tree` 增加 CLI 合约测试，锁住代表性命令面（`pr checks`、`repo transfer`、`project item edit`、`project field list`、`run logs`、`invitation accept`）并确保没有模板 `hello` 泄漏。
+- 将发布 workflow 从 Twine secret 上传迁移为 PyPI Trusted Publisher / GitHub OIDC，并收紧 MkDocs docs extras 上界，保持严格构建稳定。
+
 ## 2026-07-19
 - 新增 `chatgh repo transfer`：封装 GitHub Repository Transfer API，把仓库所有权迁移到目标 user/org；支持 `--dry-run` 先检查 source 权限与目标同名仓库，真正执行必须显式传 `--accept-transfer-consequences`，并支持转移到组织时重复传 `--team-id`；同步校对 CLI 树和官方 `gh` 对齐文档，并记录 GitHub Pages source 配置仍是未来 `repo pages` 能力缺口。
 - 补充 ChatGH 文档规范：新增 `docs/interface-tree.md`，按 ChatTea 风格记录当前 CLI 树、目标方向、职责、CLI -> Python API 映射和测试契约；同步 `mkdocs.yml` 与 package metadata 到共享文档域名 `https://arch.gh.wzhecnu.cn/ChatGH/`，启用 `mkdocs-static-i18n` suffix 模式生成语言切换，并让 Preview Docs workflow 对齐 ChatTea 的 `https://arch.gh.wzhecnu.cn/<Repo>/dev/` 预览链接。

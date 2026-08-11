@@ -61,6 +61,7 @@ chatenv cat -t gh
 
 ```bash
 chatgh --help
+chatgh --tree
 chatgh pr --help
 chatgh repo --help
 chatgh invitation --help
@@ -70,7 +71,7 @@ chatgh repo-perms --help
 chatgh set-token --help
 ```
 
-命令树：
+命令树（`chatgh --tree` 可从已注册 Click 命令实时生成完整树）：
 
 - `chatgh pr list`：生成层 PR 列表。
 - `chatgh pr view NUMBER`：生成层 PR 详情。

@@ -61,6 +61,7 @@ Docs navigation:
 
 ```bash
 chatgh --help
+chatgh --tree
 chatgh pr --help
 chatgh repo --help
 chatgh invitation --help
@@ -70,8 +71,9 @@ chatgh repo-perms --help
 chatgh set-token --help
 ```
 
-Command tree:
+Command tree (`chatgh --tree` renders the full registered Click tree live):
 
+- `chatgh --tree`: print the current registered command tree with signatures and one-line purposes for release acceptance/readback.
 - `chatgh pr list/create/view/comment/edit/checks/merge`: existing PR workflow commands; `merge` defaults to `--check` and must not be used as a dry-run.
 - `chatgh pr status/diff/close/reopen/review/ready/update-branch`: common lifecycle/review commands added in this batch; write commands use ChatGH token resolution and keep secrets out of output.
 - `chatgh repo list/create/fork/transfer/protection`: repository list/create/fork/ownership-transfer/protection commands.
