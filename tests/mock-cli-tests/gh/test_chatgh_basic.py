@@ -814,7 +814,7 @@ def test_chatgh_repo_fork_help_uses_gh_like_repository_metavar(runner):
     result = runner.invoke(cli, ["repo", "fork", "--help"])
 
     assert result.exit_code == 0
-    assert "Usage: main repo fork [OPTIONS] REPOSITORY" in result.output
+    assert "Usage: chatgh repo fork [OPTIONS] REPOSITORY" in result.output
     assert "[SOURCE_ARG]" not in result.output
 
 
