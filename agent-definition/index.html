@@ -1,0 +1,1875 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://arch.gh.wzhecnu.cn/ChatGH/agent-definition/">
+      
+      
+        <link rel="prev" href="../gh-interface-alignment/">
+      
+      
+        <link rel="next" href="../agent-task-bot-alignment/">
+      
+      
+        
+          <link rel="alternate" href="./" hreflang="zh">
+        
+          <link rel="alternate" href="../en/agent-definition/" hreflang="en">
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>机器人定义 - ChatGH 文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#chatgh" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href=".." title="ChatGH 文档" class="md-header__button md-logo" aria-label="ChatGH 文档" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ChatGH 文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              机器人定义
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="选择当前语言">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="zh" class="md-select__link">
+              中文
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="../en/agent-definition/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ChatArch/ChatGH" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ChatArch/ChatGH
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="标签" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  首页
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../interface-tree/" class="md-tabs__link">
+          
+  
+  
+  接口
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+  机器人
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="ChatGH 文档" class="md-nav__button md-logo" aria-label="ChatGH 文档" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    ChatGH 文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ChatArch/ChatGH" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ChatArch/ChatGH
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    接口
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    接口
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interface-tree/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    接口树
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gh-interface-alignment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    接口对齐规范
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    机器人
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    机器人
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    机器人定义
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    机器人定义
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一句话定义
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        术语边界
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        为什么不用单一“机器人”概念
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        最小机器人配置清单
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        字段解释
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="字段解释">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#identity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        identity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        scope
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#triggers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        triggers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        context
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        permissions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tools
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        runtime
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        memory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#approvals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        approvals
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        机器人生命周期
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#github" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GitHub 原生流程
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GitHub 原生流程">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 安装
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 触发
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 授权
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 执行
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 交付
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        三种典型机器人
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="三种典型机器人">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        代码评审机器人
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        问题修复机器人
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        注册与发布机器人
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#github_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        与官方 GitHub 代理的关系
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chatgh_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ChatGH 命令方向
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        最小可用能力
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        设计原则
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../agent-task-bot-alignment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    代理任务与机器人对齐
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        一句话定义
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        术语边界
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        为什么不用单一“机器人”概念
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        最小机器人配置清单
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        字段解释
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="字段解释">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        metadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#identity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        identity
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        scope
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#triggers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        triggers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        context
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        permissions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        tools
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        runtime
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        memory
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#approvals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        approvals
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        机器人生命周期
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#github" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GitHub 原生流程
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GitHub 原生流程">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. 安装
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. 触发
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. 授权
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. 执行
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. 交付
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        三种典型机器人
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="三种典型机器人">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        代码评审机器人
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        问题修复机器人
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        注册与发布机器人
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#github_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        与官方 GitHub 代理的关系
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chatgh_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ChatGH 命令方向
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        最小可用能力
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        设计原则
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/ChatArch/ChatGH/edit/master/docs/agent-definition.md" title="编辑此页" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="chatgh">ChatGH 机器人定义</h1>
+<p>本文定义 ChatGH 里“机器人”的产品语义、配置边界、运行流程和 GitHub 接口映射。目标是让后续 <code>chatgh agent ...</code> / <code>chatgh agent-task ...</code> 设计有一个稳定词汇表，而不是把 GitHub App、bot user、GitHub Actions、Copilot agent task、本地 CLI agent 混成一个概念。</p>
+<h2 id="_1">一句话定义</h2>
+<p>ChatGH 机器人是一个安装在 GitHub 组织、仓库或线程中的可审计工作成员。它有身份、触发方式、上下文范围、工具权限、运行时、输出约定和人工确认规则；它把 GitHub 里的 issue、PR、comment、webhook 或 workflow 事件转成可执行任务，再把进度和产物写回 GitHub。</p>
+<p>它不是单纯的聊天窗口，也不是一个裸模型调用。</p>
+<pre><code class="language-text">机器人 = 身份 + 触发器 + 上下文 + 权限 + 技能/工具 + 运行时 + 任务状态 + 输出/审计
+</code></pre>
+<h2 id="_2">术语边界</h2>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>ChatGH 语义</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>机器人</td>
+<td>可安装、可触发、可授权、可审计的工作成员</td>
+<td><code>@chatgh-reviewer</code>、<code>release-manager</code></td>
+</tr>
+<tr>
+<td>机器人身份</td>
+<td>GitHub 上显示的执行身份</td>
+<td>GitHub App <code>chatgh[bot]</code>、普通机器人用户</td>
+</tr>
+<tr>
+<td>代理任务</td>
+<td>一次被分配的工作单元</td>
+<td>“修复 issue #123 的失败测试”</td>
+</tr>
+<tr>
+<td>运行 / 会话</td>
+<td>一次实际执行过程</td>
+<td>运行器日志、工具调用、成本、状态</td>
+</tr>
+<tr>
+<td>触发器</td>
+<td>触发任务的事件或命令</td>
+<td><code>@chatgh-agent fix this</code>、<code>workflow_dispatch</code></td>
+</tr>
+<tr>
+<td>技能</td>
+<td>可复用能力包</td>
+<td>代码评审技能、发布说明技能</td>
+</tr>
+<tr>
+<td>工具</td>
+<td>可调用的外部能力</td>
+<td>GitHub API、shell、browser、MCP server</td>
+</tr>
+<tr>
+<td>策略</td>
+<td>权限与安全策略</td>
+<td>只读、可评论、可开 PR、合并前审批</td>
+</tr>
+<tr>
+<td>产物</td>
+<td>交付物</td>
+<td>PR、评论、release、patch、summary、log</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_3">为什么不用单一“机器人”概念</h2>
+<p>GitHub 生态里“bot”经常指不同层：</p>
+<ol>
+<li>普通机器人用户：一个 GitHub 用户 + PAT。</li>
+<li>GitHub App：安装在 org/repo 上，有 webhook、权限和 <code>xxx[bot]</code> 身份。</li>
+<li>GitHub Actions 机器人：<code>github-actions[bot]</code> 在 workflow 中执行。</li>
+<li>GitHub 托管 Copilot 代理：官方 <code>gh agent-task</code> 背后的托管编码代理。</li>
+<li>自托管 CLI 代理：Codex、Hermes、OpenHands、Claude Code 等本地或自托管运行器。</li>
+</ol>
+<p>ChatGH 文档里应使用更精确的词：</p>
+<ul>
+<li>“GitHub App” 指安装和 webhook/installation token 模型。</li>
+<li>“bot user” 指普通 GitHub 用户和个人访问令牌。</li>
+<li>“agent task” 指任务对象。</li>
+<li>“运行器” 指真正执行任务的进程或服务。</li>
+<li>“agent” 指面向用户的机器人工作成员。</li>
+</ul>
+<h2 id="_4">最小机器人配置清单</h2>
+<p>ChatGH 后续可以支持 <code>.chatgh/agents/&lt;name&gt;.yaml</code> 作为自托管机器人定义。这个文件不同于官方 <code>.github/agents/&lt;name&gt;.md</code>：后者是 GitHub 托管 Copilot 代理的自定义代理入口；前者是 ChatGH 自托管事件到运行器桥接的配置草案。</p>
+<pre><code class="language-yaml">apiVersion: chatgh.chatarch.org/v1alpha1
+kind: Agent
+metadata:
+  name: reviewer
+  displayName: Code Reviewer
+  description: Reviews pull requests and posts actionable comments.
+  labels:
+    role: reviewer
+    domain: code
+spec:
+  identity:
+    mode: github-app
+    appSlug: chatgh-reviewer
+    fallbackBotUser: chatgh-bot
+  scope:
+    organizations:
+      - ChatArch
+    repositories:
+      - ChatArch/ChatGH
+    threads:
+      - issues
+      - pull_requests
+  triggers:
+    mentions:
+      - &quot;@chatgh-reviewer&quot;
+    slashCommands:
+      - &quot;/review&quot;
+    webhookEvents:
+      - issue_comment
+      - pull_request
+  commandParsing:
+    defaultAction: review
+    allowFreeform: true
+    examples:
+      - &quot;@chatgh-reviewer review this PR&quot;
+      - &quot;/review focus on security and tests&quot;
+  context:
+    include:
+      - thread
+      - pull_request_diff
+      - check_runs
+      - repository_files
+    maxFiles: 50
+    maxThreadComments: 100
+  permissions:
+    github:
+      contents: read
+      issues: write
+      pull_requests: write
+      checks: read
+      statuses: write
+    local:
+      filesystem: sandbox
+      network: restricted
+  tools:
+    allow:
+      - chatgh.pr.view
+      - chatgh.pr.diff
+      - chatgh.pr.comment
+      - chatgh.pr.checks
+      - shell.pytest
+    deny:
+      - chatgh.pr.merge
+      - chatgh.repo.edit
+  runtime:
+    type: command
+    command: &quot;codex --json&quot;
+    timeoutSeconds: 1800
+    workingDirectory: checkout
+  memory:
+    scope: repository
+    retentionDays: 30
+  output:
+    progress: issue-comment
+    final: issue-comment
+    artifacts:
+      - summary
+      - patch
+      - pull_request
+  approvals:
+    requiredFor:
+      - push
+      - merge
+      - release
+      - repository_settings
+  audit:
+    logLevel: standard
+    includeToolCalls: true
+</code></pre>
+<h2 id="_5">字段解释</h2>
+<h3 id="metadata"><code>metadata</code></h3>
+<p>稳定的用户可见身份信息。</p>
+<ul>
+<li><code>name</code>: 机器可读名称，适合作为命令和文件名。</li>
+<li><code>displayName</code>: UI/评论里展示的名称。</li>
+<li><code>description</code>: agent 的职责边界。</li>
+<li><code>labels</code>: 便于目录、市场、组织策略筛选。</li>
+</ul>
+<h3 id="identity"><code>identity</code></h3>
+<p>Agent 在 GitHub 上如何被识别。</p>
+<ul>
+<li><code>github-app</code>: 推荐的组织级模式，适合 webhook、细粒度权限和审计。</li>
+<li><code>bot-user</code>: 快速原型模式，普通 GitHub 用户 + PAT。</li>
+<li><code>actions</code>: 通过 GitHub Actions 的 <code>GITHUB_TOKEN</code> 执行。</li>
+<li><code>hosted-copilot</code>: 明确调用 GitHub hosted Copilot agent task。</li>
+</ul>
+<h3 id="scope"><code>scope</code></h3>
+<p>Agent 可以看到和响应的范围。范围越小，越容易治理。</p>
+<ul>
+<li>organization scope：组织级安装。</li>
+<li>repository scope：仓库级安装。</li>
+<li>thread scope：issue/PR/comment 线程。</li>
+<li>branch/path scope：只处理某些 branch 或 path。</li>
+</ul>
+<h3 id="triggers"><code>triggers</code></h3>
+<p>Agent 如何被唤起。</p>
+<p>常见模式：</p>
+<pre><code class="language-text">@chatgh-agent fix this
+/chatgh fix
+label: agent:review
+workflow_dispatch
+repository_dispatch
+schedule
+</code></pre>
+<p>默认策略应是“显式触发”，避免 agent 在公共仓库或大社区里主动刷屏。</p>
+<h3 id="context"><code>context</code></h3>
+<p>运行前加载什么上下文。</p>
+<p>可选上下文：</p>
+<ul>
+<li>issue/PR 标题和正文。</li>
+<li>thread comments。</li>
+<li>PR diff。</li>
+<li>check runs / workflow logs。</li>
+<li>repository files。</li>
+<li>project items。</li>
+<li>linked issues。</li>
+<li>organization memory。</li>
+</ul>
+<p>上下文必须有上限，避免 prompt 爆炸和权限泄漏。</p>
+<h3 id="permissions"><code>permissions</code></h3>
+<p>权限分两层：</p>
+<ol>
+<li>平台权限：GitHub App / PAT / Actions token 能做什么。</li>
+<li>ChatGH policy：即使 token 有权限，agent 也不一定能调用。</li>
+</ol>
+<p>例如 token 可以写 PR，但 agent policy 可以禁止 merge。</p>
+<h3 id="tools"><code>tools</code></h3>
+<p>工具是 agent 可执行能力，不等于权限本身。</p>
+<p>推荐工具命名：</p>
+<pre><code class="language-text">chatgh.repo.view
+chatgh.issue.comment
+chatgh.pr.diff
+chatgh.pr.create
+chatgh.status.create
+shell.pytest
+mcp.github.search
+</code></pre>
+<p>工具清单应该默认 allowlist，而不是默认全开。</p>
+<h3 id="runtime"><code>runtime</code></h3>
+<p>运行时可以是：</p>
+<ul>
+<li><code>command</code>: 调本地 CLI，如 <code>codex --json</code>。</li>
+<li><code>container</code>: 在 Docker/E2B/Firecracker 沙盒里跑。</li>
+<li><code>actions</code>: 触发 GitHub Actions workflow。</li>
+<li><code>hosted-copilot</code>: 调 GitHub agent task。</li>
+<li><code>webhook</code>: 转发给外部 agent service。</li>
+</ul>
+<h3 id="memory"><code>memory</code></h3>
+<p>记忆必须有 scope。</p>
+<ul>
+<li><code>thread</code>: 只记住当前 issue/PR。</li>
+<li><code>repository</code>: 记住仓库级偏好和历史任务。</li>
+<li><code>organization</code>: 记住组织级规范。</li>
+<li><code>none</code>: 无持久记忆。</li>
+</ul>
+<p>默认不应把 private thread 信息泄漏到更广 scope。</p>
+<h3 id="approvals"><code>approvals</code></h3>
+<p>高风险动作必须人工确认。</p>
+<p>建议默认需要确认：</p>
+<ul>
+<li>push 到受保护分支。</li>
+<li>merge PR。</li>
+<li>创建 release。</li>
+<li>修改 workflow。</li>
+<li>修改 repository settings。</li>
+<li>删除、归档、改 visibility。</li>
+<li>读取或写入 secrets。</li>
+</ul>
+<h2 id="_6">机器人生命周期</h2>
+<pre><code class="language-text">draft
+  -&gt; installed
+  -&gt; enabled
+  -&gt; triggered
+  -&gt; authorized
+  -&gt; queued
+  -&gt; running
+  -&gt; waiting_approval
+  -&gt; completed | failed | cancelled
+  -&gt; archived
+</code></pre>
+<p>解释：</p>
+<ul>
+<li><code>draft</code>: 定义存在，但未安装。</li>
+<li><code>installed</code>: 已安装到 org/repo，但未必启用。</li>
+<li><code>enabled</code>: 可以响应事件。</li>
+<li><code>triggered</code>: 收到 webhook 或命令。</li>
+<li><code>authorized</code>: 通过 actor、repo、policy 检查。</li>
+<li><code>queued</code>: 已创建任务，等待运行器。</li>
+<li><code>running</code>: 运行器正在执行。</li>
+<li><code>waiting_approval</code>: 等人类批准高风险动作。</li>
+<li><code>completed</code>: 已交付结果。</li>
+<li><code>failed</code>: 执行失败，已写回错误或日志。</li>
+<li><code>cancelled</code>: 人类或系统取消。</li>
+<li><code>archived</code>: 历史任务归档。</li>
+</ul>
+<h2 id="github">GitHub 原生流程</h2>
+<h3 id="1">1. 安装</h3>
+<pre><code class="language-text">Admin installs GitHub App on org/repo
+  -&gt; GitHub sends installation event
+  -&gt; ChatGH stores installation id and allowed repos
+  -&gt; Admin selects agent manifest or template
+</code></pre>
+<p>快速原型可以用 bot user + PAT 跳过 GitHub App，但正式组织场景应优先 GitHub App。</p>
+<h3 id="2">2. 触发</h3>
+<pre><code class="language-text">User comments: @chatgh-reviewer review this PR
+  -&gt; GitHub sends issue_comment webhook
+  -&gt; ChatGH verifies signature
+  -&gt; ChatGH normalizes event
+  -&gt; ChatGH parses command and selects agent
+</code></pre>
+<h3 id="3">3. 授权</h3>
+<pre><code class="language-text">检查 actor 权限
+检查仓库 allowlist
+检查线程类型
+检查命令 allowlist
+检查工具策略
+创建审计记录
+</code></pre>
+<h3 id="4">4. 执行</h3>
+<pre><code class="language-text">构建任务上下文
+解析 installation token 或 bot token
+准备 checkout / sandbox
+调用运行器
+用评论、status 或 check 流式回传进度
+</code></pre>
+<h3 id="5">5. 交付</h3>
+<pre><code class="language-text">发布最终评论
+按需创建或更新 PR
+设置 commit status 或 check run
+附加产物和日志
+记录最终审计事件
+</code></pre>
+<h2 id="_7">三种典型机器人</h2>
+<h3 id="_8">代码评审机器人</h3>
+<p>职责：读 PR diff 和 CI，发评审评论。</p>
+<p>默认权限：</p>
+<pre><code class="language-text">contents: read
+pull_requests: write
+checks: read
+statuses: write
+</code></pre>
+<p>默认禁止：</p>
+<pre><code class="language-text">push
+merge
+release
+repo settings
+</code></pre>
+<h3 id="_9">问题修复机器人</h3>
+<p>职责：根据 issue 创建分支、修复、测试、开 PR。</p>
+<p>需要权限：</p>
+<pre><code class="language-text">contents: write
+issues: write
+pull_requests: write
+statuses: write
+</code></pre>
+<p>高风险点：push、修改 workflow、触发外部服务。</p>
+<h3 id="_10">注册与发布机器人</h3>
+<p>职责：类似 Julia Registrator / TagBot。</p>
+<p>Flow：</p>
+<pre><code class="language-text">@agent register
+  -&gt; read package metadata
+  -&gt; open registry PR
+  -&gt; post status/comment
+  -&gt; after merge create tag/release
+</code></pre>
+<p>这类 agent 证明 GitHub issue/commit comment 本身就可以成为任务入口，不需要先做新 UI。</p>
+<h2 id="github_1">与官方 GitHub 代理的关系</h2>
+<p>官方 <code>gh agent-task</code> 是 GitHub 托管 Copilot 代理任务。它使用 GitHub/Copilot 后端，支持：</p>
+<pre><code class="language-bash">gh agent-task create &quot;fix the failing tests&quot; --repo octocat/Hello-World --base main
+gh agent-task list
+gh agent-task view SESSION_ID
+</code></pre>
+<p>ChatGH 自托管 agent 不是这个东西。ChatGH 应对齐命名和用户心智，但在帮助文案和文档中明确区分：</p>
+<ul>
+<li>GitHub 托管: <code>gh agent-task</code> / Copilot / CAPI。</li>
+<li>ChatGH 自托管：webhook 事件 -&gt; 本地或远端运行器 -&gt; 写回 GitHub。</li>
+</ul>
+<h2 id="chatgh_1">ChatGH 命令方向</h2>
+<p>建议第一批不要直接做完整 server，而是先做可组合 primitives：</p>
+<pre><code class="language-bash">chatgh agent event verify
+chatgh agent event normalize
+chatgh agent event handle
+chatgh agent task comment
+chatgh agent status create
+chatgh agent webhook create
+chatgh app token
+</code></pre>
+<p>再逐步加：</p>
+<pre><code class="language-bash">chatgh agent install
+chatgh agent list
+chatgh agent enable
+chatgh agent disable
+chatgh agent run view
+chatgh agent run logs
+chatgh agent approve
+</code></pre>
+<h2 id="_11">最小可用能力</h2>
+<pre><code class="language-text">GitHub issue_comment webhook
+  -&gt; chatgh agent event normalize
+  -&gt; permission check
+  -&gt; 本地运行器命令
+  -&gt; issue 评论最终回复
+</code></pre>
+<p>最小可用闭环需要：</p>
+<ul>
+<li>webhook secret verification。</li>
+<li>event normalization。</li>
+<li>mention / slash command 解析器。</li>
+<li>comment 写回。</li>
+<li>本地运行器契约。</li>
+<li>审计日志。</li>
+</ul>
+<p>不属于最小闭环：</p>
+<ul>
+<li>完整 GitHub App UI。</li>
+<li>marketplace。</li>
+<li>多机器人调度。</li>
+<li>托管 Copilot CAPI。</li>
+<li>跨提供方 Gitea 支持。</li>
+</ul>
+<h2 id="_12">设计原则</h2>
+<ul>
+<li>显式触发优先，不默认 ambient monitoring。</li>
+<li>默认只读，写权限逐步打开。</li>
+<li>每个 agent 都有 owner 和 scope。</li>
+<li>每次运行都记录 actor、trigger、repo、commit、工具调用和最终产物。</li>
+<li>所有危险动作必须可解释、可审批、可撤销或可追踪。</li>
+<li>文档和命令要同时说明“GitHub 托管”和“自托管”的区别。</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.highlight", "search.share", "content.code.copy", "content.action.edit"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
