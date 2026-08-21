@@ -2,6 +2,10 @@
 
 本项目按日期记录更新；正式发版信息也维护在本文件。
 
+## 2026-08-21
+- 准备 `0.2.12` 补丁版本：将顶层 Click CLI 树迁移到 ChatStyle 共享 `add_tree_option()` runtime，新增 `chatgh --tree-brief`，默认 `chatgh --tree` 保留参数签名。
+- 将运行时依赖窗口对齐到 `chatstyle>=0.2.0,<0.3.0` 与 `chatenv>=0.2.9,<0.3.0`，并保留 0.2.10/0.2.11 中新增的 `project`、`invitation`、`repo transfer` 等命令面。
+
 ## 2026-08-12
 - 准备 `0.2.11` 补丁版本：补齐 MkDocs Material emoji renderer baseline、当前 docs dependency window、CI Python 3.10/3.11/3.12 matrix + installed `chatgh --version` / `chatgh --tree` smoke，以及 PyPI Trusted Publishing default-branch ancestry guard。
 - 将 package Homepage 对齐到 ChatArch docs custom domain，并清理公开文档中的泛用仓库占位符与 scaffold wording。
