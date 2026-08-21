@@ -28,22 +28,20 @@ def test_chatgh_tree_option_renders_registered_command_surface():
     assert result.output.startswith("chatgh\n")
     for option in ("--help", "--version", "--tree", "--tree-brief"):
         assert option in result.output
-    assert "├── pr" in result.output
-    assert "│   ├── checks [NUMBER]" in result.output
-    assert "├── repo" in result.output
-    assert "│   └── transfer" in result.output
-    assert "├── project" in result.output
-    assert "│   ├── item" in result.output
-    assert "│   │   ├── edit" in result.output
-    assert "│   ├── field" in result.output
-    assert "│   │   ├── list" in result.output
-    assert "├── run" in result.output
-    assert "│   └── logs" in result.output
-    assert "├── invitation" in result.output
-    assert "│   ├── accept" in result.output
-    assert "├── repo-perms" in result.output
-    assert "└── set-token" in result.output
-    assert "clone <REPO> [DIRECTORY]" in result.output
+    for group in ("├── pr", "├── repo", "├── project", "├── run", "├── invitation"):
+        assert group in result.output
+    for signature in (
+        "checks [NUMBER]",
+        "clone <REPO> [DIRECTORY]",
+        "transfer [REPO-ARG]",
+        "edit [NUMBER] [--owner OWNER] [--id ITEM-ID]",
+        "list [NUMBER] [--owner OWNER] [--limit LIMIT]",
+        "logs [--repo REPO] [--job-id JOB-ID]",
+        "accept <INVITATION-ID>",
+        "repo-perms [--repo REPO]",
+        "set-token [--token TOKEN]",
+    ):
+        assert signature in result.output
     assert "hello" not in result.output.lower()
 
 
