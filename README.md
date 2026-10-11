@@ -26,6 +26,8 @@ pip install -e ".[dev]"
 2. 当前仓库 `.git/config` 中的仓库本地 HTTPS 授权头，路径为规范化后的 `https://github.com/owner/repo.git`。
 3. 类型化环境配置中的 `GITHUB_ACCESS_TOKEN`。
 
+`fetch`、`pull`、`push` 和 HTTPS `repo clone` 每次调用都会重新按这个顺序解析，不会把当前 ChatEnv 默认值缓存到仓库配置。通常应保持这种动态模式；只有确实需要把某个仓库固定到专用身份时，才显式使用 `set-token` 或 clone 的 `--set-token`。
+
 可以用 `chatenv` 查看或配置类型化环境配置：
 
 ```bash
@@ -69,6 +71,10 @@ chatgh project --help
 chatgh run --help
 chatgh repo-perms --help
 chatgh set-token --help
+chatgh unset-token --help
+chatgh fetch --help
+chatgh pull --help
+chatgh push --help
 ```
 
 命令树（`chatgh --tree` 可从已注册 Click 命令实时生成完整树）：
@@ -78,12 +84,14 @@ chatgh set-token --help
 - `chatgh pr status/diff/close/reopen/review/ready/update-branch`：常见 PR 生命周期和评审命令；写操作复用 ChatGH 令牌解析，且不会打印 token。
 - `chatgh repo list/create/fork/transfer/protection`：已有仓库列表、创建、fork、所有权迁移、保护规则检查。
 - `chatgh repo view/clone/sync/edit`：常见 repo 命令；`clone/sync` 对本地 git 副作用保持显式、保守，不覆盖已有非空目录。
+- `chatgh fetch [REMOTE] [REFSPEC]`、`chatgh pull [REMOTE] [BRANCH]`、`chatgh push [REMOTE] [REFSPEC]`：调用范围内的 GitHub HTTPS 传输。缺少位置参数时只跟随当前分支的 upstream；没有 upstream 时会报错，而不会猜测无关分支。
 - `chatgh invitation list/accept/decline`：查看和处理当前账号收到的 GitHub 仓库邀请；对齐 GitHub REST API 的认证用户邀请能力。
 - `chatgh project list/view/create/edit/close/delete/copy` 与 `chatgh project item ...`、`chatgh project field ...`、`link/unlink/mark-template`：GitHub Projects v2 命令面。官方 `gh project` 只作为能力参考；ChatGH 打开 `item` 和 `field` 子树，不保留 `item-add` / `field-list` 扁平兼容入口。鉴权、JSON 输出、安全门和 Python API 走 ChatGH 自有规范。
 - `chatgh run view/logs`：查看 workflow run 和 job logs。
 - `chatgh run list/watch/rerun/cancel/download`：Actions run 运维命令；`watch` 有 timeout，`rerun/cancel` 属于远端 mutation。
 - `chatgh repo-perms`：查看令牌权限和派生能力。
 - `chatgh set-token`：为当前 GitHub 仓库配置仓库级 HTTPS 令牌。
+- `chatgh unset-token [--all]`：删除当前 remote 的本地 token pin；`--all` 只处理本仓库 local config 中 token-bearing 的 GitHub HTTPS header。
 
 ## 常用流程
 
@@ -97,7 +105,24 @@ chatgh repo edit ChatArch/ChatGH --description "GitHub helpers" --json-output
 chatgh repo edit ChatArch/ChatGH --visibility private --accept-visibility-change-consequences --json-output
 ```
 
-`repo clone` 会拒绝覆盖已有非空目录；`repo sync` 默认使用 `git pull --ff-only`。`repo edit` 当前只支持 description、homepage、default-branch 和 visibility 小子集；设置 `--visibility` 时必须显式传 `--accept-visibility-change-consequences`。
+`repo clone` 会拒绝覆盖已有非空目录，默认只为本次 clone 使用解析到的身份，不写 token pin；传 `--set-token` 才会显式固定。`repo sync` 复用同一传输层，默认 fast-forward only。`repo edit` 当前只支持 description、homepage、default-branch 和 visibility 小子集；设置 `--visibility` 时必须显式传 `--accept-visibility-change-consequences`。
+
+### 调用范围内的 Git 传输
+
+```bash
+# 没有位置参数时只使用当前分支的 upstream；没有 upstream 会明确失败。
+chatgh fetch
+chatgh pull
+chatgh pull --rebase
+
+# 显式 target；没有 --force、reset、stash 或认证重试入口。
+chatgh fetch origin main
+chatgh push -u origin main
+chatgh push origin main:main --dry-run
+chatgh push origin --tags
+```
+
+传输会分别解析有效的 fetch 与 push URL（包括 `pushurl` 和 Git URL rewrite），只接受无 URL 凭据的 `github.com` HTTPS 目标。pull 默认只 fast-forward；`--rebase` 与 `--ff-only` 互斥。认证只在网络 Git 子进程中使用一次性 credential helper；旧的 HTTP header/helper 会在该子进程内清空，认证不会跟随重定向、递归 submodule、切换身份或自动重试。Git 的原始 stdout/stderr 会脱敏，并保留其非零退出状态。
 
 ### 仓库邀请
 
@@ -250,6 +275,8 @@ chatgh repo-perms --repo octocat/Hello-World --full-json
 
 chatgh set-token --token "$GITHUB_ACCESS_TOKEN"
 chatgh set-token --token "$GITHUB_ACCESS_TOKEN" --save-env
+chatgh unset-token
+chatgh unset-token --all
 ```
 
 `repo-perms` 会展示：
@@ -265,7 +292,7 @@ chatgh set-token --token "$GITHUB_ACCESS_TOKEN" --save-env
     extraHeader = Authorization: Basic <base64(x-access-token:TOKEN)>
 ```
 
-不要把 token 写进 remote URL，也不要把原始 `extraHeader` 输出到日志。传 `--save-env` 时会同步写入类型化环境配置的 `GITHUB_ACCESS_TOKEN`。
+不要把 token 写进 remote URL，也不要把原始 `extraHeader` 输出到日志。传 `--save-env` 时会同步写入类型化环境配置的 `GITHUB_ACCESS_TOKEN`。`unset-token` 输出安全 JSON（仓库、删除的 key 名称/数量和当前默认值是否仍可解析），不会输出 token 或掩码；它是从专用 pin 切回动态 ChatEnv 默认值的预期方式。
 
 ## 交互模式
 
@@ -307,6 +334,7 @@ checks = client.get_pr_checks("octocat/Hello-World", 1)
 
 - `chatgh.github.api`：令牌、仓库解析、git credential 和 REST 请求基础能力。
 - `chatgh.github.commands`：CLI 使用的业务流程函数。
+- `chatgh.github.transport`：可导入的 invocation-scoped `fetch` / `pull` / `push` / `unset_token` API。
 - `chatgh.github.requests`：PR/checks/actions 载荷构造。
 - `chatgh.github.render`：人类可读输出、合并阻断信息和尾部日志辅助函数。
 

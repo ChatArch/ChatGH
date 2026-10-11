@@ -4,13 +4,15 @@ ChatGH follows a GitHub-familiar resource model for GitHub APIs, while keeping C
 
 ## Current CLI Surface
 
-Since `0.2.10`, this tree is generated live by `chatgh --tree` from the registered Click command surface; the docs keep a human-readable copy for review.
+Since `0.2.13`, the live `chatgh --tree` / `chatgh --tree-brief` registration is authoritative; the docs keep a human-readable copy for review.
 
 ```text
-chatgh  # GitHub helpers (PR, actions, repo).
-├── --help  # Show this help message.
-├── --version  # Show the installed package version.
-├── --tree  # Print the registered command tree.
+chatgh
+├── --help  # Show this message and exit.
+├── --version  # Show the version and exit.
+├── --tree  # Print the registered CLI tree and exit.
+├── --tree-brief  # Print the registered CLI tree without parameter signatures and exit.
+├── fetch [REMOTE] [REFSPEC] [--token TOKEN]  # Fetch from the current branch upstream or an explicit remote.
 ├── pr  # Pull request helpers.
 │   ├── list [--repo <REPO>] [--state <STATE>] [--limit <LIMIT>] [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # List pull requests.
 │   ├── create [--repo <REPO>] [--base <BASE>] [--head <HEAD>] [--title <TITLE>] [--body <BODY>] [--body-file <BODY-FILE>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Create a pull request.
@@ -29,8 +31,8 @@ chatgh  # GitHub helpers (PR, actions, repo).
 ├── repo  # Repository helpers.
 │   ├── list [--owner <OWNER>] [--limit <LIMIT>] [--sort <SORT>] [--direction <DIRECTION>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # List repositories for an owner or organization.
 │   ├── view [REPO-ARG] [--repo <REPO-OPTION>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # View repository details.
-│   ├── clone <REPO> [DIRECTORY] [--ssh] [--set-token/--no-set-token] [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # Clone a repository without overwriting an existing directory.
-│   ├── sync [REPO-ARG] [--repo <REPO-OPTION>] [--branch <BRANCH>] [--remote <REMOTE>] [--ff-only/--no-ff-only] [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # Fetch and fast-forward the current checkout for a repository.
+│   ├── clone <REPO> [DIRECTORY] [--ssh] [--set-token] [--json JSON-FIELDS] [--json-output] [--token TOKEN]  # Clone a repository without overwriting an existing directory.
+│   ├── sync [REPO-ARG] [--repo REPO-OPTION] [--branch BRANCH] [--remote REMOTE] [--ff-only] [--json JSON-FIELDS] [--json-output] [--token TOKEN]  # Fetch and fast-forward the current checkout for a repository.
 │   ├── edit [REPO-ARG] [--repo <REPO-OPTION>] [--description <DESCRIPTION>] [--homepage <HOMEPAGE>] [--default-branch <DEFAULT-BRANCH>] [--visibility <VISIBILITY>] [--accept-visibility-change-consequences] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Edit repository metadata.
 │   ├── protection [--repo <REPO>] [--owner <OWNER>] [--limit <LIMIT>] [--jobs <JOBS>] [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # Show default-branch protection and ruleset status.
 │   ├── create [--owner <OWNER>] [--name <NAME>] [--description <DESCRIPTION>] [--public] [--if-exists <IF-EXISTS>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Create a repository. Repositories are private by default.
@@ -71,7 +73,10 @@ chatgh  # GitHub helpers (PR, actions, repo).
 │   ├── accept <INVITATION-ID> [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # Accept a repository invitation by id.
 │   └── decline <INVITATION-ID> [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # Decline a repository invitation by id.
 ├── repo-perms [--repo <REPO>] [--json <FIELDS>] [--json-output] [--full-json] [--token <TOKEN>]  # Show repository permissions for the current token.
-└── set-token [--token <TOKEN>] [--save-env]  # Configure HTTPS credentials for the current GitHub repository.
+├── pull [REMOTE] [BRANCH] [--ff-only] [--rebase] [--token TOKEN]  # Pull safely from the current branch upstream or an explicit target.
+├── push [REMOTE] [REFSPEC] [--set-upstream] [--dry-run] [--tags] [--token TOKEN]  # Push a validated refspec or tags without force modes.
+├── set-token [--token <TOKEN>] [--save-env]  # Configure HTTPS credentials for the current GitHub repository.
+└── unset-token [--all]  # Remove a repository-local GitHub HTTPS token pin safely.
 ```
 
 ## Target CLI Direction
@@ -104,12 +109,16 @@ Confirmed target domains:
 ChatGH-specific custom commands stay:
 
 - `set-token`: configure repo-local HTTPS auth header and optionally ChatEnv `GITHUB_ACCESS_TOKEN`.
+- `unset-token`: safely remove the selected GitHub remote's local token pin; `--all` only touches token-bearing GitHub HTTPS headers directly owned by this repository's local config.
+- `fetch` / `pull` / `push`: invocation-scoped GitHub HTTPS transport. Without an explicit target, they use only the current branch upstream and do not guess from unrelated remotes or branches.
 - `repo-perms`: inspect token permissions and derived ChatGH capabilities.
 - `agent event ...`: future local event-to-runner bridge, if implemented; this should not pretend to be GitHub Copilot's hosted agent runtime.
 
 ## Responsibilities
 
 - `set-token`: store a GitHub token for the current repository in repo-local git config, optionally saving it to ChatEnv.
+- `unset-token`: remove only the selected GitHub HTTPS token header from this repository's local config and emit safe JSON without a token or mask.
+- `fetch` / `pull` / `push`: validate effective fetch/push URLs separately (including rewrites and `pushurl`), accept only credential-free `github.com` HTTPS, clear inherited header/helpers only in the child, and supply the current resolved token with a one-shot helper.
 - `repo-perms`: resolve the current token, read repository permissions, and derive ChatGH capabilities.
 - `repo list/view/create/edit/fork/transfer/clone/sync/protection`: cover repository inventory, mutation, ownership transfer, local checkout, fork creation, and governance inspection.
 - `pr list/create/view/comment/edit/checks/merge/status/diff/close/reopen/review/ready/update-branch`: cover PR lifecycle, review, merge gating, and CI inspection.
@@ -128,6 +137,10 @@ Every public CLI command should have an importable Python function or method beh
 
 ```text
 chatgh set-token              -> chatgh.github.commands.configure_github_https_token / save_github_token_to_env
+chatgh unset-token            -> chatgh.github.transport.unset_token
+chatgh fetch                  -> chatgh.github.transport.fetch
+chatgh pull                   -> chatgh.github.transport.pull
+chatgh push                   -> chatgh.github.transport.push
 chatgh repo-perms             -> chatgh.github.commands.get_repo_permissions / derive_repo_capabilities
 chatgh repo list              -> chatgh.github.commands.list_repos
 chatgh repo create            -> chatgh.github.commands.create_repo

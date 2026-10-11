@@ -2,6 +2,12 @@
 
 本项目按日期记录更新；正式发版信息也维护在本文件。
 
+## 2026-10-10
+- 准备 `0.2.13` 补丁版本：新增顶层 `chatgh fetch`、`chatgh pull`、`chatgh push` 与 `chatgh unset-token`。Git 传输在每次调用内校验有效 fetch/push URL、分支上游和安全 refspec，只接受无凭据的 `github.com` HTTPS 目标；默认 pull 为 fast-forward only，rebase、set-upstream、dry-run 和 tags 都必须显式请求。
+- 传输令牌继续遵循显式 `--token`、匹配仓库本地 pin、当前 ChatEnv 默认值的顺序；认证仅交给一次性 Git credential helper，不写入 remote、argv、全局配置或长期 helper。继承的 HTTPS header/helper 只在 Git 子进程中清空，禁用认证重定向、submodule 递归和认证子进程 hooks；认证失败不会切换身份或自动重试。
+- `unset-token` 默认只删除当前选中 GitHub remote 的本地 `.git`/非 `.git` 旧 pin，`--all` 仅处理本仓库 local config 中 token-bearing GitHub HTTPS headers，输出不含令牌的 JSON。`repo clone`/`repo sync` 改用动态传输；clone 不再默认固化 token，`--set-token` 保留为明确 opt-in。
+- 发布 workflow 的手动触发也限制为版本 tag，保留 PyPI OIDC Trusted Publisher 身份与默认分支祖先校验。
+
 ## 2026-08-21
 - 准备 `0.2.12` 补丁版本：将顶层 Click CLI 树迁移到 ChatStyle 共享 `add_tree_option()` runtime，新增 `chatgh --tree-brief`，默认 `chatgh --tree` 保留参数签名。
 - 将运行时依赖窗口对齐到 `chatstyle>=0.2.0,<0.3.0` 与 `chatenv>=0.2.9,<0.3.0`，并保留 0.2.10/0.2.11 中新增的 `project`、`invitation`、`repo transfer` 等命令面。

@@ -182,16 +182,21 @@ def test_merge_pr_without_check_keeps_current_behavior(monkeypatch):
     assert result["url"].endswith("/138")
 
 
-def test_clone_repo_uses_one_shot_auth_header_and_sets_repo_token(monkeypatch, tmp_path):
+def test_clone_repo_uses_scoped_transport_and_only_pins_when_requested(monkeypatch, tmp_path):
     calls = []
     configured = []
 
-    def fake_run(args, check, **kwargs):
-        calls.append(args)
-        return SimpleNamespace(returncode=0)
+    def fake_clone(repo, directory, token):
+        calls.append((repo, directory, token))
+        return {
+            "repo": repo,
+            "path": directory,
+            "url": f"https://github.com/{repo}.git",
+            "token_source": "repo git config",
+        }
 
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(gh_commands.subprocess, "run", fake_run)
+    monkeypatch.setattr(gh_commands, "clone_repository", fake_clone)
     monkeypatch.setattr(gh_commands, "resolve_token", lambda *args, **kwargs: "secret-token")
     monkeypatch.setattr(
         gh_commands,
@@ -199,12 +204,9 @@ def test_clone_repo_uses_one_shot_auth_header_and_sets_repo_token(monkeypatch, t
         lambda credential, token, cwd=None: configured.append((credential, token, cwd)),
     )
 
-    payload = gh_commands.clone_repo("ChatArch/ChatTea", "tea", False, None)
+    payload = gh_commands.clone_repo("ChatArch/ChatTea", "tea", False, None, set_token_after=True)
 
-    command = calls[0]
-    assert command[:2] == ["git", "-c"]
-    assert command[-3:] == ["clone", "https://github.com/ChatArch/ChatTea.git", "tea"]
-    assert "secret-token" not in " ".join(command)
+    assert calls == [("ChatArch/ChatTea", "tea", None)]
     assert configured == [
         (
             {"protocol": "https", "host": "github.com", "path": "ChatArch/ChatTea"},
@@ -216,17 +218,21 @@ def test_clone_repo_uses_one_shot_auth_header_and_sets_repo_token(monkeypatch, t
     assert payload["token_configured"] is True
 
 
-def test_clone_repo_without_token_skips_auth_config(monkeypatch, tmp_path):
+def test_clone_repo_defaults_to_dynamic_credentials_without_a_local_pin(monkeypatch, tmp_path):
     calls = []
     configured = []
 
-    def fake_run(args, check, **kwargs):
-        calls.append(args)
-        return SimpleNamespace(returncode=0)
+    def fake_clone(repo, directory, token):
+        calls.append((repo, directory, token))
+        return {
+            "repo": repo,
+            "path": directory,
+            "url": f"https://github.com/{repo}.git",
+            "token_source": "GitHubConfig.GITHUB_ACCESS_TOKEN",
+        }
 
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(gh_commands.subprocess, "run", fake_run)
-    monkeypatch.setattr(gh_commands, "resolve_token", lambda *args, **kwargs: None)
+    monkeypatch.setattr(gh_commands, "clone_repository", fake_clone)
     monkeypatch.setattr(
         gh_commands,
         "configure_github_https_token",
@@ -235,7 +241,7 @@ def test_clone_repo_without_token_skips_auth_config(monkeypatch, tmp_path):
 
     payload = gh_commands.clone_repo("ChatArch/ChatTea", None, False, None)
 
-    assert calls == [["git", "clone", "https://github.com/ChatArch/ChatTea.git", "ChatTea"]]
+    assert calls == [("ChatArch/ChatTea", "ChatTea", None)]
     assert configured == []
     assert payload["token_configured"] is False
 

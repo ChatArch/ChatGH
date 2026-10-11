@@ -35,3 +35,19 @@ def test_public_docs_do_not_point_to_stale_domains_or_scaffold_commands() -> Non
         assert "OWNER/REPO" not in text, rel
         assert "latest/" not in text, rel
         assert "template `hello`" not in text.lower(), rel
+
+
+def test_transport_docs_describe_the_registered_dynamic_default() -> None:
+    for rel in (
+        "README.md",
+        "README.en.md",
+        "docs/index.md",
+        "docs/index.en.md",
+        "docs/interface-tree.md",
+        "docs/interface-tree.en.md",
+    ):
+        text = Path(rel).read_text(encoding="utf-8")
+        for command in ("fetch", "pull", "push", "unset-token"):
+            assert command in text, rel
+    for rel in ("docs/interface-tree.md", "docs/interface-tree.en.md"):
+        assert "--set-token/--no-set-token" not in Path(rel).read_text(encoding="utf-8"), rel

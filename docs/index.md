@@ -26,6 +26,8 @@ pip install -e ".[dev]"
 2. 当前仓库 `.git/config` 中的仓库本地 HTTPS 授权头，路径为规范化后的 `https://github.com/owner/repo.git`。
 3. 类型化环境配置中的 `GITHUB_ACCESS_TOKEN`。
 
+HTTPS `fetch`、`pull`、`push` 和 `repo clone` 在每次调用时重新按此顺序解析；它们不会把当前 ChatEnv 默认值缓存到仓库。默认建议保持动态解析，只有仓库确实需要专用身份时才显式使用 `set-token` 或 clone 的 `--set-token`。
+
 可以用 `chatenv` 查看或配置类型化环境配置：
 
 ```bash
@@ -69,6 +71,10 @@ chatgh project --help
 chatgh run --help
 chatgh repo-perms --help
 chatgh set-token --help
+chatgh unset-token --help
+chatgh fetch --help
+chatgh pull --help
+chatgh push --help
 ```
 
 命令树（`chatgh --tree` 可从已注册 Click 命令实时生成完整树）：
@@ -87,6 +93,8 @@ chatgh set-token --help
 - `chatgh run logs`：查看 job 日志，支持尾部输出和落盘。
 - `chatgh repo-perms`：查看令牌权限和派生能力。
 - `chatgh set-token`：为当前 GitHub 仓库配置仓库级 HTTPS 令牌。
+- `chatgh unset-token [--all]`：安全删除当前 remote 的本地 token pin；`--all` 仅处理本仓库 local config 中 token-bearing 的 GitHub HTTPS header。
+- `chatgh fetch [REMOTE] [REFSPEC]`、`chatgh pull [REMOTE] [BRANCH]`、`chatgh push [REMOTE] [REFSPEC]`：调用范围内的 GitHub HTTPS 传输。缺少位置参数时只使用当前分支 upstream；没有 upstream 不猜测无关分支。
 
 ## 常用流程
 
@@ -100,7 +108,21 @@ chatgh repo edit ChatArch/ChatGH --description "GitHub helpers" --json-output
 chatgh repo edit ChatArch/ChatGH --visibility private --accept-visibility-change-consequences --json-output
 ```
 
-`repo clone` 会拒绝覆盖已有非空目录；`repo sync` 默认使用 `git pull --ff-only`。`repo edit` 当前只支持 description、homepage、default-branch 和 visibility 小子集；设置 `--visibility` 时必须显式传 `--accept-visibility-change-consequences`。
+`repo clone` 会拒绝覆盖已有非空目录，默认只为一次 clone 使用解析到的身份；`--set-token` 才会显式固化 token。`repo sync` 复用相同传输层并默认 fast-forward only。`repo edit` 当前只支持 description、homepage、default-branch 和 visibility 小子集；设置 `--visibility` 时必须显式传 `--accept-visibility-change-consequences`。
+
+### 调用范围内的 Git 传输
+
+```bash
+chatgh fetch
+chatgh pull
+chatgh pull --rebase
+chatgh fetch origin main
+chatgh push -u origin main
+chatgh push origin main:main --dry-run
+chatgh push origin --tags
+```
+
+无位置参数时只接受当前分支 upstream；没有 upstream 会明确失败。传输会分别验证有效 fetch/push URL（含 `pushurl` 和 Git URL rewrite），仅接受无 URL 凭据的 `github.com` HTTPS。认证只在网络 Git 子进程内通过一次性 credential helper 使用：子进程会清空继承的 HTTP header/helper，并禁用认证重定向、submodule 递归和认证 hooks；不会 force、reset、stash、切换身份或自动重试。pull 默认只 fast-forward，`--rebase` 与 `--ff-only` 互斥。
 
 ### 仓库邀请
 
@@ -253,6 +275,8 @@ chatgh repo-perms --repo octocat/Hello-World --full-json
 
 chatgh set-token --token "$GITHUB_ACCESS_TOKEN"
 chatgh set-token --token "$GITHUB_ACCESS_TOKEN" --save-env
+chatgh unset-token
+chatgh unset-token --all
 ```
 
 `repo-perms` 会展示：
@@ -268,7 +292,7 @@ chatgh set-token --token "$GITHUB_ACCESS_TOKEN" --save-env
     extraHeader = Authorization: Basic <base64(x-access-token:TOKEN)>
 ```
 
-不要把 token 写进 remote URL，也不要把原始 `extraHeader` 输出到日志。传 `--save-env` 时会同步写入类型化环境配置的 `GITHUB_ACCESS_TOKEN`。
+不要把 token 写进 remote URL，也不要把原始 `extraHeader` 输出到日志。传 `--save-env` 时会同步写入类型化环境配置的 `GITHUB_ACCESS_TOKEN`。`unset-token` 输出仓库、删除的 key 名称/数量与默认值是否仍可解析的安全 JSON，不输出 token 或掩码；它是从专用 pin 切回动态 ChatEnv 默认值的预期方式。
 
 ## 交互模式
 

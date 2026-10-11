@@ -26,6 +26,8 @@ Token resolution order is stable:
 2. Repo-local HTTPS auth header in the current repository's `.git/config`, with the path normalized to `https://github.com/owner/repo.git`.
 3. `GITHUB_ACCESS_TOKEN` from typed env.
 
+HTTPS `fetch`, `pull`, `push`, and `repo clone` resolve this order per invocation. They do not cache the current ChatEnv default in repository configuration. Keep the dynamic default unless a repository genuinely needs a dedicated identity, then opt in with `set-token` or clone's `--set-token`.
+
 Use `chatenv` to inspect or configure typed env:
 
 ```bash
@@ -69,6 +71,10 @@ chatgh project --help
 chatgh run --help
 chatgh repo-perms --help
 chatgh set-token --help
+chatgh unset-token --help
+chatgh fetch --help
+chatgh pull --help
+chatgh push --help
 ```
 
 Command tree (`chatgh --tree` renders the full registered Click tree live):
@@ -84,6 +90,8 @@ Command tree (`chatgh --tree` renders the full registered Click tree live):
 - `chatgh run list/watch/rerun/cancel/download`: Actions run operations added in this batch; `watch` has a timeout and `rerun/cancel` are real remote mutations.
 - `chatgh repo-perms`: show token permissions and derived capabilities.
 - `chatgh set-token`: configure a repo-scoped HTTPS token for the current GitHub repository.
+- `chatgh unset-token [--all]`: safely remove the selected local token pin; `--all` is limited to token-bearing GitHub HTTPS headers owned by this repository's local config.
+- `chatgh fetch [REMOTE] [REFSPEC]`, `chatgh pull [REMOTE] [BRANCH]`, `chatgh push [REMOTE] [REFSPEC]`: invocation-scoped GitHub HTTPS transport. Without positionals they use only the current branch upstream and never guess an unrelated branch.
 
 ## Common Workflows
 
@@ -97,7 +105,21 @@ chatgh repo edit ChatArch/ChatGH --description "GitHub helpers" --json-output
 chatgh repo edit ChatArch/ChatGH --visibility private --accept-visibility-change-consequences --json-output
 ```
 
-`repo clone` refuses to overwrite a non-empty target directory. `repo sync` defaults to `git pull --ff-only` and refuses to sync a mismatched explicit repository from the wrong checkout. `repo edit` currently supports description, homepage, default branch, and visibility; `--visibility` requires `--accept-visibility-change-consequences`.
+`repo clone` refuses to overwrite a non-empty target directory and uses the resolved identity only for that clone by default; `--set-token` explicitly persists it. `repo sync` reuses the same transport layer and defaults to fast-forward-only. `repo edit` currently supports description, homepage, default branch, and visibility; `--visibility` requires `--accept-visibility-change-consequences`.
+
+### Invocation-scoped Git transport
+
+```bash
+chatgh fetch
+chatgh pull
+chatgh pull --rebase
+chatgh fetch origin main
+chatgh push -u origin main
+chatgh push origin main:main --dry-run
+chatgh push origin --tags
+```
+
+Without positionals, transport accepts only the current branch upstream and fails clearly when there is none. It separately validates effective fetch/push URLs (including `pushurl` and Git URL rewrites) and accepts only credential-free `github.com` HTTPS. A one-shot credential helper is used only in the network-facing Git child: inherited HTTP headers/helpers are cleared there, and auth redirects, submodule recursion, and authenticated hooks are disabled. There is no force, reset, stash, identity switch, or automatic retry. Pull is fast-forward-only by default; `--rebase` and `--ff-only` are mutually exclusive.
 
 ### Repository Invitations
 
@@ -250,6 +272,8 @@ chatgh repo-perms --repo octocat/Hello-World --full-json
 
 chatgh set-token --token "$GITHUB_ACCESS_TOKEN"
 chatgh set-token --token "$GITHUB_ACCESS_TOKEN" --save-env
+chatgh unset-token
+chatgh unset-token --all
 ```
 
 `repo-perms` shows:
@@ -265,7 +289,7 @@ chatgh set-token --token "$GITHUB_ACCESS_TOKEN" --save-env
     extraHeader = Authorization: Basic <base64(x-access-token:TOKEN)>
 ```
 
-Do not put tokens in remote URLs, and do not log raw `extraHeader` values. With `--save-env`, `set-token` also writes typed env `GITHUB_ACCESS_TOKEN`.
+Do not put tokens in remote URLs, and do not log raw `extraHeader` values. With `--save-env`, `set-token` also writes typed env `GITHUB_ACCESS_TOKEN`. `unset-token` emits safe JSON with the repository, removed key names/count, and whether a default still resolves, never a token or mask; it is the intended switch from a dedicated pin back to the dynamic ChatEnv default.
 
 ## Interactive Mode
 

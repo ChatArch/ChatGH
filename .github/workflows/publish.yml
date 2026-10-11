@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   publish:
+    if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -45,7 +46,6 @@ jobs:
               print(f"tag=v{version}", file=output)
           PY
       - name: Check tag matches package version
-        if: github.event_name == 'push'
         env:
           RELEASE_TAG: ${{ steps.meta.outputs.tag }}
         run: |
@@ -54,7 +54,6 @@ jobs:
             exit 1
           fi
       - name: Check release commit is on default branch
-        if: github.event_name == 'push'
         run: |
           git fetch --no-tags origin master:refs/remotes/origin/master
           git merge-base --is-ancestor "${GITHUB_SHA}" "origin/master"
