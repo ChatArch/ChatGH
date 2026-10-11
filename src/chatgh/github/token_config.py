@@ -56,9 +56,7 @@ def repository_target(path: Optional[str] = None) -> RepositoryTarget:
 
 
 def write_token(credential: api.CredentialQuery, token: str, cwd: Optional[str] = None) -> None:
-    """Write the same Git config item as set-token without a secret in argv."""
-    from git.config import GitConfigParser
-
+    """Update one Git item losslessly, with no secret-bearing process arguments."""
     if not isinstance(token, str) or not token or re.search(r"[\x00-\x1f\x7f]", token):
         raise click.ClickException("GitHub token must be non-empty and contain no control characters.")
     target = repository_target(cwd)
@@ -67,16 +65,65 @@ def write_token(credential: api.CredentialQuery, token: str, cwd: Optional[str] 
         raise click.ClickException("GitHub HTTPS configuration requires a supported GitHub target.")
     if not re.fullmatch(r"https://github\.com/[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9][A-Za-z0-9_.-]*\.git", url):
         raise click.ClickException("GitHub configuration target is invalid.")
+    lock = target.config_path.with_name(target.config_path.name + ".lock")
+    identity = None
     try:
-        # Only the directly-owned config is parsed; includes remain references.
-        # GitConfigParser holds its config lock during read/update/write.
-        with GitConfigParser(str(target.config_path), read_only=False, merge_includes=False) as writer:
+        # Acquire the native Git lock atomically BEFORE reading the original.
+        fd = os.open(lock, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        info = os.fstat(fd)
+        identity = (info.st_dev, info.st_ino)
+        with os.fdopen(fd, "wb") as handle:
+            original = target.config_path.read_bytes()
+            handle.write(original)
+            handle.flush()
+            os.fsync(handle.fileno())
+        # Let Git preserve its own syntax and case semantics in our private
+        # lock copy. Only a random, non-secret value goes through argv.
+        import uuid
+        marker = "chatgh-config-value-" + uuid.uuid4().hex
+        if marker.encode("ascii") in original:
+            raise ValueError("marker collision")
+        result = subprocess.run(
+            ["git", "config", "--no-includes", "--file", str(lock),
+             "--replace-all", api._extraheader_config_key(credential), marker],
+            cwd=target.path, env=api._local_git_environment(),
+            capture_output=True, check=False,
+        )
+        if result.returncode:
+            raise ValueError("native Git update failed")
+        info = lock.lstat()
+        identity = (info.st_dev, info.st_ino)
+        encoded_marker = marker.encode("ascii")
+        content = lock.read_bytes()
+        if content.count(encoded_marker) != 1:
+            raise ValueError("unexpected native Git output")
+        updated = content.replace(encoded_marker, api.github_auth_extraheader(token).encode("ascii"))
+        fd = os.open(lock, os.O_RDWR | getattr(os, "O_NOFOLLOW", 0))
+        with os.fdopen(fd, "r+b") as handle:
+            info = os.fstat(handle.fileno())
+            if (info.st_dev, info.st_ino) != identity or not stat.S_ISREG(info.st_mode):
+                raise ValueError("lock ownership changed")
             if os.name == "posix":
-                target.config_path.chmod(0o600)
-            writer.set_value(f'http "{url}"', "extraHeader", api.github_auth_extraheader(token))
+                os.fchmod(handle.fileno(), 0o600)
+            handle.seek(0)
+            handle.write(updated)
+            handle.truncate()
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(lock, target.config_path)
+        identity = None
     except Exception:
-        # Never expose parser values, headers or credentials through exceptions.
         raise click.ClickException("Unable to update the repository Git token configuration safely.") from None
+    finally:
+        # Never remove a foreign lock, including one created in an acquisition
+        # race. Git manages its temporary config.lock.lock itself.
+        if identity is not None:
+            try:
+                info = lock.lstat()
+                if (info.st_dev, info.st_ino) == identity:
+                    lock.unlink()
+            except OSError:
+                pass
 
 
 def load_repository_targets(filename: str) -> tuple[list[RepositoryTarget], int]:

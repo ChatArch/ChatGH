@@ -106,6 +106,53 @@ def test_unset_has_no_broad_all_mode(tmp_path, monkeypatch):
     assert result.exit_code == 2 and 'No such option' in result.output
 
 
+def test_set_preserves_valueless_booleans_quoted_comments_and_multivalues(tmp_path):
+    path = repo(tmp_path)
+    config = path / '.git/config'
+    with config.open('a') as f:
+        f.write('[commit]\n\tgpgsign\n[review]\n\tkeep = "before # after"\n\tescaped = "quote \\\" and \\\\ slash"\n')
+    git(path, 'config', '--add', 'review.multi', 'first')
+    git(path, 'config', '--add', 'review.multi', 'second')
+    expected = {k: git(path, 'config', '--get-all', k) for k in ['review.keep', 'review.escaped', 'review.multi']}
+    api.configure_github_https_token(api.credential_path_from_repo('example/repo'), 'dummy-new', cwd=str(path))
+    assert git(path, 'config', '--type=bool', '--get', 'commit.gpgsign').strip() == 'true'
+    assert {k: git(path, 'config', '--get-all', k) for k in expected} == expected
+
+
+def test_set_replaces_case_variants_and_old_multivalues_but_not_url_subsection(tmp_path):
+    path = repo(tmp_path)
+    config = path / '.git/config'
+    with config.open('a') as f:
+        f.write('[HTTP "https://github.com/example/repo.git"]\n\textraheader = ' + api.github_auth_extraheader('dummy-old-one') + '\n\tEXTRAHEADER = ' + api.github_auth_extraheader('dummy-old-two') + '\n')
+    other = 'http.https://github.com/example/Repo.git.extraHeader'
+    git(path, 'config', other, 'preserve-other-subsection')
+    api.configure_github_https_token(api.credential_path_from_repo('example/repo'), 'dummy-new', cwd=str(path))
+    assert git(path, 'config', '--get-all', key()).splitlines() == [api.github_auth_extraheader('dummy-new')]
+    assert git(path, 'config', '--get', other).strip() == 'preserve-other-subsection'
+
+
+def test_set_exclusive_lock_does_not_truncate_or_remove_racing_foreign_lock(tmp_path, monkeypatch):
+    import os
+    from chatgh.github import token_config
+    path = repo(tmp_path)
+    lock = path / '.git/config.lock'
+    original_open = os.open
+    fired = []
+
+    def racing_open(filename, flags, *args, **kwargs):
+        if Path(filename) == lock and not fired:
+            fired.append(True)
+            fd = original_open(lock, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            os.write(fd, b'owned by another writer\n')
+            os.close(fd)
+        return original_open(filename, flags, *args, **kwargs)
+
+    monkeypatch.setattr(token_config.os, 'open', racing_open)
+    with pytest.raises(Exception, match='safely'):
+        api.configure_github_https_token(api.credential_path_from_repo('example/repo'), 'dummy-new', cwd=str(path))
+    assert fired and lock.read_text() == 'owned by another writer\n'
+
+
 def test_batch_dry_run_and_duplicate_paths_do_not_write(tmp_path, monkeypatch):
     first = repo(tmp_path, 'first')
     before = (first / '.git/config').read_bytes()
