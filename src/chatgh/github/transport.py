@@ -17,7 +17,7 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Mapping, Optional
+from typing import Callable, Iterable, Mapping, Optional
 from urllib.parse import urlsplit
 
 import click
@@ -358,8 +358,9 @@ def _effective_clone_destination(destination: GitDestination, *, cwd: Optional[s
 
 
 def _reject_custom_remote_program(remote: str, direction: str, *, cwd: Optional[str] = None) -> None:
-    key = f"remote.{validate_remote_name(remote)}.{ 'uploadpack' if direction == 'fetch' else 'receivepack' }"
-    if _git_config_values(key, cwd=cwd):
+    name = validate_remote_name(remote)
+    key = f"remote.{name}.{ 'uploadpack' if direction == 'fetch' else 'receivepack' }"
+    if _git_config_values(f"remote.{name}.vcs", cwd=cwd) or _git_config_values(key, cwd=cwd):
         raise click.ClickException(
             f"Refusing authenticated {direction}: remote '{remote}' configures a custom Git program."
         )
@@ -926,26 +927,35 @@ def _parse_local_header_removals(
     return removals, keys
 
 
-def _replace_config_file(path: Path, content: str) -> None:
+def _replace_config_file(path: Path, update: Callable[[str], Optional[str]]) -> None:
+    """Hold Git's exclusive config lock across the complete read-modify-write."""
     lock_path = path.with_name(path.name + ".lock")
     created_lock = False
     try:
-        mode = path.stat().st_mode
-        descriptor = os.open(lock_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, stat.S_IMODE(mode))
+        mode = stat.S_IMODE(path.stat().st_mode)
+        descriptor = os.open(lock_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         created_lock = True
         with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-            handle.write(content)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.chmod(lock_path, mode)
-        os.replace(lock_path, path)
-    except OSError as exc:
-        try:
-            if created_lock:
-                lock_path.unlink(missing_ok=True)
-        except OSError:
-            pass
+            # No snapshot is read until the lock is ours. A concurrent Git
+            # writer therefore either commits before this read or waits/fails.
+            content = path.read_text(encoding="utf-8")
+            updated = update(content)
+            if updated is not None:
+                handle.write(updated)
+                handle.flush()
+                os.fsync(handle.fileno())
+        if updated is not None:
+            os.chmod(lock_path, mode)
+            os.replace(lock_path, path)
+            created_lock = False
+    except (OSError, UnicodeError) as exc:
         raise click.ClickException("Unable to update this repository's local Git config safely.") from exc
+    finally:
+        if created_lock:
+            try:
+                lock_path.unlink(missing_ok=True)
+            except OSError:
+                pass
 
 
 def unset_token(*, all_tokens: bool = False, cwd: Optional[str] = None) -> dict:
@@ -953,15 +963,19 @@ def unset_token(*, all_tokens: bool = False, cwd: Optional[str] = None) -> dict:
 
     selected = _selected_destination(cwd=cwd)
     path = _config_path(cwd=cwd)
-    try:
-        content = path.read_text(encoding="utf-8") if path.exists() else ""
-    except (OSError, UnicodeError) as exc:
-        raise click.ClickException("Unable to read this repository's local Git config.") from exc
-    removals, keys = _parse_local_header_removals(content, selected, all_tokens)
-    if removals:
+    removals: list[int] = []
+    keys: list[str] = []
+
+    def remove_headers(content: str) -> Optional[str]:
+        nonlocal removals, keys
+        removals, keys = _parse_local_header_removals(content, selected, all_tokens)
+        if not removals:
+            return None
         lines = content.splitlines(keepends=True)
-        updated = "".join(line for index, line in enumerate(lines) if index not in set(removals))
-        _replace_config_file(path, updated)
+        removed = set(removals)
+        return "".join(line for index, line in enumerate(lines) if index not in removed)
+
+    _replace_config_file(path, remove_headers)
     token_info = resolve_token_with_source(None, credential_path=selected.credential_path, cwd=cwd)
     return {
         "repo": selected.repo,

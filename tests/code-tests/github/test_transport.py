@@ -571,6 +571,55 @@ def test_unset_token_removes_only_local_github_token_headers(
     assert _header("foreign") in foreign.read_text(encoding="utf-8")
 
 
+@pytest.mark.parametrize("operation", ["fetch", "pull", "push"])
+def test_transport_rejects_remote_vcs_before_resolving_credentials(
+    github_repo: Path, monkeypatch: pytest.MonkeyPatch, operation: str
+) -> None:
+    _git(github_repo, "config", "remote.origin.vcs", "custom-review-canary")
+    resolved = []
+    monkeypatch.setattr(
+        transport, "resolve_token_with_source",
+        lambda *args, **kwargs: resolved.append(True) or _token_info("dummy-token"),
+    )
+    monkeypatch.setattr(
+        transport, "_run_authenticated_git",
+        lambda *args, **kwargs: SimpleNamespace(returncode=0, stdout="", stderr=""),
+    )
+    monkeypatch.setattr(
+        transport, "_run_local_git",
+        lambda *args, **kwargs: SimpleNamespace(returncode=0, stdout="", stderr=""),
+    )
+    with pytest.raises(Exception, match="custom Git program"):
+        getattr(transport, operation)(cwd=str(github_repo))
+    assert not resolved
+
+
+def test_unset_token_locks_before_read_modify_write(
+    github_repo: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _git(github_repo, "config", "http.https://github.com/acme/fetch.git.extraHeader", _header("dummy-pin"))
+    _git(github_repo, "config", "review.existing", "preserve-me")
+    original_parse = transport._parse_local_header_removals
+    writers = []
+
+    def attempt_concurrent_writer(content, selected, all_tokens):
+        writers.append(subprocess.run(
+            ["git", "-C", str(github_repo), "config", "--local", "review.concurrent", "keep-me"],
+            capture_output=True, text=True,
+        ))
+        return original_parse(content, selected, all_tokens)
+
+    monkeypatch.setattr(transport, "_parse_local_header_removals", attempt_concurrent_writer)
+    monkeypatch.setattr(transport, "resolve_token_with_source", lambda *a, **kw: {"token": None, "source": "none"})
+    result = transport.unset_token(cwd=str(github_repo))
+    assert result["removed_count"] == 1
+    assert len(writers) == 1
+    assert writers[0].returncode != 0
+    assert "lock" in writers[0].stderr.lower()
+    assert _git(github_repo, "config", "--local", "--get", "review.existing").strip() == "preserve-me"
+    assert not (github_repo / ".git" / "config.lock").exists()
+
+
 def test_unset_token_all_is_idempotent_and_preserves_non_token_headers(
     github_repo: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
