@@ -74,7 +74,7 @@ ChatGH currently provides these repository capabilities:
 - `repo clone REPOSITORY [DIRECTORY]`: safely clone a repository and refuse non-empty target directories; it does not pin a token by default, and `--set-token` is explicit opt-in.
 - `repo sync [REPOSITORY]`: reuse invocation-scoped transport and default to fast-forward-only.
 - `fetch [REMOTE] [REFSPEC]`, `pull [REMOTE] [BRANCH]`, `push [REMOTE] [REFSPEC]`: top-level GitHub HTTPS transport; pull is fast-forward-only by default and rebase/set-upstream/dry-run/tags are explicit.
-- `unset-token [--all]`: remove the selected remote's local token pin; `--all` only removes token-bearing GitHub HTTPS headers in this repository's local config.
+- `unset-token`: delete exactly the repository Git config item written by `set-token`, using the same origin-first target; no token-content inspection or other-target cleanup.
 - `repo edit [REPOSITORY]`: edit the small description/homepage/default-branch/visibility subset; visibility changes require explicit acknowledgement.
 - `repo fork [REPOSITORY] --org/--owner ... --fork-name/--name ...`: create a fork and support `--if-exists use` for idempotent reuse of matching forks.
 - `repo transfer [REPOSITORY] --owner/--org ...`: transfer repository ownership; real transfers require explicit consequence acknowledgement.
@@ -153,7 +153,7 @@ These commands are not part of the current public surface unless they first rece
 | `chatgh fetch [REMOTE] [REFSPEC]` | `chatgh.github.transport.fetch(...)` | Invocation-scoped auth; defaults to the current branch upstream. |
 | `chatgh pull [REMOTE] [BRANCH]` | `chatgh.github.transport.pull(...)` | Fast-forward-only by default; `--rebase` is explicit. |
 | `chatgh push [REMOTE] [REFSPEC]` | `chatgh.github.transport.push(...)` | Safe refspecs only; supports `-u`, `--dry-run`, and `--tags`, never force. |
-| `chatgh unset-token [--all]` | `chatgh.github.transport.unset_token(...)` | Safe JSON with no token; never changes global/system/included config. |
+- `unset-token`: delete exactly the repository Git config item written by `set-token`, using the same origin-first target; no token-content inspection or other-target cleanup.
 | `chatgh repo edit [REPOSITORY]` | `edit_repo(repo, description, homepage, default_branch, visibility, accept_visibility_change_consequences, token)` | Small safe subset: description/homepage/default-branch/visibility; visibility changes require explicit consequence acknowledgement. |
 | `chatgh repo fork ...` | `fork_repo(...)` | Supports gh-like positional repository, `--org`, `--fork-name`, and ChatGH `--if-exists use`. |
 | `chatgh repo transfer ...` | `transfer_repo(repo, owner, team_ids, dry_run, accept_transfer_consequences, token)` | Uses GitHub Repository Transfer API; supports `--dry-run` and requires explicit consequence acknowledgement before remote mutation. |

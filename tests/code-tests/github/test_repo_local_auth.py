@@ -79,31 +79,27 @@ def test_reads_a_token_header_even_when_an_unrelated_header_shares_the_key(monke
     assert token == "repo-token"
 
 
-def test_configure_github_https_token_writes_repo_local_git_config(monkeypatch):
+def test_configure_github_https_token_writes_repo_local_git_config(tmp_path, monkeypatch):
+    import subprocess
     calls = []
+    original = subprocess.run
+    repo = tmp_path / "repo"
+    original(["git", "init", "-q", str(repo)], check=True)
+    original(["git", "-C", str(repo), "remote", "add", "origin", "https://github.com/ChatArch/ChatShare.git"], check=True)
+    original(["git", "-C", str(repo), "config", "review.keep", "untouched"], check=True)
+    monkeypatch.chdir(repo)
 
-    def fake_run(args, **kwargs):
+    def tracked_run(args, **kwargs):
         calls.append(args)
-        return SimpleNamespace(returncode=0, stdout="", stderr="")
+        return original(args, **kwargs)
 
-    monkeypatch.setattr(gh_api.subprocess, "run", fake_run)
-
-    gh_api.configure_github_https_token(
-        {"protocol": "https", "host": "github.com", "path": "ChatArch/ChatShare"},
-        "repo-token",
-    )
-
-    assert calls == [
-        [
-            "git",
-            "config",
-            "--local",
-            "http.https://github.com/ChatArch/ChatShare.git.extraHeader",
-            _basic_header("repo-token"),
-        ]
-    ]
+    monkeypatch.setattr(gh_api.subprocess, "run", tracked_run)
+    credential = {"protocol": "https", "host": "github.com", "path": "ChatArch/ChatShare"}
+    gh_api.configure_github_https_token(credential, "repo-token")
+    assert gh_api.read_github_token_from_git(credential) == "repo-token"
+    assert original(["git", "config", "--get", "review.keep"], check=True, capture_output=True, text=True).stdout.strip() == "untouched"
+    assert all("repo-token" not in str(call) and _basic_header("repo-token") not in str(call) for call in calls)
     assert all("--global" not in call for call in calls)
-    assert all("credential" not in call for call in calls)
 
 
 def test_resolve_token_prefers_repo_local_git_config_over_chatenv(monkeypatch):

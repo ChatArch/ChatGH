@@ -92,8 +92,8 @@ chatgh push --help
 - `chatgh run view`：查看 workflow run 和 job。
 - `chatgh run logs`：查看 job 日志，支持尾部输出和落盘。
 - `chatgh repo-perms`：查看令牌权限和派生能力。
-- `chatgh set-token`：为当前 GitHub 仓库配置仓库级 HTTPS 令牌。
-- `chatgh unset-token [--all]`：安全删除当前 remote 的本地 token pin；`--all` 仅处理本仓库 local config 中 token-bearing 的 GitHub HTTPS header。
+- `chatgh set-token`：写入或更新仓库 token；`--from-config` 读取当前配置，`--file` 按 JSON/YAML 仓库清单批量更新。
+- `chatgh unset-token`：仅删除 set 写入的同一精确仓库 Git 配置项。
 - `chatgh fetch [REMOTE] [REFSPEC]`、`chatgh pull [REMOTE] [BRANCH]`、`chatgh push [REMOTE] [REFSPEC]`：调用范围内的 GitHub HTTPS 传输。缺少位置参数时只使用当前分支 upstream；没有 upstream 不猜测无关分支。
 
 ## 常用流程
@@ -273,10 +273,9 @@ chatgh repo protection --owner octocat --limit 50 --jobs 8 --json-output
 chatgh repo-perms --repo octocat/Hello-World --json-output
 chatgh repo-perms --repo octocat/Hello-World --full-json
 
-chatgh set-token --token "$GITHUB_ACCESS_TOKEN"
-chatgh set-token --token "$GITHUB_ACCESS_TOKEN" --save-env
+chatgh set-token --from-config
+chatgh set-token --from-config --json-output
 chatgh unset-token
-chatgh unset-token --all
 ```
 
 `repo-perms` 会展示：
@@ -364,3 +363,14 @@ mkdocs build --strict
 ```
 
 默认测试使用 mock/fake 载荷和临时目录，不调用真实 GitHub API，也不会污染真实 git credential 或环境配置。
+
+## Token 更新与清理
+
+[更新、清理与批量维护](token-updates.md)
+
+```bash
+chatgh set-token --from-config
+chatgh unset-token
+chatgh set-token --from-config --file repositories.json --dry-run
+chatgh set-token --from-config --file repositories.json --json-output
+```

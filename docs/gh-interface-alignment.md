@@ -74,7 +74,7 @@ ChatGH 当前提供这些仓库能力：
 - `repo clone REPOSITORY [DIRECTORY]`：安全克隆仓库，目标目录非空时拒绝覆盖；默认不把 token 固化到配置，`--set-token` 是明确 opt-in。
 - `repo sync [REPOSITORY]`：复用调用范围内传输，默认 fast-forward only。
 - `fetch [REMOTE] [REFSPEC]`、`pull [REMOTE] [BRANCH]`、`push [REMOTE] [REFSPEC]`：顶层 GitHub HTTPS 传输；pull 默认 fast-forward only，rebase/set-upstream/dry-run/tags 都需显式请求。
-- `unset-token [--all]`：删除当前 remote 的 local token pin；`--all` 只删除本仓库 local config 中 token-bearing 的 GitHub HTTPS header。
+- `unset-token`：与 set 选择同一 origin 优先目标，删除 set 写入的精确 Git 配置项；不判断 token 内容，不清理其它目标。
 - `repo edit [REPOSITORY]`：编辑 description、homepage、default-branch、visibility 小子集；visibility 变更需要显式确认。
 - `repo fork [REPOSITORY] --org/--owner ... --fork-name/--name ...`：创建 fork，并支持 `--if-exists use` 幂等复用匹配的已有 fork。
 - `repo transfer [REPOSITORY] --owner/--org ...`：迁移仓库所有权；真实迁移必须显式确认后果。
@@ -153,7 +153,7 @@ ChatGH 的机器人方向必须遵守：
 | `chatgh fetch [REMOTE] [REFSPEC]` | `chatgh.github.transport.fetch(...)` | 仅调用范围内认证，默认当前分支 upstream。 |
 | `chatgh pull [REMOTE] [BRANCH]` | `chatgh.github.transport.pull(...)` | 默认 fast-forward only；`--rebase` 必须显式。 |
 | `chatgh push [REMOTE] [REFSPEC]` | `chatgh.github.transport.push(...)` | 仅安全 refspec，支持 `-u`、`--dry-run`、`--tags`，无 force。 |
-| `chatgh unset-token [--all]` | `chatgh.github.transport.unset_token(...)` | 安全 JSON；不输出 token，且不修改 global/system/include config。 |
+- `unset-token`：与 set 选择同一 origin 优先目标，删除 set 写入的精确 Git 配置项；不判断 token 内容，不清理其它目标。
 | `chatgh repo edit [REPOSITORY]` | `edit_repo(repo, description, homepage, default_branch, visibility, accept_visibility_change_consequences, token)` | 小子集：description / homepage / default-branch / visibility；visibility 必须显式确认后果。 |
 | `chatgh repo fork ...` | `fork_repo(...)` | 支持类官方 gh 位置参数、`--org`、`--fork-name` 和 ChatGH `--if-exists use`。 |
 | `chatgh repo transfer ...` | `transfer_repo(repo, owner, team_ids, dry_run, accept_transfer_consequences, token)` | 调 GitHub Repository Transfer API；支持 `--dry-run`，真实远端迁移必须显式确认后果。 |

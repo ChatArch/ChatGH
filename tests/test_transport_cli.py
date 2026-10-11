@@ -61,20 +61,18 @@ def test_unset_token_emits_safe_json_without_a_token(monkeypatch):
     monkeypatch.setattr(
         transport_cli,
         "unset_token",
-        lambda all_tokens: {
+        lambda: {
             "repo": "acme/repo",
             "removed_keys": ["http.https://github.com/acme/repo.git.extraHeader"],
             "removed_count": 1,
-            "default_resolves": True,
         },
     )
 
-    result = CliRunner().invoke(main, ["unset-token", "--all"])
+    result = CliRunner().invoke(main, ["unset-token"])
 
     assert result.exit_code == 0, result.output
     assert json.loads(result.output) == {
         "repo": "acme/repo",
         "removed_keys": ["http.https://github.com/acme/repo.git.extraHeader"],
         "removed_count": 1,
-        "default_resolves": True,
     }

@@ -599,18 +599,12 @@ def mask_token(token: Optional[str]) -> str:
     return token[:7] + "..." + token[-5:]
 
 
-def set_token(token: Optional[str], save_env: bool) -> dict:
-    repo, credential_path = resolve_repo_from_git_remote()
-    resolved_token = resolve_token(
-        token,
-        credential_path=credential_path,
-        exact_only=True,
-    ) or resolve_token(token, credential_path=credential_path)
-    if not resolved_token:
-        raise click.ClickException(
-            "Missing token. Provide --token or configure a GitHub credential for the current repository."
-        )
-    configure_github_https_token(credential_path, resolved_token)
-    if save_env:
-        save_github_token_to_env(resolved_token)
-    return {"repo": repo, "saved_env": save_env}
+def set_token(
+    token: Optional[str], save_env: bool, *, from_config: bool = False,
+    repo_file: Optional[str] = None, dry_run: bool = False,
+) -> dict:
+    from chatgh.github.token_config import set_repository_tokens
+
+    return set_repository_tokens(
+        token, save_env, from_config=from_config, repo_file=repo_file, dry_run=dry_run
+    )

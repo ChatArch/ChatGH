@@ -26,7 +26,7 @@ pip install -e ".[dev]"
 2. 当前仓库 `.git/config` 中的仓库本地 HTTPS 授权头，路径为规范化后的 `https://github.com/owner/repo.git`。
 3. 类型化环境配置中的 `GITHUB_ACCESS_TOKEN`。
 
-`fetch`、`pull`、`push` 和 HTTPS `repo clone` 每次调用都会重新按这个顺序解析，不会把当前 ChatEnv 默认值缓存到仓库配置。通常应保持这种动态模式；只有确实需要把某个仓库固定到专用身份时，才显式使用 `set-token` 或 clone 的 `--set-token`。
+`fetch`、`pull`、`push` 和 HTTPS `repo clone` 每次调用都会重新按这个顺序解析，不会把当前 ChatEnv 默认值缓存到仓库配置。`set-token` 写入或更新仓库 Git token 配置，`unset-token` 删除同一项配置；需要从当前配置刷新旧值时，使用 `set-token --from-config`。
 
 可以用 `chatenv` 查看或配置类型化环境配置：
 
@@ -90,8 +90,8 @@ chatgh push --help
 - `chatgh run view/logs`：查看 workflow run 和 job logs。
 - `chatgh run list/watch/rerun/cancel/download`：Actions run 运维命令；`watch` 有 timeout，`rerun/cancel` 属于远端 mutation。
 - `chatgh repo-perms`：查看令牌权限和派生能力。
-- `chatgh set-token`：为当前 GitHub 仓库配置仓库级 HTTPS 令牌。
-- `chatgh unset-token [--all]`：删除当前 remote 的本地 token pin；`--all` 只处理本仓库 local config 中 token-bearing 的 GitHub HTTPS header。
+- `chatgh set-token`：写入或更新仓库 token；`--from-config` 读取当前配置，`--file` 按 JSON/YAML 仓库清单批量更新。
+- `chatgh unset-token`：与 set 选择同一目标，只删除 set 写入的精确 Git 配置项，不判断 token 内容或清理其它目标。
 
 ## 常用流程
 
@@ -273,10 +273,9 @@ chatgh repo protection --owner octocat --limit 50 --jobs 8 --json-output
 chatgh repo-perms --repo octocat/Hello-World --json-output
 chatgh repo-perms --repo octocat/Hello-World --full-json
 
-chatgh set-token --token "$GITHUB_ACCESS_TOKEN"
-chatgh set-token --token "$GITHUB_ACCESS_TOKEN" --save-env
+chatgh set-token --from-config
+chatgh set-token --from-config --json-output
 chatgh unset-token
-chatgh unset-token --all
 ```
 
 `repo-perms` 会展示：
@@ -365,3 +364,14 @@ mkdocs build --strict
 ```
 
 默认测试使用 mock/fake 载荷和临时目录，不调用真实 GitHub API，也不会污染真实 git credential 或环境配置。
+
+### Token 更新与清理
+
+[更新、清理与批量维护](https://arch.gh.wzhecnu.cn/ChatGH/token-updates/)
+
+```bash
+chatgh set-token --from-config
+chatgh unset-token
+chatgh set-token --from-config --file repositories.json --dry-run
+chatgh set-token --from-config --file repositories.json --json-output
+```

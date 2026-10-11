@@ -6,6 +6,8 @@ non-PR GitHub tasks available as first-class command groups.
 
 from __future__ import annotations
 
+import json
+
 import click
 from chatstyle import CommandField, CommandSchema, add_interactive_option, resolve_command_inputs
 from chatstyle.core import InteractiveResolution, normalize_interactive
@@ -817,25 +819,38 @@ def repo_permissions(repo, json_fields, json_output, full_json, token):
 @cli.command(name="set-token")
 @click.option("--token", default=None, help="GitHub token.")
 @click.option("--save-env", is_flag=True, help="Also save the token into ChatGH env config.")
-def set_repo_token(token, save_env):
-    """Configure HTTPS credentials for the current GitHub repository."""
-    from chatgh.github.commands import resolve_repo_and_credential_path
+@click.option("--from-config", is_flag=True, help="Read the current GitHub configuration, not the old repository token.")
+@click.option("--file", "repo_file", type=click.Path(exists=True, dir_okay=False), help="JSON/YAML repository manifest for batch updates.")
+@click.option("--dry-run", is_flag=True, help="Validate targets and report changes without writing tokens.")
+@click.option("--json-output", is_flag=True, help="Output safe structured results without token values.")
+def set_repo_token(token, save_env, from_config, repo_file, dry_run, json_output):
+    """Set or update the repository GitHub HTTPS token configuration."""
+    if from_config or repo_file or dry_run:
+        result = set_token(token, save_env, from_config=from_config, repo_file=repo_file, dry_run=dry_run)
+    else:
+        from chatgh.github.commands import resolve_repo_and_credential_path
 
-    repo, credential_path = resolve_repo_and_credential_path(None)
-    resolved_token = resolve_token(token, credential_path=credential_path, exact_only=True)
-    if resolved_token is None:
-        resolved_token = resolve_token(token, credential_path=credential_path)
-    if is_interactive_available():
-        prompt_label = "github_token"
-        if resolved_token:
-            prompt_label += f" (current: {_mask_secret(resolved_token)}, enter to keep)"
-        token_input = ask_text(prompt_label, password=True)
-        if token_input == BACK_VALUE:
-            raise click.Abort()
-        entered = str(token_input).strip()
-        if entered:
-            resolved_token = entered
-    result = set_token(resolved_token, save_env)
-    click.echo(f"Configured Git HTTPS token for {result['repo']}.")
+        repo, credential_path = resolve_repo_and_credential_path(None)
+        resolved_token = resolve_token(token, credential_path=credential_path, exact_only=True)
+        if resolved_token is None:
+            resolved_token = resolve_token(token, credential_path=credential_path)
+        if not json_output and is_interactive_available():
+            prompt_label = "github_token"
+            if resolved_token:
+                prompt_label += f" (current: {_mask_secret(resolved_token)}, enter to keep)"
+            token_input = ask_text(prompt_label, password=True)
+            if token_input == BACK_VALUE:
+                raise click.Abort()
+            entered = str(token_input).strip()
+            if entered:
+                resolved_token = entered
+        result = set_token(resolved_token, save_env)
+    if json_output or repo_file:
+        click.echo(json.dumps(result, ensure_ascii=False))
+        if result.get("failed"):
+            raise click.ClickException("Some repository token updates failed; inspect the safe results.")
+        return
+    action = "Would configure" if dry_run else "Configured"
+    click.echo(f"{action} Git HTTPS token for {result['repo']}.")
     if result["saved_env"]:
         click.echo("Saved token to ChatGH env config.")

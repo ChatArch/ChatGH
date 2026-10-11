@@ -13,70 +13,70 @@ chatgh
 ├── --tree  # Print the registered CLI tree and exit.
 ├── --tree-brief  # Print the registered CLI tree without parameter signatures and exit.
 ├── fetch [REMOTE] [REFSPEC] [--token TOKEN]  # Fetch from the current branch upstream or an explicit remote.
-├── pr  # Pull request helpers.
-│   ├── list [--repo <REPO>] [--state <STATE>] [--limit <LIMIT>] [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # List pull requests.
-│   ├── create [--repo <REPO>] [--base <BASE>] [--head <HEAD>] [--title <TITLE>] [--body <BODY>] [--body-file <BODY-FILE>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Create a pull request.
-│   ├── view [NUMBER] [--repo <REPO>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Show pull request details.
-│   ├── comment [NUMBER] [--repo <REPO>] [--body <BODY>] [--body-file <BODY-FILE>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Comment on a pull request.
-│   ├── edit [NUMBER] [--repo <REPO>] [--title <TITLE>] [--body <BODY>] [--body-file <BODY-FILE>] [--state <STATE>] [--base <BASE>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Edit a pull request.
-│   ├── checks [NUMBER] [--repo <REPO>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Show CI check status for a pull request.
-│   ├── status [--repo <REPO>] [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # Show current repository pull request status.
-│   ├── diff [NUMBER] [--repo <REPO>] [--token <TOKEN>] [--interactive/--no-interactive]  # Show a pull request diff.
-│   ├── close [NUMBER] [--repo <REPO>] [--comment <COMMENT>] [--delete-branch] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Close a pull request.
-│   ├── reopen [NUMBER] [--repo <REPO>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Reopen a pull request.
-│   ├── review [NUMBER] [--repo <REPO>] [--approve] [--request-changes] [--comment] [--body <BODY>] [--body-file <BODY-FILE>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Review a pull request.
-│   ├── ready [NUMBER] [--repo <REPO>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Mark a draft pull request ready for review.
-│   ├── update-branch [NUMBER] [--repo <REPO>] [--expected-head-sha <EXPECTED-HEAD-SHA>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Update a pull request branch from its base branch.
-│   └── merge [NUMBER] [--repo <REPO>] [--method <METHOD>] [--title <TITLE>] [--message <MESSAGE>] [--message-file <MESSAGE-FILE>] [--check/--no-check] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Merge a pull request.
-├── repo  # Repository helpers.
-│   ├── list [--owner <OWNER>] [--limit <LIMIT>] [--sort <SORT>] [--direction <DIRECTION>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # List repositories for an owner or organization.
-│   ├── view [REPO-ARG] [--repo <REPO-OPTION>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # View repository details.
-│   ├── clone <REPO> [DIRECTORY] [--ssh] [--set-token] [--json JSON-FIELDS] [--json-output] [--token TOKEN]  # Clone a repository without overwriting an existing directory.
-│   ├── sync [REPO-ARG] [--repo REPO-OPTION] [--branch BRANCH] [--remote REMOTE] [--ff-only] [--json JSON-FIELDS] [--json-output] [--token TOKEN]  # Fetch and fast-forward the current checkout for a repository.
-│   ├── edit [REPO-ARG] [--repo <REPO-OPTION>] [--description <DESCRIPTION>] [--homepage <HOMEPAGE>] [--default-branch <DEFAULT-BRANCH>] [--visibility <VISIBILITY>] [--accept-visibility-change-consequences] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Edit repository metadata.
-│   ├── protection [--repo <REPO>] [--owner <OWNER>] [--limit <LIMIT>] [--jobs <JOBS>] [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # Show default-branch protection and ruleset status.
-│   ├── create [--owner <OWNER>] [--name <NAME>] [--description <DESCRIPTION>] [--public] [--if-exists <IF-EXISTS>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Create a repository. Repositories are private by default.
-│   ├── fork [SOURCE-ARG] [--source <SOURCE>] [--owner <OWNER>] [--org <ORG>] [--name <NAME>] [--fork-name <FORK-NAME>] [--default-branch-only] [--if-exists <IF-EXISTS>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Fork a repository into a target owner or organization.
-│   └── transfer [REPO-ARG] [--repo <REPO-OPTION>] [--owner <OWNER>] [--org <ORG>] [--team-id <TEAM-IDS>] [--dry-run] [--accept-transfer-consequences] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Transfer a repository to another GitHub owner or organization.
-├── project  # GitHub Projects helpers.
-│   ├── item  # Manage project items.
-│   │   ├── list [NUMBER] [--owner <OWNER>] [--limit <LIMIT>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # List project items.
-│   │   ├── add [NUMBER] [--owner <OWNER>] [--url <URL>] [--content-id <CONTENT-ID>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Add an issue or pull request item to a project.
-│   │   ├── create [NUMBER] [--owner <OWNER>] [--title <TITLE>] [--body <BODY>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Create a draft issue item.
-│   │   ├── edit [NUMBER] [--owner <OWNER>] [--id <ITEM-ID>] [--field-id <FIELD-ID>] [--field-name <FIELD-NAME>] [--text <TEXT>] [--number <NUMBER-VALUE>] [--date <DATE>] [--single-select-option-id <SINGLE-SELECT-OPTION-ID>] [--iteration-id <ITERATION-ID>] [--clear] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Edit a project item field value.
-│   │   ├── archive [NUMBER] [--owner <OWNER>] [--id <ITEM-ID>] [--undo] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Archive or unarchive a project item.
-│   │   └── delete [NUMBER] [--owner <OWNER>] [--id <ITEM-ID>] [--confirm <CONFIRM>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Delete a project item.
-│   ├── field  # Manage project fields.
-│   │   ├── list [NUMBER] [--owner <OWNER>] [--limit <LIMIT>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # List project fields.
-│   │   ├── create [NUMBER] [--owner <OWNER>] [--name <NAME>] [--data-type <DATA-TYPE>] [--single-select-option <OPTIONS>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Create a project field.
-│   │   └── delete [NUMBER] [--owner <OWNER>] [--field-id <FIELD-ID>] [--confirm <CONFIRM>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Delete a project field.
-│   ├── list [--owner <OWNER>] [--limit <LIMIT>] [--closed] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # List projects for an owner.
-│   ├── view [NUMBER] [--owner <OWNER>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # View a project.
-│   ├── create [--owner <OWNER>] [--title <TITLE>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Create a project.
-│   ├── edit [NUMBER] [--owner <OWNER>] [--title <TITLE>] [--description <DESCRIPTION>] [--readme <README>] [--visibility <VISIBILITY>] [--accept-visibility-change-consequences] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Edit a project.
-│   ├── close [NUMBER] [--owner <OWNER>] [--undo] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Close or reopen a project.
-│   ├── delete [NUMBER] [--owner <OWNER>] [--confirm <CONFIRM>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Delete a project.
-│   ├── copy [NUMBER] [--owner <OWNER>] [--target-owner <TARGET-OWNER>] [--title <TITLE>] [--drafts/--no-drafts] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Copy a project.
-│   ├── link [NUMBER] [--owner <OWNER>] [--repo-id <REPO-ID>] [--team-id <TEAM-ID>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Link a repository or team to a project.
-│   ├── unlink [NUMBER] [--owner <OWNER>] [--repo-id <REPO-ID>] [--team-id <TEAM-ID>] [--confirm <CONFIRM>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Unlink a repository or team from a project.
-│   └── mark-template [NUMBER] [--owner <OWNER>] [--undo] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Mark or unmark a project as a template.
-├── run  # GitHub Actions helpers.
-│   ├── list [--repo <REPO>] [--branch <BRANCH>] [--status <STATUS>] [--event <EVENT>] [--limit <LIMIT>] [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # List workflow runs.
-│   ├── watch [RUN-ID-ARG] [--repo <REPO>] [--run-id <RUN-ID>] [--interval <INTERVAL>] [--timeout <TIMEOUT>] [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # Watch a workflow run until it completes.
-│   ├── rerun [RUN-ID-ARG] [--repo <REPO>] [--run-id <RUN-ID>] [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # Rerun a workflow run.
-│   ├── cancel [RUN-ID-ARG] [--repo <REPO>] [--run-id <RUN-ID>] [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # Cancel a workflow run.
-│   ├── download [RUN-ID-ARG] [--repo <REPO>] [--run-id <RUN-ID>] [--name <NAME>] [--dir <OUTPUT-DIR>] [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # Download workflow run artifacts.
-│   ├── view [--repo <REPO>] [--run-id <RUN-ID>] [--job-limit <JOB-LIMIT>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Show a workflow run and its jobs.
-│   └── logs [--repo <REPO>] [--job-id <JOB-ID>] [--tail <TAIL>] [--output <OUTPUT>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Show logs for a workflow job.
 ├── invitation  # Repository invitation helpers.
-│   ├── list [--limit <LIMIT>] [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # List repository invitations for the authenticated user.
-│   ├── accept <INVITATION-ID> [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # Accept a repository invitation by id.
-│   └── decline <INVITATION-ID> [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # Decline a repository invitation by id.
-├── repo-perms [--repo <REPO>] [--json <FIELDS>] [--json-output] [--full-json] [--token <TOKEN>]  # Show repository permissions for the current token.
+│   ├── accept <INVITATION-ID> [--json JSON-FIELDS] [--json-output] [--token TOKEN]  # Accept a repository invitation by id.
+│   ├── decline <INVITATION-ID> [--json JSON-FIELDS] [--json-output] [--token TOKEN]  # Decline a repository invitation by id.
+│   └── list [--limit LIMIT] [--json JSON-FIELDS] [--json-output] [--token TOKEN]  # List repository invitations for the authenticated user.
+├── pr  # Pull request helpers.
+│   ├── checks [NUMBER] [--repo REPO] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Show CI check status for a pull request.
+│   ├── close [NUMBER] [--repo REPO] [--comment COMMENT] [--delete-branch] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Close a pull request.
+│   ├── comment [NUMBER] [--repo REPO] [--body BODY] [--body-file BODY-FILE] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Comment on a pull request.
+│   ├── create [--repo REPO] [--base BASE] [--head HEAD] [--title TITLE] [--body BODY] [--body-file BODY-FILE] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Create a pull request.
+│   ├── diff [NUMBER] [--repo REPO] [--token TOKEN] [--interactive]  # Show a pull request diff.
+│   ├── edit [NUMBER] [--repo REPO] [--title TITLE] [--body BODY] [--body-file BODY-FILE] [--state STATE] [--base BASE] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Edit a pull request.
+│   ├── list [--repo REPO] [--state STATE] [--limit LIMIT] [--json JSON-FIELDS] [--json-output] [--token TOKEN]  # List pull requests.
+│   ├── merge [NUMBER] [--repo REPO] [--method METHOD] [--title TITLE] [--message MESSAGE] [--message-file MESSAGE-FILE] [--check] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Merge a pull request.
+│   ├── ready [NUMBER] [--repo REPO] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Mark a draft pull request ready for review.
+│   ├── reopen [NUMBER] [--repo REPO] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Reopen a pull request.
+│   ├── review [NUMBER] [--repo REPO] [--approve] [--request-changes] [--comment] [--body BODY] [--body-file BODY-FILE] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Review a pull request.
+│   ├── status [--repo REPO] [--json JSON-FIELDS] [--json-output] [--token TOKEN]  # Show current repository pull request status.
+│   ├── update-branch [NUMBER] [--repo REPO] [--expected-head-sha EXPECTED-HEAD-SHA] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Update a pull request branch from its base branch.
+│   └── view [NUMBER] [--repo REPO] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Show pull request details.
+├── project  # GitHub Projects helpers.
+│   ├── close [NUMBER] [--owner OWNER] [--undo] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Close or reopen a project.
+│   ├── copy [NUMBER] [--owner OWNER] [--target-owner TARGET-OWNER] [--title TITLE] [--drafts] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Copy a project.
+│   ├── create [--owner OWNER] [--title TITLE] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Create a project.
+│   ├── delete [NUMBER] [--owner OWNER] [--confirm CONFIRM] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Delete a project.
+│   ├── edit [NUMBER] [--owner OWNER] [--title TITLE] [--description DESCRIPTION] [--readme README] [--visibility VISIBILITY] [--accept-visibility-change-consequences] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Edit a project.
+│   ├── field  # Manage project fields.
+│   │   ├── create [NUMBER] [--owner OWNER] [--name NAME] [--data-type DATA-TYPE] [--single-select-option OPTIONS] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Create a project field.
+│   │   ├── delete [NUMBER] [--owner OWNER] [--field-id FIELD-ID] [--confirm CONFIRM] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Delete a project field.
+│   │   └── list [NUMBER] [--owner OWNER] [--limit LIMIT] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # List project fields.
+│   ├── item  # Manage project items.
+│   │   ├── add [NUMBER] [--owner OWNER] [--url URL] [--content-id CONTENT-ID] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Add an issue or pull request item to a project.
+│   │   ├── archive [NUMBER] [--owner OWNER] [--id ITEM-ID] [--undo] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Archive or unarchive a project item.
+│   │   ├── create [NUMBER] [--owner OWNER] [--title TITLE] [--body BODY] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Create a draft issue item.
+│   │   ├── delete [NUMBER] [--owner OWNER] [--id ITEM-ID] [--confirm CONFIRM] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Delete a project item.
+│   │   ├── edit [NUMBER] [--owner OWNER] [--id ITEM-ID] [--field-id FIELD-ID] [--field-name FIELD-NAME] [--text TEXT] [--number NUMBER-VALUE] [--date DATE] [--single-select-option-id SINGLE-SELECT-OPTION-ID] [--iteration-id ITERATION-ID] [--clear] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Edit a project item field value.
+│   │   └── list [NUMBER] [--owner OWNER] [--limit LIMIT] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # List project items.
+│   ├── link [NUMBER] [--owner OWNER] [--repo-id REPO-ID] [--team-id TEAM-ID] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Link a repository or team to a project.
+│   ├── list [--owner OWNER] [--limit LIMIT] [--closed] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # List projects for an owner.
+│   ├── mark-template [NUMBER] [--owner OWNER] [--undo] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Mark or unmark a project as a template.
+│   ├── unlink [NUMBER] [--owner OWNER] [--repo-id REPO-ID] [--team-id TEAM-ID] [--confirm CONFIRM] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Unlink a repository or team from a project.
+│   └── view [NUMBER] [--owner OWNER] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # View a project.
 ├── pull [REMOTE] [BRANCH] [--ff-only] [--rebase] [--token TOKEN]  # Pull safely from the current branch upstream or an explicit target.
 ├── push [REMOTE] [REFSPEC] [--set-upstream] [--dry-run] [--tags] [--token TOKEN]  # Push a validated refspec or tags without force modes.
-├── set-token [--token <TOKEN>] [--save-env]  # Configure HTTPS credentials for the current GitHub repository.
-└── unset-token [--all]  # Remove a repository-local GitHub HTTPS token pin safely.
+├── repo  # Repository helpers.
+│   ├── clone <REPO> [DIRECTORY] [--ssh] [--set-token] [--json JSON-FIELDS] [--json-output] [--token TOKEN]  # Clone a repository without overwriting an existing directory.
+│   ├── create [--owner OWNER] [--name NAME] [--description DESCRIPTION] [--public] [--if-exists IF-EXISTS] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Create a repository. Repositories are private by default.
+│   ├── edit [REPO-ARG] [--repo REPO-OPTION] [--description DESCRIPTION] [--homepage HOMEPAGE] [--default-branch DEFAULT-BRANCH] [--visibility VISIBILITY] [--accept-visibility-change-consequences] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Edit repository metadata.
+│   ├── fork [SOURCE-ARG] [--source SOURCE] [--owner OWNER] [--org ORG] [--name NAME] [--fork-name FORK-NAME] [--default-branch-only] [--if-exists IF-EXISTS] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Fork a repository into a target owner or organization.
+│   ├── list [--owner OWNER] [--limit LIMIT] [--sort SORT] [--direction DIRECTION] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # List repositories for an owner or organization.
+│   ├── protection [--repo REPO] [--owner OWNER] [--limit LIMIT] [--jobs JOBS] [--json JSON-FIELDS] [--json-output] [--token TOKEN]  # Show default-branch protection and ruleset status.
+│   ├── sync [REPO-ARG] [--repo REPO-OPTION] [--branch BRANCH] [--remote REMOTE] [--ff-only] [--json JSON-FIELDS] [--json-output] [--token TOKEN]  # Fetch and fast-forward the current checkout for a repository.
+│   ├── transfer [REPO-ARG] [--repo REPO-OPTION] [--owner OWNER] [--org ORG] [--team-id TEAM-IDS] [--dry-run] [--accept-transfer-consequences] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Transfer a repository to another GitHub owner or organization.
+│   └── view [REPO-ARG] [--repo REPO-OPTION] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # View repository details.
+├── repo-perms [--repo REPO] [--json JSON-FIELDS] [--json-output] [--full-json] [--token TOKEN]  # Show repository permissions for the current token.
+├── run  # GitHub Actions helpers.
+│   ├── cancel [RUN-ID-ARG] [--repo REPO] [--run-id RUN-ID] [--json JSON-FIELDS] [--json-output] [--token TOKEN]  # Cancel a workflow run.
+│   ├── download [RUN-ID-ARG] [--repo REPO] [--run-id RUN-ID] [--name NAME] [--dir OUTPUT-DIR] [--json JSON-FIELDS] [--json-output] [--token TOKEN]  # Download workflow run artifacts.
+│   ├── list [--repo REPO] [--branch BRANCH] [--status STATUS] [--event EVENT] [--limit LIMIT] [--json JSON-FIELDS] [--json-output] [--token TOKEN]  # List workflow runs.
+│   ├── logs [--repo REPO] [--job-id JOB-ID] [--tail TAIL] [--output OUTPUT] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Show logs for a workflow job.
+│   ├── rerun [RUN-ID-ARG] [--repo REPO] [--run-id RUN-ID] [--json JSON-FIELDS] [--json-output] [--token TOKEN]  # Rerun a workflow run.
+│   ├── view [--repo REPO] [--run-id RUN-ID] [--job-limit JOB-LIMIT] [--json JSON-FIELDS] [--json-output] [--token TOKEN] [--interactive]  # Show a workflow run and its jobs.
+│   └── watch [RUN-ID-ARG] [--repo REPO] [--run-id RUN-ID] [--interval INTERVAL] [--timeout TIMEOUT] [--json JSON-FIELDS] [--json-output] [--token TOKEN]  # Watch a workflow run until it completes.
+├── set-token [--token TOKEN] [--save-env] [--from-config] [--file REPO-FILE] [--dry-run] [--json-output]  # Set or update the repository GitHub HTTPS token configuration.
+└── unset-token  # Remove exactly the repository config item written by set-token.
 ```
 
 ## Target CLI Direction
@@ -109,7 +109,7 @@ Confirmed target domains:
 ChatGH-specific custom commands stay:
 
 - `set-token`: configure repo-local HTTPS auth header and optionally ChatEnv `GITHUB_ACCESS_TOKEN`.
-- `unset-token`: safely remove the selected GitHub remote's local token pin; `--all` only touches token-bearing GitHub HTTPS headers directly owned by this repository's local config.
+- `unset-token`: delete exactly the repository Git config item written by `set-token`, using the same origin-first target; no token-content inspection or other-target cleanup.
 - `fetch` / `pull` / `push`: invocation-scoped GitHub HTTPS transport. Without an explicit target, they use only the current branch upstream and do not guess from unrelated remotes or branches.
 - `repo-perms`: inspect token permissions and derived ChatGH capabilities.
 - `agent event ...`: future local event-to-runner bridge, if implemented; this should not pretend to be GitHub Copilot's hosted agent runtime.
@@ -136,7 +136,7 @@ ChatGH-specific custom commands stay:
 Every public CLI command should have an importable Python function or method behind it. Integrations, gateway services, MCP tools, and future agent runtimes should call Python APIs directly instead of shelling out when possible.
 
 ```text
-chatgh set-token              -> chatgh.github.commands.configure_github_https_token / save_github_token_to_env
+chatgh set-token              -> chatgh.github.commands.set_token / token_config.set_repository_tokens
 chatgh unset-token            -> chatgh.github.transport.unset_token
 chatgh fetch                  -> chatgh.github.transport.fetch
 chatgh pull                   -> chatgh.github.transport.pull

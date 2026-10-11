@@ -12,12 +12,11 @@ import base64
 import os
 import re
 import shlex
-import stat
 import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Iterable, Mapping, Optional
+from typing import Iterable, Mapping, Optional
 from urllib.parse import urlsplit
 
 import click
@@ -35,11 +34,6 @@ _REMOTE_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 _REF_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]*$")
 _REPO_PART_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 _CONFIG_KEY_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/@%?&=+~\\-]*$")
-_SECTION_RE = re.compile(
-    r'^\s*\[\s*http\s+"(?P<url>(?:[^"\\]|\\.)*)"\s*\]\s*(?:[#;].*)?$',
-    re.IGNORECASE,
-)
-_EXTRAHEADER_RE = re.compile(r"^\s*extraheader\s*(?:=|\s)\s*(?P<value>.*?)\s*(?:\r?\n)?$", re.IGNORECASE)
 _GIT_REPOSITORY_OVERRIDE_ENV = {
     "GIT_DIR",
     "GIT_WORK_TREE",
@@ -807,181 +801,35 @@ def credential_helper_main(argv: Optional[list[str]] = None) -> int:
     return 0
 
 
-def _pin_destination_for_remote(remote: str, *, cwd: Optional[str] = None) -> GitDestination:
-    """Resolve a local token-pin target, including legacy GitHub SSH remotes.
+def unset_token(*, cwd: Optional[str] = None) -> dict:
+    """Undo set-token: delete only its exact repository-local config item."""
+    from chatgh.github.token_config import repository_target
 
-    This helper is intentionally only for removing a pre-existing HTTPS config
-    header. Network transports still reject SSH rather than converting it.
-    """
-
-    urls = _remote_urls(remote, "fetch", cwd=cwd)
-    if len(urls) != 1:
-        raise click.ClickException(f"Remote '{remote}' has multiple fetch URLs.")
-    url = urls[0]
-    try:
-        return validate_github_https_url(url)
-    except click.ClickException:
-        pass
-    candidate = _require_safe_text(url, "Git remote URL")
-    path: Optional[str] = None
-    if candidate.startswith("git@github.com:"):
-        path = candidate[len("git@github.com:") :]
-    elif candidate.startswith("ssh://git@github.com/"):
-        path = candidate[len("ssh://git@github.com/") :]
-    if path is None:
-        raise click.ClickException("Current repository has no recognizable GitHub remote for a token pin.")
-    normalized = path.removesuffix(".git")
-    parts = normalized.split("/")
-    if len(parts) != 2:
-        raise click.ClickException("Current repository has no recognizable GitHub remote for a token pin.")
-    return _destination_from_parts(parts[0], parts[1])
-
-
-def _selected_destination(*, cwd: Optional[str] = None) -> GitDestination:
-    try:
-        upstream = current_upstream(cwd=cwd)
-    except click.ClickException as exc:
-        # A repository with no upstream can still remove the old origin-style
-        # pin created by earlier ChatGH releases.  Do not silently bypass an
-        # invalid configured upstream, though.
-        if "no usable upstream" not in str(exc) and "Cannot determine" not in str(exc):
-            raise
-        remotes = _run_git_read(["remote"], cwd=cwd)
-        names = [line.strip() for line in remotes.stdout.splitlines() if line.strip()]
-        if "origin" in names:
-            return _pin_destination_for_remote("origin", cwd=cwd)
-        if len(names) == 1:
-            return _pin_destination_for_remote(names[0], cwd=cwd)
-        raise click.ClickException(
-            "Current checkout has no selected GitHub remote. Configure an upstream or an origin remote first."
+    target = repository_target(cwd)
+    found = _run_git_read(
+        ["config", "--local", "--no-includes", "--null", "--get-all", target.key],
+        cwd=str(target.path),
+    )
+    if found.returncode not in {0, 1}:
+        raise click.ClickException("Unable to inspect the repository token configuration.")
+    removed = 0
+    if found.returncode == 0:
+        result = _run_git_read(
+            ["config", "--local", "--unset-all", target.key], cwd=str(target.path)
         )
-    else:
-        return _pin_destination_for_remote(upstream.remote, cwd=cwd)
-    raise click.ClickException("Current repository has no recognizable GitHub HTTPS remote.")
-
-
-def _config_path(*, cwd: Optional[str] = None) -> Path:
-    result = _run_git_read(["rev-parse", "--git-path", "config"], cwd=cwd)
-    if result.returncode != 0 or not result.stdout.strip():
-        raise click.ClickException("Current directory is not a Git repository with local config.")
-    path = Path(result.stdout.strip())
-    if not path.is_absolute():
-        path = Path(cwd or os.getcwd()) / path
-    if path.is_symlink():
-        raise click.ClickException("Refusing to edit a symlinked local Git config.")
-    return path
-
-
-def _unquote_git_value(value: str) -> str:
-    value = value.strip()
-    if len(value) >= 2 and value.startswith('"') and value.endswith('"'):
-        value = value[1:-1]
-        value = value.replace(r"\\", "\\").replace(r'\"', '"')
-    return value
-
-
-def _token_bearing_header(value: str) -> bool:
-    prefix = "Authorization: Basic "
-    if not value.startswith(prefix):
-        return False
-    try:
-        decoded = base64.b64decode(value[len(prefix) :].strip(), validate=True).decode("utf-8")
-    except (ValueError, UnicodeDecodeError):
-        return False
-    username, separator, token = decoded.partition(":")
-    return username == "x-access-token" and separator == ":" and bool(token) and not _contains_control(token)
-
-
-def _parse_local_header_removals(
-    content: str, selected: GitDestination, all_tokens: bool
-) -> tuple[list[int], list[str]]:
-    lines = content.splitlines(keepends=True)
-    current_url: Optional[str] = None
-    removals: list[int] = []
-    keys: list[str] = []
-    for index, line in enumerate(lines):
-        section = _SECTION_RE.match(line.rstrip("\r\n"))
-        if section:
-            current_url = _unquote_git_value(section.group("url"))
-            continue
-        if line.lstrip().startswith("["):
-            current_url = None
-            continue
-        if not current_url:
-            continue
-        header = _EXTRAHEADER_RE.match(line)
-        if not header:
-            continue
-        try:
-            candidate = validate_github_https_url(current_url)
-        except click.ClickException:
-            continue
-        if not all_tokens and candidate.credential_path["path"] != selected.credential_path["path"]:
-            continue
-        if not _token_bearing_header(_unquote_git_value(header.group("value"))):
-            continue
-        removals.append(index)
-        key = f"http.{current_url}.extraHeader"
-        if key not in keys:
-            keys.append(key)
-    return removals, keys
-
-
-def _replace_config_file(path: Path, update: Callable[[str], Optional[str]]) -> None:
-    """Hold Git's exclusive config lock across the complete read-modify-write."""
-    lock_path = path.with_name(path.name + ".lock")
-    created_lock = False
-    try:
-        mode = stat.S_IMODE(path.stat().st_mode)
-        descriptor = os.open(lock_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        created_lock = True
-        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-            # No snapshot is read until the lock is ours. A concurrent Git
-            # writer therefore either commits before this read or waits/fails.
-            content = path.read_text(encoding="utf-8")
-            updated = update(content)
-            if updated is not None:
-                handle.write(updated)
-                handle.flush()
-                os.fsync(handle.fileno())
-        if updated is not None:
-            os.chmod(lock_path, mode)
-            os.replace(lock_path, path)
-            created_lock = False
-    except (OSError, UnicodeError) as exc:
-        raise click.ClickException("Unable to update this repository's local Git config safely.") from exc
-    finally:
-        if created_lock:
-            try:
-                lock_path.unlink(missing_ok=True)
-            except OSError:
-                pass
-
-
-def unset_token(*, all_tokens: bool = False, cwd: Optional[str] = None) -> dict:
-    """Remove only token-bearing GitHub HTTPS headers owned by local config."""
-
-    selected = _selected_destination(cwd=cwd)
-    path = _config_path(cwd=cwd)
-    removals: list[int] = []
-    keys: list[str] = []
-
-    def remove_headers(content: str) -> Optional[str]:
-        nonlocal removals, keys
-        removals, keys = _parse_local_header_removals(content, selected, all_tokens)
-        if not removals:
-            return None
-        lines = content.splitlines(keepends=True)
-        removed = set(removals)
-        return "".join(line for index, line in enumerate(lines) if index not in removed)
-
-    _replace_config_file(path, remove_headers)
-    token_info = resolve_token_with_source(None, credential_path=selected.credential_path, cwd=cwd)
+        if result.returncode not in {0, 5}:
+            raise click.ClickException("Unable to remove the repository token configuration safely.")
+        removed = int(result.returncode == 0)
+        verify = _run_git_read(
+            ["config", "--local", "--no-includes", "--get-all", target.key],
+            cwd=str(target.path),
+        )
+        if verify.returncode != 1:
+            raise click.ClickException("Repository token configuration removal was not verified.")
     return {
-        "repo": selected.repo,
-        "removed_keys": keys,
-        "removed_count": len(removals),
-        "default_resolves": bool(token_info["token"]),
+        "repo": target.repo,
+        "removed_keys": [target.key] if removed else [],
+        "removed_count": removed,
     }
 
 
