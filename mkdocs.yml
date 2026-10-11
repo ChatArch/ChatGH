@@ -46,6 +46,7 @@ plugins:
             接口: Interface
             接口树: Interface Tree
             接口对齐规范: Interface Alignment
+            Token 更新与清理: Token Updates And Cleanup
             机器人: Agents
             机器人定义: Agent Definition
             代理任务与机器人对齐: Agent Task And Bot Alignment
@@ -62,6 +63,7 @@ nav:
   - 接口:
       - 接口树: interface-tree.md
       - 接口对齐规范: gh-interface-alignment.md
+      - Token 更新与清理: token-updates.md
   - 机器人:
       - 机器人定义: agent-definition.md
       - 代理任务与机器人对齐: agent-task-bot-alignment.md

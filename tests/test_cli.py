@@ -44,7 +44,7 @@ def test_chatgh_tree_option_renders_registered_command_surface():
         "accept <INVITATION-ID>",
         "repo-perms [--repo REPO]",
         "set-token [--token TOKEN]",
-        "unset-token [--all]",
+        "unset-token  #",
         "fetch [REMOTE] [REFSPEC]",
         "pull [REMOTE] [BRANCH]",
         "push [REMOTE] [REFSPEC]",
@@ -69,4 +69,4 @@ def test_chatgh_version_option():
     result = CliRunner().invoke(main, ["--version"])
 
     assert result.exit_code == 0
-    assert "0.2.13" in result.output
+    assert "0.2.14" in result.output

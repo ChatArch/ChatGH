@@ -67,10 +67,7 @@ def push_command(
 
 
 @click.command(name="unset-token")
-@click.option("--all", "all_tokens", is_flag=True, help="Remove all local token-bearing GitHub HTTPS headers.")
-def unset_token_command(all_tokens: bool) -> None:
-    """Remove a repository-local GitHub HTTPS token pin safely."""
+def unset_token_command() -> None:
+    """Remove exactly the repository config item written by set-token."""
 
-    # This is intentionally JSON-only: it is useful in automation and never
-    # includes token values or masks.
-    click.echo(json.dumps(unset_token(all_tokens=all_tokens), ensure_ascii=False, sort_keys=True))
+    click.echo(json.dumps(unset_token(), ensure_ascii=False, sort_keys=True))

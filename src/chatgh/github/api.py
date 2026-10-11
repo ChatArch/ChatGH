@@ -135,7 +135,7 @@ def credential_path_from_repo(repo: str) -> CredentialQuery:
     return {"protocol": "https", "host": "github.com", "path": normalized}
 
 
-def resolve_repo_from_git_remote() -> tuple[str, dict[str, str]]:
+def resolve_repo_from_git_remote(cwd: Optional[str] = None) -> tuple[str, dict[str, str]]:
     try:
         remotes_result = subprocess.run(
             ["git", "remote"],
@@ -143,6 +143,7 @@ def resolve_repo_from_git_remote() -> tuple[str, dict[str, str]]:
             capture_output=True,
             text=True,
             env=_local_git_environment(),
+            cwd=cwd,
         )
     except subprocess.CalledProcessError as exc:
         raise click.ClickException(
@@ -172,6 +173,7 @@ def resolve_repo_from_git_remote() -> tuple[str, dict[str, str]]:
                 capture_output=True,
                 text=True,
                 env=_local_git_environment(),
+            cwd=cwd,
             )
         except subprocess.CalledProcessError:
             continue
@@ -322,21 +324,9 @@ def _token_from_extraheader(header: str) -> Optional[str]:
 def configure_github_https_token(
     credential: CredentialQuery, token: str, cwd: Optional[str] = None
 ) -> None:
-    try:
-        header = github_auth_extraheader(token)
-        subprocess.run(
-            ["git", "config", "--local", _extraheader_config_key(credential), header],
-            check=True,
-            capture_output=True,
-            text=True,
-            cwd=cwd,
-            env=_local_git_environment(),
-        )
-    except subprocess.CalledProcessError as exc:
-        stderr = (exc.stderr or "").strip()
-        raise click.ClickException(
-            f"Failed to configure GitHub token for {credential['path']}: {stderr or 'git credential command failed'}"
-        ) from exc
+    from chatgh.github.token_config import write_token
+
+    write_token(credential, token, cwd)
 
 
 def save_github_token_to_env(token: str) -> None:

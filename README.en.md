@@ -89,7 +89,7 @@ Command tree (`chatgh --tree` renders the full registered Click tree live):
 - `chatgh run list/watch/rerun/cancel/download`: Actions run operations added in this batch; `watch` has a timeout and `rerun/cancel` are real remote mutations.
 - `chatgh repo-perms`: show token permissions and derived capabilities.
 - `chatgh set-token`: configure a repo-scoped HTTPS token for the current GitHub repository.
-- `chatgh unset-token [--all]`: remove the selected local token pin; `--all` is limited to token-bearing GitHub HTTPS headers owned by this repository's local config.
+- `unset-token`: delete exactly the repository Git config item written by `set-token`, using the same origin-first target; no token-content inspection or other-target cleanup.
 
 ## Common Workflows
 
@@ -260,10 +260,10 @@ chatgh repo protection --owner octocat --limit 50 --jobs 8 --json-output
 chatgh repo-perms --repo octocat/Hello-World --json-output
 chatgh repo-perms --repo octocat/Hello-World --full-json
 
-chatgh set-token --token "$GITHUB_ACCESS_TOKEN"
-chatgh set-token --token "$GITHUB_ACCESS_TOKEN" --save-env
+chatgh set-token --from-config
+chatgh set-token --from-config --json-output
 chatgh unset-token
-chatgh unset-token --all
+- `unset-token`: delete exactly the repository Git config item written by `set-token`, using the same origin-first target; no token-content inspection or other-target cleanup.
 ```
 
 `repo-perms` shows:
@@ -279,7 +279,7 @@ chatgh unset-token --all
     extraHeader = Authorization: Basic <base64(x-access-token:TOKEN)>
 ```
 
-Do not put tokens in remote URLs, and do not log raw `extraHeader` values. With `--save-env`, `set-token` also writes typed env `GITHUB_ACCESS_TOKEN`. `unset-token` emits safe JSON with the repository, removed key names/count, and whether a default still resolves—never a token or token mask. It is the intended way to return from a dedicated pin to the dynamic ChatEnv default.
+- `unset-token`: delete exactly the repository Git config item written by `set-token`, using the same origin-first target; no token-content inspection or other-target cleanup.
 
 ## Interactive Mode
 
@@ -352,3 +352,14 @@ mkdocs build --strict
 ```
 
 Default tests use mock/fake payloads and temporary paths. They do not call the live GitHub API or write real git credentials or env config.
+
+### Token updates and cleanup
+
+[Token updates and batch maintenance](https://arch.gh.wzhecnu.cn/ChatGH/en/token-updates/)
+
+```bash
+chatgh set-token --from-config
+chatgh unset-token
+chatgh set-token --from-config --file repositories.json --dry-run
+chatgh set-token --from-config --file repositories.json --json-output
+```

@@ -2,6 +2,11 @@
 
 本项目按日期记录更新；正式发版信息也维护在本文件。
 
+## 2026-10-11
+- `0.2.14`：简化 `unset-token`，与 `set-token` 使用相同的 origin 优先目标，仅删除 set 写入的精确仓库 Git 配置项；不判断令牌内容、不读取默认令牌、不扫描或清理其它目标，移除 `--all` 扩展。
+- `set-token --from-config` 显式读取当前 GitHub 类型化配置，覆盖仓库旧值；`--file` 支持 JSON/YAML 仓库维护清单，全量预检、common-config 去重、逐项写入回读及错误统计，提供 `--dry-run` / `--json-output`。
+- token 写入使用仓库配置写入 API，令牌及编码授权头不进入子进程 argv；清单不存 token。fetch/pull/push、clone/sync 与传输令牌顺序保持不变。
+
 ## 2026-10-10
 - 准备 `0.2.13` 补丁版本：新增顶层 `chatgh fetch`、`chatgh pull`、`chatgh push` 与 `chatgh unset-token`。Git 传输在每次调用内校验有效 fetch/push URL、分支上游和安全 refspec，只接受无凭据的 `github.com` HTTPS 目标；默认 pull 为 fast-forward only，rebase、set-upstream、dry-run 和 tags 都必须显式请求。
 - 传输令牌继续遵循显式 `--token`、匹配仓库本地 pin、当前 ChatEnv 默认值的顺序；认证仅交给一次性 Git credential helper，不写入 remote、argv、全局配置或长期 helper。继承的 HTTPS header/helper 只在 Git 子进程中清空，禁用认证重定向、submodule 递归和认证子进程 hooks；认证失败不会切换身份或自动重试。

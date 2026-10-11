@@ -558,15 +558,11 @@ def test_unset_token_removes_only_local_github_token_headers(
     local = _git(github_repo, "config", "--local", "--list")
     assert result == {
         "repo": "acme/fetch",
-        "removed_keys": [
-            "http.https://github.com/acme/fetch.git.extraHeader",
-            "http.https://github.com/acme/fetch.extraHeader",
-        ],
-        "removed_count": 2,
-        "default_resolves": False,
+        "removed_keys": ["http.https://github.com/acme/fetch.git.extraHeader"],
+        "removed_count": 1,
     }
     assert selected not in local
-    assert legacy not in local
+    assert legacy in local
     assert other_host in local
     assert _header("foreign") in foreign.read_text(encoding="utf-8")
 
@@ -594,82 +590,49 @@ def test_transport_rejects_remote_vcs_before_resolving_credentials(
     assert not resolved
 
 
-def test_unset_token_locks_before_read_modify_write(
-    github_repo: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _git(github_repo, "config", "http.https://github.com/acme/fetch.git.extraHeader", _header("dummy-pin"))
-    _git(github_repo, "config", "review.existing", "preserve-me")
-    original_parse = transport._parse_local_header_removals
-    writers = []
+def test_unset_native_git_preserves_a_concurrent_unrelated_write(github_repo, monkeypatch):
+    key = "http.https://github.com/acme/fetch.git.extraHeader"
+    _git(github_repo, "config", key, _header("dummy"))
+    original_run = transport._run_git_read
 
-    def attempt_concurrent_writer(content, selected, all_tokens):
-        writers.append(subprocess.run(
-            ["git", "-C", str(github_repo), "config", "--local", "review.concurrent", "keep-me"],
-            capture_output=True, text=True,
-        ))
-        return original_parse(content, selected, all_tokens)
+    def interleave(args, *, cwd=None):
+        if args == ["config", "--local", "--unset-all", key]:
+            _git(github_repo, "config", "review.concurrent", "keep-me")
+        return original_run(args, cwd=cwd)
 
-    monkeypatch.setattr(transport, "_parse_local_header_removals", attempt_concurrent_writer)
-    monkeypatch.setattr(transport, "resolve_token_with_source", lambda *a, **kw: {"token": None, "source": "none"})
-    result = transport.unset_token(cwd=str(github_repo))
-    assert result["removed_count"] == 1
-    assert len(writers) == 1
-    assert writers[0].returncode != 0
-    assert "lock" in writers[0].stderr.lower()
-    assert _git(github_repo, "config", "--local", "--get", "review.existing").strip() == "preserve-me"
-    assert not (github_repo / ".git" / "config.lock").exists()
+    monkeypatch.setattr(transport, "_run_git_read", interleave)
+    assert transport.unset_token(cwd=str(github_repo))["removed_count"] == 1
+    assert _git(github_repo, "config", "--get", "review.concurrent").strip() == "keep-me"
 
 
-def test_unset_token_all_is_idempotent_and_preserves_non_token_headers(
-    github_repo: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _git(github_repo, "config", "--add", "http.https://github.com/acme/other.git.extraHeader", _header("other"))
-    _git(github_repo, "config", "--add", "http.https://github.com/acme/other.git.extraHeader", "X-Test: keep")
-    monkeypatch.setattr(transport, "resolve_token_with_source", lambda *args, **kwargs: {"token": None, "source": "none"})
-
-    first = transport.unset_token(all_tokens=True, cwd=str(github_repo))
-    second = transport.unset_token(all_tokens=True, cwd=str(github_repo))
-
-    local = _git(github_repo, "config", "--local", "--list")
-    assert first["removed_count"] == 1
-    assert second["removed_count"] == 0
-    assert "X-Test: keep" in local
+def test_unset_token_is_idempotent_and_preserves_other_targets(github_repo):
+    own = "http.https://github.com/acme/fetch.git.extraHeader"
+    other = "http.https://github.com/acme/other.git.extraHeader"
+    _git(github_repo, "config", own, _header("current"))
+    _git(github_repo, "config", other, "X-Test: keep")
+    assert transport.unset_token(cwd=str(github_repo))["removed_count"] == 1
+    assert transport.unset_token(cwd=str(github_repo))["removed_count"] == 0
+    assert _git(github_repo, "config", "--get", other).strip() == "X-Test: keep"
 
 
-def test_unset_token_can_clear_a_legacy_pin_for_a_github_ssh_remote(
-    github_repo: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_unset_token_clears_the_set_key_for_github_ssh_remote(github_repo):
     _git(github_repo, "remote", "set-url", "origin", "git@github.com:acme/fetch.git")
-    legacy = _header("legacy-ssh-pin")
-    _git(github_repo, "config", "http.https://github.com/acme/fetch.extraHeader", legacy)
-    monkeypatch.setattr(transport, "resolve_token_with_source", lambda *args, **kwargs: {"token": None, "source": "none"})
-
+    key = "http.https://github.com/acme/fetch.git.extraHeader"
+    _git(github_repo, "config", key, _header("current"))
     result = transport.unset_token(cwd=str(github_repo))
-
-    assert result["repo"] == "acme/fetch"
-    assert result["removed_count"] == 1
-    assert legacy not in _git(github_repo, "config", "--local", "--list")
+    assert result["repo"] == "acme/fetch" and result["removed_count"] == 1
 
 
-def test_unset_token_fails_closed_without_a_selected_remote(
-    github_repo: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_unset_uses_the_same_fallback_remote_order_as_set(github_repo):
     _git(github_repo, "config", "--unset", "branch.main.remote")
     _git(github_repo, "remote", "remove", "origin")
     _git(github_repo, "remote", "add", "alpha", "https://github.com/acme/alpha.git")
     _git(github_repo, "remote", "add", "beta", "https://github.com/acme/beta.git")
-    alpha_header = _header("alpha")
-    beta_header = _header("beta")
-    _git(github_repo, "config", "http.https://github.com/acme/alpha.git.extraHeader", alpha_header)
-    _git(github_repo, "config", "http.https://github.com/acme/beta.git.extraHeader", beta_header)
-    monkeypatch.setattr(transport, "resolve_token_with_source", lambda *args, **kwargs: pytest.fail("no resolver"))
-
-    with pytest.raises(Exception, match="selected GitHub remote"):
-        transport.unset_token(cwd=str(github_repo))
-
-    local = _git(github_repo, "config", "--local", "--list")
-    assert alpha_header in local
-    assert beta_header in local
+    _git(github_repo, "config", "http.https://github.com/acme/alpha.git.extraHeader", _header("alpha"))
+    _git(github_repo, "config", "http.https://github.com/acme/beta.git.extraHeader", _header("beta"))
+    result = transport.unset_token(cwd=str(github_repo))
+    assert result["repo"] == "acme/alpha" and result["removed_count"] == 1
+    assert _git(github_repo, "config", "--get", "http.https://github.com/acme/beta.git.extraHeader").strip() == _header("beta")
 
 
 def test_unset_token_fails_without_writing_when_local_config_is_locked(
@@ -684,7 +647,7 @@ def test_unset_token_fails_without_writing_when_local_config_is_locked(
     lock_path.write_text("other git writer\n", encoding="utf-8")
     monkeypatch.setattr(transport, "resolve_token_with_source", lambda *args, **kwargs: {"token": None, "source": "none"})
 
-    with pytest.raises(Exception, match="local Git config safely"):
+    with pytest.raises(Exception, match="configuration safely"):
         transport.unset_token(cwd=str(github_repo))
 
     assert header in _git(github_repo, "config", "--local", "--list")

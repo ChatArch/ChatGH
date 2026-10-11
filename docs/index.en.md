@@ -26,7 +26,7 @@ Token resolution order is stable:
 2. Repo-local HTTPS auth header in the current repository's `.git/config`, with the path normalized to `https://github.com/owner/repo.git`.
 3. `GITHUB_ACCESS_TOKEN` from typed env.
 
-HTTPS `fetch`, `pull`, `push`, and `repo clone` resolve this order per invocation. They do not cache the current ChatEnv default in repository configuration. Keep the dynamic default unless a repository genuinely needs a dedicated identity, then opt in with `set-token` or clone's `--set-token`.
+`set-token` writes or updates a repository Git token item, and `unset-token` deletes the same item. Use `set-token --from-config` to refresh an old repository value from current typed configuration.
 
 Use `chatenv` to inspect or configure typed env:
 
@@ -90,7 +90,7 @@ Command tree (`chatgh --tree` renders the full registered Click tree live):
 - `chatgh run list/watch/rerun/cancel/download`: Actions run operations added in this batch; `watch` has a timeout and `rerun/cancel` are real remote mutations.
 - `chatgh repo-perms`: show token permissions and derived capabilities.
 - `chatgh set-token`: configure a repo-scoped HTTPS token for the current GitHub repository.
-- `chatgh unset-token [--all]`: safely remove the selected local token pin; `--all` is limited to token-bearing GitHub HTTPS headers owned by this repository's local config.
+- `unset-token`: delete exactly the repository Git config item written by `set-token`, using the same origin-first target; no token-content inspection or other-target cleanup.
 - `chatgh fetch [REMOTE] [REFSPEC]`, `chatgh pull [REMOTE] [BRANCH]`, `chatgh push [REMOTE] [REFSPEC]`: invocation-scoped GitHub HTTPS transport. Without positionals they use only the current branch upstream and never guess an unrelated branch.
 
 ## Common Workflows
@@ -270,10 +270,10 @@ chatgh repo protection --owner octocat --limit 50 --jobs 8 --json-output
 chatgh repo-perms --repo octocat/Hello-World --json-output
 chatgh repo-perms --repo octocat/Hello-World --full-json
 
-chatgh set-token --token "$GITHUB_ACCESS_TOKEN"
-chatgh set-token --token "$GITHUB_ACCESS_TOKEN" --save-env
+chatgh set-token --from-config
+chatgh set-token --from-config --json-output
 chatgh unset-token
-chatgh unset-token --all
+- `unset-token`: delete exactly the repository Git config item written by `set-token`, using the same origin-first target; no token-content inspection or other-target cleanup.
 ```
 
 `repo-perms` shows:
@@ -289,7 +289,7 @@ chatgh unset-token --all
     extraHeader = Authorization: Basic <base64(x-access-token:TOKEN)>
 ```
 
-Do not put tokens in remote URLs, and do not log raw `extraHeader` values. With `--save-env`, `set-token` also writes typed env `GITHUB_ACCESS_TOKEN`. `unset-token` emits safe JSON with the repository, removed key names/count, and whether a default still resolves, never a token or mask; it is the intended switch from a dedicated pin back to the dynamic ChatEnv default.
+- `unset-token`: delete exactly the repository Git config item written by `set-token`, using the same origin-first target; no token-content inspection or other-target cleanup.
 
 ## Interactive Mode
 
@@ -361,3 +361,14 @@ mkdocs build --strict
 ```
 
 Default tests use mock/fake payloads and temporary paths. They do not call the live GitHub API or write real git credentials or env config.
+
+## Token updates and cleanup
+
+[Token updates and batch maintenance](token-updates.md)
+
+```bash
+chatgh set-token --from-config
+chatgh unset-token
+chatgh set-token --from-config --file repositories.json --dry-run
+chatgh set-token --from-config --file repositories.json --json-output
+```
