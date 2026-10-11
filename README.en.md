@@ -26,6 +26,8 @@ Token resolution order is stable:
 2. Repo-local HTTPS auth header in the current repository's `.git/config`, with the path normalized to `https://github.com/owner/repo.git`.
 3. `GITHUB_ACCESS_TOKEN` from typed env.
 
+HTTPS `fetch`, `pull`, `push`, and `repo clone` resolve this order on every invocation; they do not cache the current ChatEnv default in repository config. Keep that dynamic behavior by default. Use `set-token` or clone's `--set-token` only when a repository truly needs a dedicated pinned identity.
+
 Use `chatenv` to inspect or configure typed env:
 
 ```bash
@@ -68,6 +70,10 @@ chatgh project --help
 chatgh run --help
 chatgh repo-perms --help
 chatgh set-token --help
+chatgh unset-token --help
+chatgh fetch --help
+chatgh pull --help
+chatgh push --help
 ```
 
 Command tree (`chatgh --tree` renders the full registered Click tree live):
@@ -77,11 +83,13 @@ Command tree (`chatgh --tree` renders the full registered Click tree live):
 - `chatgh pr status/diff/close/reopen/review/ready/update-branch`: common lifecycle/review commands added in this batch; write commands use ChatGH token resolution and keep secrets out of output.
 - `chatgh repo list/create/fork/transfer/protection`: repository list/create/fork/ownership-transfer/protection commands.
 - `chatgh repo view/clone/sync/edit`: common repository commands added in this batch; `clone/sync` keep local git side effects explicit and conservative.
+- `chatgh fetch [REMOTE] [REFSPEC]`, `chatgh pull [REMOTE] [BRANCH]`, and `chatgh push [REMOTE] [REFSPEC]`: invocation-scoped GitHub HTTPS transport. With no positionals they follow only the current branch upstream; they fail clearly rather than guessing an unrelated branch.
 - `chatgh project list/view/create/edit/close/delete/copy`, `chatgh project item ...`, `chatgh project field ...`, and `link/unlink/mark-template`: GitHub Projects v2 commands. Official `gh project` is only a capability reference; ChatGH opens native `item` and `field` subtrees and does not keep flat `item-add` / `field-list` compatibility entries. Auth, JSON output, safety gates, and Python APIs follow ChatGH conventions.
 - `chatgh run view/logs`: workflow run and job-log inspection.
 - `chatgh run list/watch/rerun/cancel/download`: Actions run operations added in this batch; `watch` has a timeout and `rerun/cancel` are real remote mutations.
 - `chatgh repo-perms`: show token permissions and derived capabilities.
 - `chatgh set-token`: configure a repo-scoped HTTPS token for the current GitHub repository.
+- `chatgh unset-token [--all]`: remove the selected local token pin; `--all` is limited to token-bearing GitHub HTTPS headers owned by this repository's local config.
 
 ## Common Workflows
 
@@ -95,7 +103,24 @@ chatgh repo edit ChatArch/ChatGH --description "GitHub helpers" --json-output
 chatgh repo edit ChatArch/ChatGH --visibility private --accept-visibility-change-consequences --json-output
 ```
 
-`repo clone` refuses to overwrite a non-empty target directory. `repo sync` defaults to `git pull --ff-only` and refuses to sync a mismatched explicit repository from the wrong checkout. `repo edit` currently supports description, homepage, default branch, and visibility; `--visibility` requires `--accept-visibility-change-consequences`.
+`repo clone` refuses to overwrite a non-empty target directory and uses a resolved identity only for that clone by default; `--set-token` explicitly opts into pinning it afterward. `repo sync` reuses the same transport layer and is fast-forward-only by default. `repo edit` currently supports description, homepage, default branch, and visibility; `--visibility` requires `--accept-visibility-change-consequences`.
+
+### Invocation-scoped Git transport
+
+```bash
+# No positionals means only the current branch upstream; no upstream fails clearly.
+chatgh fetch
+chatgh pull
+chatgh pull --rebase
+
+# Explicit targets; there is no force, reset, stash, or auth-retry switch.
+chatgh fetch origin main
+chatgh push -u origin main
+chatgh push origin main:main --dry-run
+chatgh push origin --tags
+```
+
+Transport resolves effective fetch and push URLs separately (including `pushurl` and Git URL rewrites) and accepts only credential-free `github.com` HTTPS targets. Pull is fast-forward-only by default; `--rebase` and `--ff-only` are mutually exclusive. Authentication uses a one-shot credential helper only in the network-facing Git child. Inherited HTTP headers/helpers are cleared in that child; auth does not follow redirects, recurse through submodules, switch identities, or retry automatically. Git stdout/stderr is redacted while retaining Git's non-zero exit status.
 
 ### GitHub Projects
 
@@ -237,6 +262,8 @@ chatgh repo-perms --repo octocat/Hello-World --full-json
 
 chatgh set-token --token "$GITHUB_ACCESS_TOKEN"
 chatgh set-token --token "$GITHUB_ACCESS_TOKEN" --save-env
+chatgh unset-token
+chatgh unset-token --all
 ```
 
 `repo-perms` shows:
@@ -252,7 +279,7 @@ chatgh set-token --token "$GITHUB_ACCESS_TOKEN" --save-env
     extraHeader = Authorization: Basic <base64(x-access-token:TOKEN)>
 ```
 
-Do not put tokens in remote URLs, and do not log raw `extraHeader` values. With `--save-env`, `set-token` also writes typed env `GITHUB_ACCESS_TOKEN`.
+Do not put tokens in remote URLs, and do not log raw `extraHeader` values. With `--save-env`, `set-token` also writes typed env `GITHUB_ACCESS_TOKEN`. `unset-token` emits safe JSON with the repository, removed key names/count, and whether a default still resolves—never a token or token mask. It is the intended way to return from a dedicated pin to the dynamic ChatEnv default.
 
 ## Interactive Mode
 
@@ -294,6 +321,7 @@ Lower-level modules are also available:
 
 - `chatgh.github.api`: token, repository inference, git credential, and REST request helpers.
 - `chatgh.github.commands`: workflow functions used by the CLI.
+- `chatgh.github.transport`: importable invocation-scoped `fetch` / `pull` / `push` / `unset_token` APIs.
 - `chatgh.github.requests`: PR/checks/actions payload construction.
 - `chatgh.github.render`: human-readable output, merge blockers, and tail helpers.
 

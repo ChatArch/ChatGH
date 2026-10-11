@@ -4,13 +4,15 @@ ChatGH 按 GitHub 用户熟悉的资源模型组织接口，同时保留 ChatGH 
 
 ## 当前命令面
 
-从 `0.2.10` 起，下面的树可由 `chatgh --tree` 从已注册 Click 命令实时生成；文档保留一份用于人类阅读和审阅。
+从 `0.2.13` 起，实际 `chatgh --tree` / `chatgh --tree-brief` 的注册结果为准；文档保留一份用于人类阅读和审阅。
 
 ```text
-chatgh  # GitHub helpers (PR, actions, repo).
-├── --help  # Show this help message.
-├── --version  # Show the installed package version.
-├── --tree  # Print the registered command tree.
+chatgh
+├── --help  # Show this message and exit.
+├── --version  # Show the version and exit.
+├── --tree  # Print the registered CLI tree and exit.
+├── --tree-brief  # Print the registered CLI tree without parameter signatures and exit.
+├── fetch [REMOTE] [REFSPEC] [--token TOKEN]  # Fetch from the current branch upstream or an explicit remote.
 ├── pr  # Pull request helpers.
 │   ├── list [--repo <REPO>] [--state <STATE>] [--limit <LIMIT>] [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # List pull requests.
 │   ├── create [--repo <REPO>] [--base <BASE>] [--head <HEAD>] [--title <TITLE>] [--body <BODY>] [--body-file <BODY-FILE>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Create a pull request.
@@ -29,8 +31,8 @@ chatgh  # GitHub helpers (PR, actions, repo).
 ├── repo  # Repository helpers.
 │   ├── list [--owner <OWNER>] [--limit <LIMIT>] [--sort <SORT>] [--direction <DIRECTION>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # List repositories for an owner or organization.
 │   ├── view [REPO-ARG] [--repo <REPO-OPTION>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # View repository details.
-│   ├── clone <REPO> [DIRECTORY] [--ssh] [--set-token/--no-set-token] [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # Clone a repository without overwriting an existing directory.
-│   ├── sync [REPO-ARG] [--repo <REPO-OPTION>] [--branch <BRANCH>] [--remote <REMOTE>] [--ff-only/--no-ff-only] [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # Fetch and fast-forward the current checkout for a repository.
+│   ├── clone <REPO> [DIRECTORY] [--ssh] [--set-token] [--json JSON-FIELDS] [--json-output] [--token TOKEN]  # Clone a repository without overwriting an existing directory.
+│   ├── sync [REPO-ARG] [--repo REPO-OPTION] [--branch BRANCH] [--remote REMOTE] [--ff-only] [--json JSON-FIELDS] [--json-output] [--token TOKEN]  # Fetch and fast-forward the current checkout for a repository.
 │   ├── edit [REPO-ARG] [--repo <REPO-OPTION>] [--description <DESCRIPTION>] [--homepage <HOMEPAGE>] [--default-branch <DEFAULT-BRANCH>] [--visibility <VISIBILITY>] [--accept-visibility-change-consequences] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Edit repository metadata.
 │   ├── protection [--repo <REPO>] [--owner <OWNER>] [--limit <LIMIT>] [--jobs <JOBS>] [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # Show default-branch protection and ruleset status.
 │   ├── create [--owner <OWNER>] [--name <NAME>] [--description <DESCRIPTION>] [--public] [--if-exists <IF-EXISTS>] [--json <FIELDS>] [--json-output] [--token <TOKEN>] [--interactive/--no-interactive]  # Create a repository. Repositories are private by default.
@@ -71,7 +73,10 @@ chatgh  # GitHub helpers (PR, actions, repo).
 │   ├── accept <INVITATION-ID> [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # Accept a repository invitation by id.
 │   └── decline <INVITATION-ID> [--json <FIELDS>] [--json-output] [--token <TOKEN>]  # Decline a repository invitation by id.
 ├── repo-perms [--repo <REPO>] [--json <FIELDS>] [--json-output] [--full-json] [--token <TOKEN>]  # Show repository permissions for the current token.
-└── set-token [--token <TOKEN>] [--save-env]  # Configure HTTPS credentials for the current GitHub repository.
+├── pull [REMOTE] [BRANCH] [--ff-only] [--rebase] [--token TOKEN]  # Pull safely from the current branch upstream or an explicit target.
+├── push [REMOTE] [REFSPEC] [--set-upstream] [--dry-run] [--tags] [--token TOKEN]  # Push a validated refspec or tags without force modes.
+├── set-token [--token <TOKEN>] [--save-env]  # Configure HTTPS credentials for the current GitHub repository.
+└── unset-token [--all]  # Remove a repository-local GitHub HTTPS token pin safely.
 ```
 
 ## 目标命令方向
@@ -104,12 +109,16 @@ chatgh  # GitHub helpers (PR, actions, repo).
 保留 ChatGH 自有命令：
 
 - `set-token`：为当前仓库配置仓库本地 HTTPS 授权头，并可选写入 ChatEnv 的 `GITHUB_ACCESS_TOKEN`。
+- `unset-token`：安全移除当前 GitHub remote 的本地 token pin；`--all` 只处理本仓库 local config 直接拥有的 token-bearing GitHub HTTPS header。
+- `fetch` / `pull` / `push`：调用范围内的 GitHub HTTPS Git 传输。没有显式 target 时只读取当前分支 upstream；不会从无关 remote/branch 猜测目标。
 - `repo-perms`：检查当前令牌权限，并推导 ChatGH 能力。
 - `agent event ...`：未来的本地事件到运行器桥接；如果实现，不能伪装成 GitHub Copilot 的托管代理运行时。
 
 ## 职责边界
 
 - `set-token`：把 GitHub 令牌保存到当前仓库的本地 git 配置，并可选保存到 ChatEnv。
+- `unset-token`：只从当前仓库 local config 删除选中 GitHub HTTPS remote 的 token header；输出安全 JSON，不输出 token 或掩码。
+- `fetch` / `pull` / `push`：分别验证 Git 生效的 fetch/push URL（含 rewrite 与 `pushurl`），只允许无凭据 `github.com` HTTPS；调用范围内清空旧 header/helper，并用一次性 helper 供应当前解析出的 token。
 - `repo-perms`：解析当前令牌、读取仓库权限，并推导 ChatGH 能力。
 - `repo list/view/create/edit/fork/transfer/clone/sync/protection`：覆盖仓库清单、仓库变更、所有权迁移、本地检出、fork 创建和治理检查。
 - `pr list/create/view/comment/edit/checks/merge/status/diff/close/reopen/review/ready/update-branch`：覆盖 PR 生命周期、评审、合并门禁和 CI 检查。
@@ -128,6 +137,10 @@ chatgh  # GitHub helpers (PR, actions, repo).
 
 ```text
 chatgh set-token              -> chatgh.github.commands.configure_github_https_token / save_github_token_to_env
+chatgh unset-token            -> chatgh.github.transport.unset_token
+chatgh fetch                  -> chatgh.github.transport.fetch
+chatgh pull                   -> chatgh.github.transport.pull
+chatgh push                   -> chatgh.github.transport.push
 chatgh repo-perms             -> chatgh.github.commands.get_repo_permissions / derive_repo_capabilities
 chatgh repo list              -> chatgh.github.commands.list_repos
 chatgh repo create            -> chatgh.github.commands.create_repo

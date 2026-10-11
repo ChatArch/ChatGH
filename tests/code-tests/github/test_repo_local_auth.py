@@ -18,7 +18,7 @@ def test_reads_repo_local_extraheader_from_git_config(monkeypatch):
             "git",
             "config",
             "--local",
-            "--get",
+            "--get-all",
             "http.https://github.com/ChatArch/ChatShare.git.extraHeader",
         ]
         return SimpleNamespace(returncode=0, stdout=_basic_header("repo-token") + "\n", stderr="")
@@ -31,6 +31,52 @@ def test_reads_repo_local_extraheader_from_git_config(monkeypatch):
 
     assert token == "repo-token"
     assert calls
+
+
+def test_reads_legacy_no_dot_git_repo_local_extraheader(monkeypatch):
+    calls = []
+
+    def fake_run(args, **kwargs):
+        calls.append(args)
+        if args[-1].endswith(".git.extraHeader"):
+            return SimpleNamespace(returncode=1, stdout="", stderr="")
+        return SimpleNamespace(returncode=0, stdout=_basic_header("legacy-token") + "\n", stderr="")
+
+    monkeypatch.setattr(gh_api.subprocess, "run", fake_run)
+
+    token = gh_api.read_github_token_from_git(
+        {"protocol": "https", "host": "github.com", "path": "ChatArch/ChatShare"}
+    )
+
+    assert token == "legacy-token"
+    assert [call[-1] for call in calls] == [
+        "http.https://github.com/ChatArch/ChatShare.git.extraHeader",
+        "http.https://github.com/ChatArch/ChatShare.extraHeader",
+    ]
+
+
+def test_reads_a_token_header_even_when_an_unrelated_header_shares_the_key(monkeypatch):
+    def fake_run(args, **kwargs):
+        assert args == [
+            "git",
+            "config",
+            "--local",
+            "--get-all",
+            "http.https://github.com/ChatArch/ChatShare.git.extraHeader",
+        ]
+        return SimpleNamespace(
+            returncode=0,
+            stdout="X-Trace: keep\n" + _basic_header("repo-token") + "\n",
+            stderr="",
+        )
+
+    monkeypatch.setattr(gh_api.subprocess, "run", fake_run)
+
+    token = gh_api.read_github_token_from_git(
+        {"protocol": "https", "host": "github.com", "path": "ChatArch/ChatShare"}
+    )
+
+    assert token == "repo-token"
 
 
 def test_configure_github_https_token_writes_repo_local_git_config(monkeypatch):

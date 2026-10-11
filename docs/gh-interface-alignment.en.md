@@ -19,7 +19,9 @@ src/chatgh/
   cli.py                         # top-level command registration
   commands/pr.py                 # PR CLI command group
   github/cli.py                  # repo/run/repo-perms/set-token CLI groups
+  github/transport_cli.py        # top-level fetch/pull/push/unset-token Click adapters
   github/commands.py             # Python command/service functions; CLI calls here
+  github/transport.py            # invocation-scoped GitHub HTTPS transport and credential helper
   github/requests.py             # GitHub API / payload functions
   github/api.py                  # token, repo resolution, low-level helpers
   github/render.py               # human-readable output helpers
@@ -39,6 +41,7 @@ Rules:
 - When official short/long options do not conflict, provide aliases such as `-R/--repo`, `--org`, and `--fork-name`.
 - Align official `--json FIELDS` while preserving ChatGH extensions: `--json-output`, `--token`, repo-local auth / ChatEnv token resolution, `--if-exists use`, and PR merge safety gates.
 - Be conservative about local git side effects. `clone`, `remote`, and `sync` capabilities must have explicit parameters, clear output, and tests; they must not overwrite existing checkouts/remotes by default.
+- Git transport exposes only audited targets and flags: without positionals it uses only the current branch upstream; fetch/push URLs are validated separately (including `pushurl` and rewrites), and only credential-free `github.com` HTTPS is accepted. Do not add force, reset, stash, implicit identity switches, or auth retries.
 
 ## `repo fork` Alignment Example
 
@@ -68,8 +71,10 @@ ChatGH currently provides these repository capabilities:
 - `repo list [--owner OWNER] [--json FIELDS] [--json-output]`: list repositories for a user or organization.
 - `repo create`: create a repository; private is the default and public requires explicit `--public`.
 - `repo view [REPOSITORY] [-R/--repo REPOSITORY]`: read repository metadata.
-- `repo clone REPOSITORY [DIRECTORY]`: safely clone a repository and refuse non-empty target directories.
-- `repo sync [REPOSITORY]`: explicitly run `git fetch` and `git pull --ff-only`.
+- `repo clone REPOSITORY [DIRECTORY]`: safely clone a repository and refuse non-empty target directories; it does not pin a token by default, and `--set-token` is explicit opt-in.
+- `repo sync [REPOSITORY]`: reuse invocation-scoped transport and default to fast-forward-only.
+- `fetch [REMOTE] [REFSPEC]`, `pull [REMOTE] [BRANCH]`, `push [REMOTE] [REFSPEC]`: top-level GitHub HTTPS transport; pull is fast-forward-only by default and rebase/set-upstream/dry-run/tags are explicit.
+- `unset-token [--all]`: remove the selected remote's local token pin; `--all` only removes token-bearing GitHub HTTPS headers in this repository's local config.
 - `repo edit [REPOSITORY]`: edit the small description/homepage/default-branch/visibility subset; visibility changes require explicit acknowledgement.
 - `repo fork [REPOSITORY] --org/--owner ... --fork-name/--name ...`: create a fork and support `--if-exists use` for idempotent reuse of matching forks.
 - `repo transfer [REPOSITORY] --owner/--org ...`: transfer repository ownership; real transfers require explicit consequence acknowledgement.
@@ -144,7 +149,11 @@ These commands are not part of the current public surface unless they first rece
 | `chatgh repo create ...` | `create_repo(...)` | Creates a repository; public repositories require an explicit option. |
 | `chatgh repo view [REPOSITORY] [-R/--repo REPOSITORY]` | `view_repo(repo, token)` | Reads the repository payload; supports JSON output. |
 | `chatgh repo clone REPOSITORY [DIRECTORY]` | `clone_repo(repo, directory, ssh, token)` | Safe clone; refuses to overwrite a non-empty target directory and does not change workspace remotes by default. |
-| `chatgh repo sync [REPOSITORY]` | `sync_repo(repo, branch, remote, ff_only, token)` | Explicit `git fetch` + `git pull --ff-only`; defaults to current checkout/current branch. |
+| `chatgh repo sync [REPOSITORY]` | `sync_repo(repo, branch, remote, ff_only, token)` | Reuses invocation-scoped transport; defaults to the current checkout upstream / fast-forward-only. |
+| `chatgh fetch [REMOTE] [REFSPEC]` | `chatgh.github.transport.fetch(...)` | Invocation-scoped auth; defaults to the current branch upstream. |
+| `chatgh pull [REMOTE] [BRANCH]` | `chatgh.github.transport.pull(...)` | Fast-forward-only by default; `--rebase` is explicit. |
+| `chatgh push [REMOTE] [REFSPEC]` | `chatgh.github.transport.push(...)` | Safe refspecs only; supports `-u`, `--dry-run`, and `--tags`, never force. |
+| `chatgh unset-token [--all]` | `chatgh.github.transport.unset_token(...)` | Safe JSON with no token; never changes global/system/included config. |
 | `chatgh repo edit [REPOSITORY]` | `edit_repo(repo, description, homepage, default_branch, visibility, accept_visibility_change_consequences, token)` | Small safe subset: description/homepage/default-branch/visibility; visibility changes require explicit consequence acknowledgement. |
 | `chatgh repo fork ...` | `fork_repo(...)` | Supports gh-like positional repository, `--org`, `--fork-name`, and ChatGH `--if-exists use`. |
 | `chatgh repo transfer ...` | `transfer_repo(repo, owner, team_ids, dry_run, accept_transfer_consequences, token)` | Uses GitHub Repository Transfer API; supports `--dry-run` and requires explicit consequence acknowledgement before remote mutation. |

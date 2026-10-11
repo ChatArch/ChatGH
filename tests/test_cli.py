@@ -17,6 +17,10 @@ def test_chatgh_help_lists_tree_options_and_github_commands():
         "invitation",
         "repo-perms",
         "set-token",
+        "unset-token",
+        "fetch",
+        "pull",
+        "push",
     ):
         assert command in result.output
 
@@ -40,6 +44,10 @@ def test_chatgh_tree_option_renders_registered_command_surface():
         "accept <INVITATION-ID>",
         "repo-perms [--repo REPO]",
         "set-token [--token TOKEN]",
+        "unset-token [--all]",
+        "fetch [REMOTE] [REFSPEC]",
+        "pull [REMOTE] [BRANCH]",
+        "push [REMOTE] [REFSPEC]",
     ):
         assert signature in result.output
     assert "hello" not in result.output.lower()
@@ -61,4 +69,4 @@ def test_chatgh_version_option():
     result = CliRunner().invoke(main, ["--version"])
 
     assert result.exit_code == 0
-    assert "0.2.12" in result.output
+    assert "0.2.13" in result.output

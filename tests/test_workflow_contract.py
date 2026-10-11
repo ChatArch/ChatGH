@@ -19,6 +19,8 @@ def test_publish_workflow_uses_oidc_with_tag_and_main_guards() -> None:
     assert "pypa/gh-action-pypi-publish@release/v1" in workflow
     assert "Check tag matches package version" in workflow
     assert "Check release commit is on default branch" in workflow
+    assert "github.ref_type == 'tag'" in workflow
+    assert "github.event_name == 'push'" not in workflow
     assert "git fetch --no-tags origin master:refs/remotes/origin/master" in workflow
     assert 'git merge-base --is-ancestor "${GITHUB_SHA}" "origin/master"' in workflow
     assert "git fetch origin master --tags" not in workflow

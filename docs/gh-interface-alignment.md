@@ -19,7 +19,9 @@ src/chatgh/
   cli.py                         # 顶层命令注册
   commands/pr.py                 # PR 命令组
   github/cli.py                  # repo/run/repo-perms/set-token 命令组
+  github/transport_cli.py        # 顶层 fetch/pull/push/unset-token Click adapter
   github/commands.py             # Python 命令与服务函数；CLI 调用这里
+  github/transport.py            # 调用范围内 GitHub HTTPS 传输与 credential helper
   github/requests.py             # GitHub API 与载荷函数
   github/api.py                  # 令牌、仓库解析和底层辅助函数
   github/render.py               # 人类可读输出辅助函数
@@ -39,6 +41,7 @@ src/chatgh/
 - 官方常见短参/长参若无冲突，应提供别名。例如 `-R/--repo`、`--org`、`--fork-name`。
 - 对齐官方 `--json FIELDS`，同时保留 ChatGH 自有扩展：`--json-output`、`--token`、仓库本地鉴权与 ChatEnv 令牌解析、`--if-exists use`、PR 合并安全门。
 - 对本地 git 有副作用的行为默认保持克制。`clone`、`remote`、`sync` 等能力必须有明确参数、清晰输出和测试，不能默认覆盖已有 checkout / remote。
+- Git 传输只暴露已审计的目标和 flag：无位置参数时只使用当前分支 upstream；fetch/push URL 分开验证（含 `pushurl` 与 rewrite），只允许无凭据 `github.com` HTTPS。不得加入 force、reset、stash、隐式身份切换或认证重试。
 
 ## `repo fork` 对齐示例
 
@@ -68,8 +71,10 @@ ChatGH 当前提供这些仓库能力：
 - `repo list [--owner OWNER] [--json FIELDS] [--json-output]`：列出用户或组织下的仓库。
 - `repo create`：创建仓库，默认私有，公开仓库需要显式 `--public`。
 - `repo view [REPOSITORY] [-R/--repo REPOSITORY]`：读取仓库基础信息。
-- `repo clone REPOSITORY [DIRECTORY]`：安全克隆仓库，目标目录非空时拒绝覆盖。
-- `repo sync [REPOSITORY]`：显式执行 `git fetch` 和 `git pull --ff-only`。
+- `repo clone REPOSITORY [DIRECTORY]`：安全克隆仓库，目标目录非空时拒绝覆盖；默认不把 token 固化到配置，`--set-token` 是明确 opt-in。
+- `repo sync [REPOSITORY]`：复用调用范围内传输，默认 fast-forward only。
+- `fetch [REMOTE] [REFSPEC]`、`pull [REMOTE] [BRANCH]`、`push [REMOTE] [REFSPEC]`：顶层 GitHub HTTPS 传输；pull 默认 fast-forward only，rebase/set-upstream/dry-run/tags 都需显式请求。
+- `unset-token [--all]`：删除当前 remote 的 local token pin；`--all` 只删除本仓库 local config 中 token-bearing 的 GitHub HTTPS header。
 - `repo edit [REPOSITORY]`：编辑 description、homepage、default-branch、visibility 小子集；visibility 变更需要显式确认。
 - `repo fork [REPOSITORY] --org/--owner ... --fork-name/--name ...`：创建 fork，并支持 `--if-exists use` 幂等复用匹配的已有 fork。
 - `repo transfer [REPOSITORY] --owner/--org ...`：迁移仓库所有权；真实迁移必须显式确认后果。
@@ -144,7 +149,11 @@ ChatGH 的机器人方向必须遵守：
 | `chatgh repo create ...` | `create_repo(...)` | 创建仓库，公开仓库需要显式参数。 |
 | `chatgh repo view [REPOSITORY] [-R/--repo REPOSITORY]` | `view_repo(repo, token)` | 读取仓库基础载荷，支持 JSON。 |
 | `chatgh repo clone REPOSITORY [DIRECTORY]` | `clone_repo(repo, directory, ssh, token)` | 安全 clone；目标目录非空则拒绝覆盖；不默认改 workspace remote。 |
-| `chatgh repo sync [REPOSITORY]` | `sync_repo(repo, branch, remote, ff_only, token)` | 显式 `git fetch` + `git pull --ff-only`，默认当前 checkout / 当前分支。 |
+| `chatgh repo sync [REPOSITORY]` | `sync_repo(repo, branch, remote, ff_only, token)` | 复用调用范围 transport，默认当前 checkout 的 upstream / fast-forward only。 |
+| `chatgh fetch [REMOTE] [REFSPEC]` | `chatgh.github.transport.fetch(...)` | 仅调用范围内认证，默认当前分支 upstream。 |
+| `chatgh pull [REMOTE] [BRANCH]` | `chatgh.github.transport.pull(...)` | 默认 fast-forward only；`--rebase` 必须显式。 |
+| `chatgh push [REMOTE] [REFSPEC]` | `chatgh.github.transport.push(...)` | 仅安全 refspec，支持 `-u`、`--dry-run`、`--tags`，无 force。 |
+| `chatgh unset-token [--all]` | `chatgh.github.transport.unset_token(...)` | 安全 JSON；不输出 token，且不修改 global/system/include config。 |
 | `chatgh repo edit [REPOSITORY]` | `edit_repo(repo, description, homepage, default_branch, visibility, accept_visibility_change_consequences, token)` | 小子集：description / homepage / default-branch / visibility；visibility 必须显式确认后果。 |
 | `chatgh repo fork ...` | `fork_repo(...)` | 支持类官方 gh 位置参数、`--org`、`--fork-name` 和 ChatGH `--if-exists use`。 |
 | `chatgh repo transfer ...` | `transfer_repo(repo, owner, team_ids, dry_run, accept_transfer_consequences, token)` | 调 GitHub Repository Transfer API；支持 `--dry-run`，真实远端迁移必须显式确认后果。 |

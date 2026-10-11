@@ -294,7 +294,7 @@ def test_chatgh_repo_clone_supports_positional_repo_and_directory(monkeypatch, r
         "directory": "ChatTea",
         "ssh": False,
         "token": None,
-        "set_token_after": True,
+        "set_token_after": False,
     }
 
 

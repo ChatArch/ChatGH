@@ -13,8 +13,6 @@ from chatgh.github.api import (
     configure_github_https_token,
     credential_path_from_repo,
     get_client,
-    github_auth_extraheader,
-    github_https_url,
     resolve_repo,
     resolve_repo_from_git_remote,
     resolve_token,
@@ -22,6 +20,7 @@ from chatgh.github.api import (
     save_github_token_to_env,
     split_repo,
 )
+from chatgh.github.transport import clone_repository, pull as transport_pull
 from chatgh.github.render import (
     collect_merge_blockers,
     derive_repo_capabilities,
@@ -258,32 +257,44 @@ def clone_repo(
     directory: Optional[str],
     ssh: bool,
     token: Optional[str],
-    set_token_after: bool = True,
+    set_token_after: bool = False,
 ) -> dict:
     resolved_repo = resolve_repo(repo)
     _owner, name = split_repo(resolved_repo)
     target_dir = Path(directory or name)
     if target_dir.exists() and any(target_dir.iterdir()):
         raise click.ClickException(f"Target directory already exists and is not empty: {target_dir}")
-    credential_path = credential_path_from_repo(resolved_repo)
-    url = f"git@github.com:{resolved_repo}.git" if ssh else github_https_url(credential_path)
-    resolved_token = None if ssh else resolve_token(token, credential_path=credential_path)
+    if ssh:
+        url = f"git@github.com:{resolved_repo}.git"
+        command = ["git", "clone", "--no-recurse-submodules", "--", url, str(target_dir)]
+        result = subprocess.run(command, check=False, capture_output=True, text=True)
+        if result.returncode != 0:
+            raise click.ClickException((result.stderr or result.stdout or "git clone failed").strip())
+        return {
+            "repo": resolved_repo,
+            "path": str(target_dir),
+            "url": url,
+            "token_configured": False,
+        }
 
-    command = ["git"]
-    if resolved_token:
-        command.extend(["-c", f"http.{url}.extraHeader={github_auth_extraheader(resolved_token)}"])
-    command.extend(["clone", url, str(target_dir)])
-    result = subprocess.run(command, check=False, capture_output=True, text=True)
-    if result.returncode != 0:
-        raise click.ClickException((result.stderr or result.stdout or "git clone failed").strip())
+    payload = clone_repository(resolved_repo, str(target_dir), token)
     token_configured = False
-    if resolved_token and set_token_after:
+    if set_token_after:
+        # Pinning remains opt-in. Normal clones keep their credential dynamic
+        # and resolve it again for each invocation-scoped transport operation.
+        credential_path = credential_path_from_repo(payload["repo"])
+        resolved_token = resolve_token(token, credential_path=credential_path)
+        if not resolved_token:
+            raise click.ClickException(
+                "Missing token. Pass --token or configure a matching repo-local GitHub token."
+            )
         configure_github_https_token(credential_path, resolved_token, cwd=str(target_dir))
         token_configured = True
-    return {"repo": resolved_repo, "path": str(target_dir), "url": url, "token_configured": token_configured}
+    payload["token_configured"] = token_configured
+    return payload
 
 
-def sync_repo(repo: Optional[str], branch: Optional[str], remote: str, ff_only: bool, token: Optional[str]) -> dict:
+def sync_repo(repo: Optional[str], branch: Optional[str], remote: Optional[str], ff_only: bool, token: Optional[str]) -> dict:
     current_repo, _credential_path = resolve_repo_from_git_remote()
     if repo is not None:
         requested_repo = resolve_repo(repo)
@@ -295,22 +306,13 @@ def sync_repo(repo: Optional[str], branch: Optional[str], remote: str, ff_only: 
         resolved_repo = requested_repo
     else:
         resolved_repo = current_repo
-    fetch = subprocess.run(["git", "fetch", remote], check=False, capture_output=True, text=True)
-    if fetch.returncode != 0:
-        raise click.ClickException((fetch.stderr or fetch.stdout or "git fetch failed").strip())
-    if branch is None:
-        branch_result = subprocess.run(["git", "branch", "--show-current"], check=False, capture_output=True, text=True)
-        branch = (branch_result.stdout or "").strip()
-    if not branch:
-        raise click.ClickException("Cannot determine current branch. Pass --branch.")
-    pull_command = ["git", "pull"]
-    if ff_only:
-        pull_command.append("--ff-only")
-    pull_command.extend([remote, branch])
-    pull = subprocess.run(pull_command, check=False, capture_output=True, text=True)
-    if pull.returncode != 0:
-        raise click.ClickException((pull.stderr or pull.stdout or "git pull failed").strip())
-    return {"repo": resolved_repo, "remote": remote, "branch": branch, "output": (pull.stdout or "").strip()}
+    payload = transport_pull(remote, branch, token, ff_only=ff_only)
+    return {
+        "repo": resolved_repo,
+        "remote": payload["remote"],
+        "branch": payload["branch"],
+        "output": payload["output"],
+    }
 
 def create_pr(
     repo: Optional[str],

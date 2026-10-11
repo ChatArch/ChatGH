@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import os
 from urllib.parse import urlparse
 import subprocess
 from typing import Optional, TypedDict
@@ -13,6 +14,23 @@ from chatgh.config import GitHubConfig
 
 CHATARCH_ENV_DIR = get_paths().envs_dir
 
+_GIT_REPOSITORY_OVERRIDE_ENV = {
+    "GIT_DIR",
+    "GIT_WORK_TREE",
+    "GIT_COMMON_DIR",
+    "GIT_INDEX_FILE",
+    "GIT_INDEX_VERSION",
+    "GIT_OBJECT_DIRECTORY",
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+    "GIT_GRAFT_FILE",
+    "GIT_REPLACE_REF_BASE",
+    "GIT_NAMESPACE",
+    "GIT_SHALLOW_FILE",
+    "GIT_CEILING_DIRECTORIES",
+    "GIT_DISCOVERY_ACROSS_FILESYSTEM",
+    "GIT_EXEC_PATH",
+}
+
 class CredentialQuery(TypedDict):
     protocol: str
     host: str
@@ -22,6 +40,22 @@ class CredentialQuery(TypedDict):
 class ResolvedToken(TypedDict):
     token: Optional[str]
     source: str
+
+
+def _local_git_environment() -> dict[str, str]:
+    """Keep local config lookup tied to the selected checkout, not caller overrides."""
+
+    env = dict(os.environ)
+    for key in list(env):
+        if (
+            key in _GIT_REPOSITORY_OVERRIDE_ENV
+            or key == "GIT_CONFIG_COUNT"
+            or key == "GIT_CONFIG_PARAMETERS"
+            or key.startswith("GIT_CONFIG_KEY_")
+            or key.startswith("GIT_CONFIG_VALUE_")
+        ):
+            env.pop(key, None)
+    return env
 
 
 def get_client(
@@ -58,9 +92,10 @@ def resolve_token(
     token: Optional[str],
     credential_path: Optional[CredentialQuery] = None,
     exact_only: bool = False,
+    cwd: Optional[str] = None,
 ) -> Optional[str]:
     return resolve_token_with_source(
-        token, credential_path=credential_path, exact_only=exact_only
+        token, credential_path=credential_path, exact_only=exact_only, cwd=cwd
     )["token"]
 
 
@@ -68,11 +103,12 @@ def resolve_token_with_source(
     token: Optional[str],
     credential_path: Optional[CredentialQuery] = None,
     exact_only: bool = False,
+    cwd: Optional[str] = None,
 ) -> ResolvedToken:
     if token:
         return {"token": token, "source": "--token"}
     credential_token = read_github_token_from_git(
-        credential_path, exact_only=exact_only
+        credential_path, exact_only=exact_only, cwd=cwd
     )
     if credential_token:
         return {"token": credential_token, "source": "repo git config"}
@@ -106,6 +142,7 @@ def resolve_repo_from_git_remote() -> tuple[str, dict[str, str]]:
             check=True,
             capture_output=True,
             text=True,
+            env=_local_git_environment(),
         )
     except subprocess.CalledProcessError as exc:
         raise click.ClickException(
@@ -134,6 +171,7 @@ def resolve_repo_from_git_remote() -> tuple[str, dict[str, str]]:
                 check=True,
                 capture_output=True,
                 text=True,
+                env=_local_git_environment(),
             )
         except subprocess.CalledProcessError:
             continue
@@ -210,10 +248,11 @@ def read_github_token_from_credentials(
 def read_github_token_from_git(
     credential_path: Optional[CredentialQuery] = None,
     exact_only: bool = False,
+    cwd: Optional[str] = None,
 ) -> Optional[str]:
     if not credential_path:
         return None
-    return _read_repo_local_extraheader(credential_path)
+    return _read_repo_local_extraheader(credential_path, cwd=cwd)
 
 
 def github_https_url(credential: CredentialQuery) -> str:
@@ -225,24 +264,44 @@ def _extraheader_config_key(credential: CredentialQuery) -> str:
     return f"http.{github_https_url(credential)}.extraHeader"
 
 
+def _legacy_extraheader_config_key(credential: CredentialQuery) -> str:
+    """Return the pre-normalization key used by older local token pins."""
+
+    path = credential["path"].strip().removeprefix("/").removesuffix(".git")
+    return f"http.https://{credential['host']}/{path}.extraHeader"
+
+
 def github_auth_extraheader(token: str) -> str:
     raw = f"x-access-token:{token}".encode("utf-8")
     return "Authorization: Basic " + base64.b64encode(raw).decode("ascii")
 
 
-def _read_repo_local_extraheader(credential: CredentialQuery) -> Optional[str]:
-    try:
-        result = subprocess.run(
-            ["git", "config", "--local", "--get", _extraheader_config_key(credential)],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-    except OSError:
-        return None
-    if result.returncode != 0:
-        return None
-    return _token_from_extraheader(result.stdout.strip())
+def _read_repo_local_extraheader(
+    credential: CredentialQuery, cwd: Optional[str] = None
+) -> Optional[str]:
+    keys = [_extraheader_config_key(credential)]
+    legacy_key = _legacy_extraheader_config_key(credential)
+    if legacy_key not in keys:
+        keys.append(legacy_key)
+    for key in keys:
+        try:
+            result = subprocess.run(
+                ["git", "config", "--local", "--get-all", key],
+                check=False,
+                capture_output=True,
+                text=True,
+                cwd=cwd,
+                env=_local_git_environment(),
+            )
+        except OSError:
+            return None
+        if result.returncode == 0:
+            headers = (getattr(result, "stdout", "") or "").splitlines()
+            for header in reversed(headers):
+                token = _token_from_extraheader(header.strip())
+                if token:
+                    return token
+    return None
 
 
 def _token_from_extraheader(header: str) -> Optional[str]:
@@ -271,6 +330,7 @@ def configure_github_https_token(
             capture_output=True,
             text=True,
             cwd=cwd,
+            env=_local_git_environment(),
         )
     except subprocess.CalledProcessError as exc:
         stderr = (exc.stderr or "").strip()
