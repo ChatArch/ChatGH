@@ -2,6 +2,11 @@
 
 本项目按日期记录更新；正式发版信息也维护在本文件。
 
+## 2026-10-20
+- `0.2.15`：实现 `chatenv test -t gh [PROFILE]` 的 GitHub PAT 检查，显示当前认证状态、UTC 到期时间和剩余天数；7 天内临期明确警告，失效、缺少凭据或检查失败以非零状态退出。
+- 新增可复用 Python API `chatgh.github.token_status.check_token()`，读取 GitHub 官方有效期响应头；未知有效期不等于永久有效，401 不冒称确定过期，权限/限流/网络错误与凭据失效分开报告。
+- 仅测试 ChatEnv 已选中的 profile 值，不读取仓库 token、不切换 profile；依赖下限更新为 `chatenv>=0.2.14`，以支持默认配置加载与命名 profile 隔离。
+
 ## 2026-10-11
 - `0.2.14`：简化 `unset-token`，与 `set-token` 使用相同的 origin 优先目标，仅删除 set 写入的精确仓库 Git 配置项；不判断令牌内容、不读取默认令牌、不扫描或清理其它目标，移除 `--all` 扩展。
 - `set-token --from-config` 显式读取当前 GitHub 类型化配置，覆盖仓库旧值；`--file` 支持 JSON/YAML 仓库维护清单，全量预检、common-config 去重、逐项写入回读及错误统计，提供 `--dry-run` / `--json-output`。

@@ -37,6 +37,17 @@ chatenv cat -t gh
 
 安装 `chatgh` 后，它会通过 `chatenv.configs` 入口点注册 `GitHubConfig`，所以 `chatenv list` 会出现 `[GitHub]` 分组，`-t gh` / `-t github` 可以解析到同一份 GitHub 类型化环境配置。
 
+检查当前配置的 PAT，或指定命名 profile（需要 ChatEnv 0.2.14+）：
+
+```bash
+chatenv test -t gh -I
+chatenv test -t gh work -I
+```
+
+输出包含当前是否有效、UTC 到期时间与剩余天数。7 天内到期时明确警告；失效、缺少凭据或检查失败以非零状态退出。只测试 ChatEnv 选中的 `GITHUB_ACCESS_TOKEN`，不会使用仓库 token 替代该 profile，也不会激活命名 profile。有效期来自 GitHub 的 `GitHub-Authentication-Token-Expiration` 响应头；缺失或无法解析时显示未知，不代表永久有效。401 表示凭据无效，可能过期、撤销或填错；403、限流与网络错误单独报告，不能据此断定过期。
+
+Python 调用可使用 `chatgh.github.token_status.check_token(token, warning_days=7)`，返回结构化状态、`valid`、`expires_at`、`days_remaining` 和 HTTP 状态，不返回 token。检查使用一次只读 `GET /user`，认证成功不等于有权操作任意仓库。[GitHub 官方有效期说明](https://github.blog/changelog/2021-07-26-expiration-options-for-personal-access-tokens/)
+
 `ghp_xxx` / `github_pat_xxx` 都是 GitHub 个人访问令牌。通常 clone/fetch/push 至少需要 contents 读写权限；PR 评论、合并和 Actions 读取按仓库策略补充对应权限。
 
 ### 仓库推断
