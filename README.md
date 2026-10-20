@@ -37,11 +37,13 @@ chatenv cat -t gh
 
 安装 `chatgh` 后，它会通过 `chatenv.configs` 入口点注册 `GitHubConfig`，所以 `chatenv list` 会出现 `[GitHub]` 分组，`-t gh` / `-t github` 可以解析到同一份 GitHub 类型化环境配置。
 
-检查当前配置的 PAT，或指定命名 profile（需要 ChatEnv 0.2.14+）：
+检查当前配置的 PAT，或指定命名 profile（需要 ChatEnv 0.2.15+）：
 
 ```bash
 chatenv test -t gh -I
 chatenv test -t gh work -I
+# Equivalent explicit profile option
+chatenv test -t gh --profile work -I
 ```
 
 输出包含当前是否有效、UTC 到期时间与剩余天数。7 天内到期时明确警告；失效、缺少凭据或检查失败以非零状态退出。只测试 ChatEnv 选中的 `GITHUB_ACCESS_TOKEN`，不会使用仓库 token 替代该 profile，也不会激活命名 profile。有效期来自 GitHub 的 `GitHub-Authentication-Token-Expiration` 响应头；缺失或无法解析时显示未知，不代表永久有效。401 表示凭据无效，可能过期、撤销或填错；403、限流与网络错误单独报告，不能据此断定过期。

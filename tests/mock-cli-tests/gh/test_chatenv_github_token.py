@@ -19,13 +19,32 @@ def test_real_chatenv_entry_selects_profile_and_preserves_active(tmp_path, monke
     old_value = GitHubConfig.GITHUB_ACCESS_TOKEN.value
     try:
         with patch("chatgh.github.token_status.check_token", return_value=payload) as check:
-            for extra, selected in (([], "synthetic-active-token"), (["work"], "synthetic-work-token")):
+            for extra, selected in (([], "synthetic-active-token"), (["work"], "synthetic-work-token"), (["--profile", "work"], "synthetic-work-token")):
                 result = CliRunner().invoke(cli, ["--home", str(tmp_path), "test", "-t", "gh", *extra, "-I"])
                 assert result.exit_code == 0, result.output
                 assert "Currently valid: yes" in result.output
                 assert "2026-11-20T12:00:00Z" in result.output
                 check.assert_called_with(selected)
         assert active.read_bytes() == before
+    finally:
+        GitHubConfig.GITHUB_ACCESS_TOKEN.value = old_value
+
+
+def test_empty_named_profile_does_not_check_active_or_process_token(tmp_path, monkeypatch):
+    from chatenv.cli import cli
+    from chatenv.store import EnvStore
+
+    store = EnvStore(tmp_path / "envs")
+    store.save_active(GitHubConfig, {"GITHUB_ACCESS_TOKEN": "synthetic-active-token"})
+    store.save_profile(GitHubConfig, "empty", {})
+    monkeypatch.setenv("GITHUB_ACCESS_TOKEN", "synthetic-process-token")
+    old_value = GitHubConfig.GITHUB_ACCESS_TOKEN.value
+    try:
+        with patch("requests.get") as get:
+            result = CliRunner().invoke(cli, ["--home", str(tmp_path), "test", "-t", "gh", "--profile", "empty", "-I"])
+        get.assert_not_called()
+        assert result.exit_code == 1, result.output
+        assert "GITHUB_ACCESS_TOKEN is not configured for this profile" in result.output
     finally:
         GitHubConfig.GITHUB_ACCESS_TOKEN.value = old_value
 

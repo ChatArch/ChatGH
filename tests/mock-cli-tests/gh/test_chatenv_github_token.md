@@ -8,7 +8,8 @@ credentials or external services are used.
 
 ## Expected process and results
 
-1. Invoke `chatenv test -t gh -I` after loading a synthetic token. The GitHub
+1. Invoke `chatenv test -t gh -I` after loading a synthetic token. Also select a
+   named profile with either positional PROFILE or `--profile NAME`. The GitHub
    provider calls the reusable checker with that exact value, then displays
    validity, UTC expiration, and remaining days without printing the token.
 2. A valid token more than seven days from expiration passes. A token at or below
@@ -21,6 +22,8 @@ credentials or external services are used.
    tested without crossing identities.
 6. An unrelated netrc credential cannot replace the selected bearer token;
    environment proxy settings remain effective.
+7. An empty selected profile reports missing credentials without HTTP requests,
+   even when the active profile and process have tokens.
 
 ```sh
 python -m pytest tests/mock-cli-tests/gh/test_chatenv_github_token.py -q

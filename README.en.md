@@ -37,11 +37,13 @@ chatenv cat -t gh
 
 After `chatgh` is installed, it registers `GitHubConfig` through the `chatenv.configs` entry point, so `chatenv list` shows a `[GitHub]` group and `-t gh` / `-t github` resolve to the same GitHub typed env.
 
-Check the active PAT or a named profile (ChatEnv 0.2.14+):
+Check the active PAT or a named profile (ChatEnv 0.2.15+):
 
 ```bash
 chatenv test -t gh -I
 chatenv test -t gh work -I
+# Equivalent explicit profile option
+chatenv test -t gh --profile work -I
 ```
 
 The check displays current validity, UTC expiration, and days remaining. Expiration within seven days produces a warning. Invalid/missing credentials and check failures exit nonzero. It tests only the `GITHUB_ACCESS_TOKEN` selected by ChatEnv, never substitutes repository credentials, and does not activate a named profile. Expiration comes from GitHub's `GitHub-Authentication-Token-Expiration` response header; an absent or unparseable header means unknown, not never expiring. HTTP 401 cannot distinguish expiry, revocation, and incorrect credentials. Permission/rate-limit/network failures are reported separately.
