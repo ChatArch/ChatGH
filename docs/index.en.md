@@ -37,6 +37,17 @@ chatenv cat -t gh
 
 After `chatgh` is installed, it registers `GitHubConfig` through the `chatenv.configs` entry point, so `chatenv list` shows a `[GitHub]` group and `-t gh` / `-t github` resolve to the same GitHub typed env.
 
+Check the active PAT or a named profile (ChatEnv 0.2.14+):
+
+```bash
+chatenv test -t gh -I
+chatenv test -t gh work -I
+```
+
+The check displays current validity, UTC expiration, and days remaining. Expiration within seven days produces a warning. Invalid/missing credentials and check failures exit nonzero. It tests only the `GITHUB_ACCESS_TOKEN` selected by ChatEnv, never substitutes repository credentials, and does not activate a named profile. Expiration comes from GitHub's `GitHub-Authentication-Token-Expiration` response header; an absent or unparseable header means unknown, not never expiring. HTTP 401 cannot distinguish expiry, revocation, and incorrect credentials. Permission/rate-limit/network failures are reported separately.
+
+Python callers can use `chatgh.github.token_status.check_token(token, warning_days=7)` for structured status, `valid`, `expires_at`, `days_remaining`, and HTTP status without returning credentials. The check makes one read-only `GET /user`; successful authentication does not imply permission for every repository operation. [GitHub expiration announcement](https://github.blog/changelog/2021-07-26-expiration-options-for-personal-access-tokens/)
+
 `ghp_xxx` and `github_pat_xxx` are GitHub Personal Access Tokens. Clone/fetch/push usually require contents read/write permissions; PR comments, merges, and Actions inspection may require additional repository permissions.
 
 ### Repository Inference
